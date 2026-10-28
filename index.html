@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Tecnología y Digitalización - La Hispanidad</title>
+  <style>
+    :root { 
+      --primary: #2563eb; 
+      --primary-dark: #1d4ed8; 
+      --bg: #f8fafc; 
+      --card: #ffffff; 
+      --text: #1e293b; 
+      --border: #e2e8f0; 
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    header {
+      background: linear-gradient(135deg, #0f172a, #1e293b); color: white;
+      padding: 28px; border-radius: 12px; margin-bottom: 24px; text-align: center;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    header h1 { font-size: 1.8rem; margin-bottom: 6px; }
+    header p { opacity: 0.85; font-size: 0.95rem; }
+
+    .repo-banner {
+      background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px;
+      padding: 12px 16px; margin-bottom: 20px; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 10px; font-size: 0.88rem; color: #1e40af;
+    }
+    .repo-banner input {
+      padding: 6px 10px; border-radius: 6px; border: 1px solid #93c5fd; font-size: 0.85rem; width: 220px;
+    }
+    .repo-banner button {
+      background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px;
+      font-weight: 600; cursor: pointer; transition: background 0.2s;
+    }
+    .repo-banner button:hover { background: var(--primary-dark); }
+
+    .section-title { 
+      font-size: 1.2rem; font-weight: 700; color: #334155; margin: 24px 0 12px; 
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px; text-decoration: none; color: inherit; transition: all 0.2s;
+      display: flex; flex-direction: column; justify-content: space-between;
+      border-left: 5px solid var(--primary);
+    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: var(--primary); }
+
+    .card.cuadro-mando { border-left-color: #0284c7; }
+    .card.cuadro-mando .card-tag { color: #0284c7; }
+
+    .card.directo { border-left-color: #16a34a; }
+    .card.directo .card-tag { color: #16a34a; }
+
+    .card-tag { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 6px; }
+    .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; color: #0f172a; }
+    .card-desc { font-size: 0.85rem; color: #64748b; margin-bottom: 16px; flex-grow: 1; }
+    
+    .btn-link {
+      background: #f1f5f9; text-align: center; padding: 8px; border-radius: 6px;
+      font-size: 0.85rem; font-weight: 700; color: #334155; transition: all 0.2s;
+    }
+    .card:hover .btn-link { background: var(--primary); color: white; }
+    .card.cuadro-mando:hover .btn-link { background: #0284c7; color: white; }
+    .card.directo:hover .btn-link { background: #16a34a; color: white; }
+
+    .status-text { font-size: 0.8rem; color: #64748b; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Tecnología y Digitalización</h1>
+    <p>Colegio La Hispanidad | Portal Docente</p>
+  </header>
+
+  <div class="repo-banner">
+    <div>
+      <strong>Detector Automático GitHub:</strong> <span id="detectorStatus">Buscando herramientas en el repositorio...</span>
+    </div>
+    <div style="display:flex; gap:6px; align-items:center;">
+      <input type="text" id="repoInput" placeholder="usuario/repositorio" title="Escribe tu usuario/repositorio de GitHub">
+      <button onclick="manualRepoUpdate()">Cargar</button>
+    </div>
+  </div>
+
+  <!-- HERRAMIENTAS GENERALES FIJAS -->
+  <div class="section-title">
+    <span>📊 Cuadro de Mando y Registro Directo</span>
+  </div>
+  <div class="grid">
+    <a href="seguimiento.html" class="card cuadro-mando">
+      <div>
+        <div class="card-tag">Matriz General</div>
+        <div class="card-title">Cuaderno de Seguimiento</div>
+        <div class="card-desc">Consulta por alumnado, grupo y matriz completa de todos los criterios con medias acumuladas.</div>
+      </div>
+      <div class="btn-link">Ver Panel de Seguimiento ➔</div>
+    </a>
+
+    <a href="evaluador_directo.html" class="card directo">
+      <div>
+        <div class="card-tag">Evaluador Directo</div>
+        <div class="card-title">Exámenes y Actividades</div>
+        <div class="card-desc">Registro rápido de notas numéricas directas por criterio para pruebas escritas, cuaderno o taller.</div>
+      </div>
+      <div class="btn-link">Abrir Evaluador Directo ➔</div>
+    </a>
+  </div>
+
+  <!-- EVALUADORES Y UNIDADES DETECTADAS AUTOMÁTICAMENTE -->
+  <div class="section-title">
+    <span>📁 Evaluadores y Unidades Didácticas</span>
+    <span class="status-text" id="countStatus">Cargando elementos...</span>
+  </div>
+  <div class="grid" id="evaluadoresGrid">
+    <!-- Se poblará dinámicamente -->
+  </div>
+</div>
+
+<script>
+  const fallbackEvaluadores = [
+    {
+      file: "EVALUADOR DOBLADOR 2 ESO.html",
+      title: "Doblador de Ropa Mecanizado",
+      tag: "2º ESO - Tecnología",
+      desc: "Evaluación de taller, trazado, mecanismos y seguridad."
+    },
+    {
+      file: "EVALUADOR DESARROLLO SOST. 3 ESO.html",
+      title: "Retos de Digitalización y Sociedad",
+      tag: "3º ESO - Tecnología",
+      desc: "Evaluación de sostenibilidad, ODS y trabajo por equipos."
+    },
+    {
+      file: "EVALUADOR ENIAC 4 ESO.html",
+      title: "De ENIAC a la Nube",
+      tag: "4º ESO - Digitalización",
+      desc: "Evaluación de hardware, ecosistema digital y licencias abiertas."
+    }
+  ];
+
+  function extraerMetaDeNombre(filename) {
+    const nameUpper = filename.toUpperCase();
+    let tag = "Evaluación";
+    let title = filename.replace(/\.html$/i, '');
+
+    if (filename.toLowerCase() === "evaluador_directo.html") {
+      return { tag: "Evaluación Directa", title: "Evaluador Directo" };
+    }
+
+    if (nameUpper.includes("2 ESO") || nameUpper.includes("2º ESO")) tag = "2º ESO - Tecnología";
+    else if (nameUpper.includes("3 ESO") || nameUpper.includes("3º ESO")) tag = "3º ESO - Tecnología";
+    else if (nameUpper.includes("4 ESO") || nameUpper.includes("4º ESO")) tag = "4º ESO - Digitalización";
+    else if (nameUpper.includes("1 ESO") || nameUpper.includes("1º ESO")) tag = "1º ESO - Tecnología";
+
+    title = title.replace(/^EVALUADOR\s+/i, '')
+                 .replace(/\s+\d+º?\s*ESO$/i, '')
+                 .replace(/_/g, ' ');
+
+    return { tag, title: title || filename };
+  }
+
+  function renderGrid(evaluadoresList) {
+    const grid = document.getElementById("evaluadoresGrid");
+    grid.innerHTML = "";
+
+    if (!evaluadoresList || evaluadoresList.length === 0) {
+      grid.innerHTML = "<p style='color:#64748b; font-size:0.9rem;'>No se encontraron evaluadores adicionales en el repositorio.</p>";
+      return;
+    }
+
+    evaluadoresList.forEach(item => {
+      const card = document.createElement("a");
+      card.href = item.file;
+      card.className = "card";
+      card.innerHTML = `
+        <div>
+          <div class="card-tag">${item.tag}</div>
+          <div class="card-title">${item.title}</div>
+          <div class="card-desc">${item.desc || 'Unidad de evaluación interactiva.'}</div>
+        </div>
+        <div class="btn-link">Abrir Evaluador ➔</div>
+      `;
+      grid.appendChild(card);
+    });
+
+    document.getElementById("countStatus").textContent = `${evaluadoresList.length} unidad(es) detectada(s)`;
+  }
+
+  async function cargarDesdeGitHub(repoPath) {
+    const statusLabel = document.getElementById("detectorStatus");
+    statusLabel.textContent = `Consultando GitHub (${repoPath})...`;
+
+    try {
+      const res = await fetch(`https://api.github.com/repos/${repoPath}/contents`);
+      if (!res.ok) throw new Error("Repositorio no encontrado o límite de API alcanzado.");
+
+      const files = await res.json();
+      const htmlFiles = files.filter(f => 
+        f.type === "file" && 
+        f.name.toLowerCase().endsWith(".html") && 
+        !["index.html", "seguimiento.html", "evaluador_directo.html", "404.html"].includes(f.name.toLowerCase())
+      );
+
+      if (htmlFiles.length > 0) {
+        const detected = htmlFiles.map(f => {
+          const meta = extraerMetaDeNombre(f.name);
+          return {
+            file: f.name,
+            title: meta.title,
+            tag: meta.tag,
+            desc: "Detectado automáticamente en tu repositorio GitHub."
+          };
+        });
+
+        renderGrid(detected);
+        statusLabel.textContent = `✅ Autodetectado con éxito desde ${repoPath}`;
+        localStorage.setItem("github_repo_cache", repoPath);
+        return true;
+      }
+    } catch (err) {
+      console.warn("Fallo en la detección vía API:", err);
+      statusLabel.textContent = `ℹ️ Mostrando lista local (${err.message})`;
+    }
+    return false;
+  }
+
+  function manualRepoUpdate() {
+    const val = document.getElementById("repoInput").value.trim();
+    if (val) {
+      cargarDesdeGitHub(val);
+    }
+  }
+
+  async function initDetector() {
+    let repoDetected = null;
+
+    const host = window.location.hostname;
+    const pathParts = window.location.pathname.split('/').filter(p => p.length > 0);
+
+    if (host.endsWith(".github.io")) {
+      const user = host.split('.')[0];
+      const repo = pathParts.length > 0 ? pathParts[0] : "";
+      if (user && repo) repoDetected = `${user}/${repo}`;
+    }
+
+    const savedRepo = localStorage.getItem("github_repo_cache");
+    if (savedRepo) repoDetected = savedRepo;
+
+    if (repoDetected) {
+      document.getElementById("repoInput").value = repoDetected;
+      const ok = await cargarDesdeGitHub(repoDetected);
+      if (ok) return;
+    }
+
+    document.getElementById("detectorStatus").textContent = "Modo Local activo";
+    renderGrid(fallbackEvaluadores);
+  }
+
+  window.onload = initDetector;
+</script>
+
+</body>
+</html>
