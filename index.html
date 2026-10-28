@@ -3,55 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portal Tecnología y Digitalización - La Hispanidad</title>
+  <title>Portal Tecnología y Digitalización - Manuel Pozo Cano</title>
   <style>
     :root { 
-      --primary: #2563eb; 
-      --primary-dark: #1d4ed8; 
-      --bg: #f8fafc; 
+      --primary: #15803d; 
+      --primary-dark: #166534; 
+      --bg: #f4f7f5; 
       --card: #ffffff; 
-      --text: #1e293b; 
-      --border: #e2e8f0; 
+      --text: #1c2a23; 
+      --border: #d1fae5; 
+      --border-card: #e2e8f0;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
     .container { max-width: 1100px; margin: 0 auto; }
 
     header {
-      background: linear-gradient(135deg, #0f172a, #1e293b); color: white;
-      padding: 28px; border-radius: 12px; margin-bottom: 24px; text-align: center;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      background: linear-gradient(135deg, #052e16, #14532d, #15803d); 
+      color: white;
+      padding: 32px 24px; 
+      border-radius: 16px; 
+      margin-bottom: 28px; 
+      text-align: center;
+      box-shadow: 0 10px 15px -3px rgba(5, 46, 22, 0.25), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      border-bottom: 4px solid #22c55e;
     }
-    header h1 { font-size: 1.8rem; margin-bottom: 6px; }
-    header p { opacity: 0.85; font-size: 0.95rem; }
-
-    .repo-banner {
-      background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px;
-      padding: 12px 16px; margin-bottom: 20px; display: flex; justify-content: space-between;
-      align-items: center; flex-wrap: wrap; gap: 10px; font-size: 0.88rem; color: #1e40af;
+    header h1 { 
+      font-size: 2.1rem; 
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px; 
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
-    .repo-banner input {
-      padding: 6px 10px; border-radius: 6px; border: 1px solid #93c5fd; font-size: 0.85rem; width: 220px;
+    header .sub-header { 
+      font-size: 1.05rem; 
+      font-weight: 500;
+      opacity: 0.95; 
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
     }
-    .repo-banner button {
-      background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px;
-      font-weight: 600; cursor: pointer; transition: background 0.2s;
+    header .badge {
+      background: rgba(255, 255, 255, 0.18);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
     }
-    .repo-banner button:hover { background: var(--primary-dark); }
 
     .section-title { 
-      font-size: 1.2rem; font-weight: 700; color: #334155; margin: 24px 0 12px; 
+      font-size: 1.25rem; font-weight: 700; color: #14532d; margin: 28px 0 14px; 
       display: flex; align-items: center; justify-content: space-between;
     }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
 
     .card {
-      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-      padding: 20px; text-decoration: none; color: inherit; transition: all 0.2s;
-      display: flex; flex-direction: column; justify-content: space-between;
-      border-left: 5px solid var(--primary);
+      background: var(--card); 
+      border: 1px solid var(--border-card); 
+      border-radius: 14px;
+      padding: 22px; 
+      text-decoration: none; 
+      color: inherit; 
+      transition: all 0.25s ease-in-out;
+      display: flex; 
+      flex-direction: column; 
+      justify-content: space-between;
+      border-left: 6px solid var(--primary);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
-    .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: var(--primary); }
+    .card:hover { 
+      transform: translateY(-4px); 
+      box-shadow: 0 12px 20px -5px rgba(21, 128, 61, 0.15); 
+      border-color: var(--primary); 
+    }
 
     .card.cuadro-mando { border-left-color: #0284c7; }
     .card.cuadro-mando .card-tag { color: #0284c7; }
@@ -59,38 +86,86 @@
     .card.directo { border-left-color: #16a34a; }
     .card.directo .card-tag { color: #16a34a; }
 
-    .card-tag { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 6px; }
-    .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; color: #0f172a; }
-    .card-desc { font-size: 0.85rem; color: #64748b; margin-bottom: 16px; flex-grow: 1; }
+    .card-tag { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--primary); margin-bottom: 6px; letter-spacing: 0.5px; }
+    .card-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; color: #064e3b; }
+    .card-desc { font-size: 0.88rem; color: #4b5563; margin-bottom: 18px; flex-grow: 1; line-height: 1.45; }
     
     .btn-link {
-      background: #f1f5f9; text-align: center; padding: 8px; border-radius: 6px;
-      font-size: 0.85rem; font-weight: 700; color: #334155; transition: all 0.2s;
+      background: #f0fdf4; 
+      text-align: center; 
+      padding: 10px; 
+      border-radius: 8px;
+      font-size: 0.88rem; 
+      font-weight: 700; 
+      color: var(--primary-dark); 
+      transition: all 0.2s;
+      border: 1px solid #d1fae5;
     }
-    .card:hover .btn-link { background: var(--primary); color: white; }
-    .card.cuadro-mando:hover .btn-link { background: #0284c7; color: white; }
-    .card.directo:hover .btn-link { background: #16a34a; color: white; }
+    .card:hover .btn-link { background: var(--primary); color: white; border-color: var(--primary); }
+    .card.cuadro-mando:hover .btn-link { background: #0284c7; color: white; border-color: #0284c7; }
+    .card.directo:hover .btn-link { background: #16a34a; color: white; border-color: #16a34a; }
 
-    .status-text { font-size: 0.8rem; color: #64748b; font-weight: 500; }
+    .status-text { font-size: 0.82rem; color: #6b7280; font-weight: 500; }
+
+    /* FOOTER CAMUFLADO Y ELEGANTE */
+    footer {
+      margin-top: 50px;
+      padding: 20px 10px;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      font-size: 0.82rem;
+      color: #6b7280;
+    }
+    .footer-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #eef2ff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      color: #3730a3;
+      margin-top: 8px;
+      border: 1px solid #e0e7ff;
+    }
+    .btn-config-toggle {
+      background: none;
+      border: none;
+      color: var(--primary-dark);
+      cursor: pointer;
+      font-size: 0.78rem;
+      text-decoration: underline;
+      margin-left: 6px;
+      font-weight: 600;
+    }
+    .repo-config-panel {
+      display: none;
+      margin: 12px auto 0;
+      max-width: 380px;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .repo-config-panel input {
+      padding: 5px 8px; border-radius: 6px; border: 1px solid #94a3b8; font-size: 0.8rem; width: 200px;
+    }
+    .repo-config-panel button {
+      background: var(--primary); color: white; border: none; padding: 5px 10px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.8rem;
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
   <header>
-    <h1>Tecnología y Digitalización</h1>
-    <p>Colegio La Hispanidad | Portal Docente</p>
+    <h1>🌿 Tecnología y Digitalización</h1>
+    <div class="sub-header">
+      <span><strong>Manuel Pozo Cano</strong></span>
+      <span class="badge">🏫 Colegio La Hispanidad</span>
+    </div>
   </header>
-
-  <div class="repo-banner">
-    <div>
-      <strong>Detector Automático GitHub:</strong> <span id="detectorStatus">Buscando herramientas en el repositorio...</span>
-    </div>
-    <div style="display:flex; gap:6px; align-items:center;">
-      <input type="text" id="repoInput" placeholder="usuario/repositorio" title="Escribe tu usuario/repositorio de GitHub">
-      <button onclick="manualRepoUpdate()">Cargar</button>
-    </div>
-  </div>
 
   <!-- HERRAMIENTAS GENERALES FIJAS -->
   <div class="section-title">
@@ -101,7 +176,7 @@
       <div>
         <div class="card-tag">Matriz General</div>
         <div class="card-title">Cuaderno de Seguimiento</div>
-        <div class="card-desc">Consulta por alumnado, grupo y matriz completa de todos los criterios con medias acumuladas.</div>
+        <div class="card-desc">Consulta por alumnado, grupo y matriz completa de todos los criterios oficiales con medias acumuladas.</div>
       </div>
       <div class="btn-link">Ver Panel de Seguimiento ➔</div>
     </a>
@@ -124,6 +199,18 @@
   <div class="grid" id="evaluadoresGrid">
     <!-- Se poblará dinámicamente -->
   </div>
+
+  <footer>
+    <p>© Manuel Pozo Cano | Departamento de Tecnología | Colegio La Hispanidad</p>
+    <div class="footer-status">
+      <span id="detectorStatus">🔎 Sincronizado con GitHub</span>
+      <button class="btn-config-toggle" onclick="toggleConfigPanel()">⚙️ Configurar</button>
+    </div>
+    <div class="repo-config-panel" id="repoConfigPanel">
+      <input type="text" id="repoInput" placeholder="usuario/repositorio" title="Escribe tu usuario/repositorio de GitHub">
+      <button onclick="manualRepoUpdate()">Actualizar</button>
+    </div>
+  </footer>
 </div>
 
 <script>
@@ -198,7 +285,7 @@
 
   async function cargarDesdeGitHub(repoPath) {
     const statusLabel = document.getElementById("detectorStatus");
-    statusLabel.textContent = `Consultando GitHub (${repoPath})...`;
+    statusLabel.textContent = `Consultando GitHub...`;
 
     try {
       const res = await fetch(`https://api.github.com/repos/${repoPath}/contents`);
@@ -223,21 +310,27 @@
         });
 
         renderGrid(detected);
-        statusLabel.textContent = `✅ Autodetectado con éxito desde ${repoPath}`;
+        statusLabel.textContent = `✅ Sincronizado con ${repoPath}`;
         localStorage.setItem("github_repo_cache", repoPath);
         return true;
       }
     } catch (err) {
       console.warn("Fallo en la detección vía API:", err);
-      statusLabel.textContent = `ℹ️ Mostrando lista local (${err.message})`;
+      statusLabel.textContent = `ℹ️ Lista local (${err.message})`;
     }
     return false;
+  }
+
+  function toggleConfigPanel() {
+    const panel = document.getElementById("repoConfigPanel");
+    panel.style.display = panel.style.display === "block" ? "none" : "block";
   }
 
   function manualRepoUpdate() {
     const val = document.getElementById("repoInput").value.trim();
     if (val) {
       cargarDesdeGitHub(val);
+      document.getElementById("repoConfigPanel").style.display = "none";
     }
   }
 
