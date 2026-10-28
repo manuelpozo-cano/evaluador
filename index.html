@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Tecnología y Digitalización - La Hispanidad</title>
+  <style>
+    :root { --primary: #2563eb; --dark: #0f172a; --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background-color: var(--bg); color: #1e293b; padding: 20px; line-height: 1.5; }
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    header {
+      background: linear-gradient(135deg, #0f172a, #1e293b); color: white;
+      padding: 28px; border-radius: 12px; margin-bottom: 24px; text-align: center;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    header h1 { font-size: 1.8rem; margin-bottom: 6px; }
+    header p { opacity: 0.85; font-size: 0.95rem; }
+
+    .section-title { font-size: 1.2rem; font-weight: 700; color: #334155; margin: 24px 0 12px; display: flex; align-items: center; gap: 8px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px; text-decoration: none; color: inherit; transition: all 0.2s;
+      display: flex; flex-direction: column; justify-content: space-between;
+      border-left: 4px solid var(--primary);
+    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: var(--primary); }
+
+    .card-tag { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 6px; }
+    .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+    .card-desc { font-size: 0.85rem; color: #64748b; margin-bottom: 16px; }
+    
+    .btn-link {
+      background: #f1f5f9; text-align: center; padding: 8px; border-radius: 6px;
+      font-size: 0.85rem; font-weight: 700; color: #334155; transition: background 0.2s;
+    }
+    .card:hover .btn-link { background: var(--primary); color: white; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Tecnología y Digitalización</h1>
+    <p>Colegio La Hispanidad | Panel de Evaluación Docente</p>
+  </header>
+
+  <!-- HERRAMIENTAS DOCENTES -->
+  <div class="section-title">🔒 Evaluadores LOMLOE (Sincronización Cloud)</div>
+  <div class="grid">
+    
+    <!-- 2º ESO -->
+    <a href="EVALUADOR DOBLADOR 2 ESO.html" class="card">
+      <div>
+        <div class="card-tag">2º ESO - Tecnología</div>
+        <div class="card-title">Doblador de Ropa</div>
+        <div class="card-desc">Evaluación técnica de taller y fabricación sincronizada en tiempo real.</div>
+      </div>
+      <div class="btn-link">Abrir Evaluador ➔</div>
+    </a>
+
+    <!-- 3º ESO -->
+    <a href="EVALUADOR DESARROLLO SOST. 3 ESO.html" class="card">
+      <div>
+        <div class="card-tag">3º ESO - Tecnología</div>
+        <div class="card-title">Retos de Digitalización y Sociedad</div>
+        <div class="card-desc">Evaluación de sostenibilidad, ODS y trabajo por equipos.</div>
+      </div>
+      <div class="btn-link">Abrir Evaluador ➔</div>
+    </a>
+
+    <!-- 4º ESO -->
+    <a href="EVALUADOR ENIAC 4 ESO.html" class="card">
+      <div>
+        <div class="card-tag">4º ESO - Digitalización</div>
+        <div class="card-title">De ENIAC a la Nube</div>
+        <div class="card-desc">Evaluación de hardware, ecosistema digital y licencias abiertas.</div>
+      </div>
+      <div class="btn-link">Abrir Evaluador ➔</div>
+    </a>
+
+    <!-- SEGUIMIENTO GENERAL -->
+    <a href="seguimiento.html" class="card" style="border-left-color: #0284c7;">
+      <div>
+        <div class="card-tag" style="color: #0284c7;">Cuadro de Mando</div>
+        <div class="card-title">Seguimiento y Matriz LOMLOE</div>
+        <div class="card-desc">Consulta por alumno y grupo, matriz de criterios y medias acumuladas.</div>
+      </div>
+      <div class="btn-link">Ver Panel de Seguimiento ➔</div>
+    </a>
+
+  </div>
+</div>
+
+</body>
+</html>

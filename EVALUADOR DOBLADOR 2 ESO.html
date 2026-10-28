@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaluador LOMLOE - Doblador de Ropa (2º ESO)</title>
+  
+  <!-- SDK de Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    
+    header {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    }
+    header h1 { font-size: 1.6rem; margin-bottom: 6px; }
+    header p { opacity: 0.9; font-size: 0.95rem; }
+
+    .cloud-status {
+      background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(4px);
+      padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;
+      display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; }
+    .status-dot.online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+
+    .card {
+      background: var(--card-bg); border-radius: 12px; padding: 20px;
+      margin-bottom: 20px; border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .selector-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; align-items: flex-end; }
+    @media (max-width: 600px) { .selector-grid { grid-template-columns: 1fr; } }
+
+    label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 0.9rem; color: #475569; }
+    select {
+      width: 100%; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid var(--border); background-color: #fff; font-size: 1rem;
+    }
+
+    .nav-select-wrapper { display: flex; gap: 6px; align-items: center; }
+    .btn-nav-icon {
+      background: #f1f5f9; border: 1px solid var(--border); color: #334155;
+      padding: 10px 14px; border-radius: 8px; cursor: pointer; font-weight: 700;
+      transition: all 0.15s; font-size: 1rem; flex-shrink: 0;
+    }
+    .btn-nav-icon:hover:not(:disabled) { background: var(--primary); color: white; border-color: var(--primary); }
+    .btn-nav-icon:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .criterio-card { margin-bottom: 20px; border-left: 4px solid var(--primary); }
+    .criterio-header { margin-bottom: 12px; }
+    .criterio-code { font-weight: 700; color: var(--primary); font-size: 0.95rem; }
+    .criterio-title { font-size: 1.05rem; font-weight: 600; margin-top: 2px; }
+    .criterio-desc { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+
+    .rubrica-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px;
+    }
+    @media (max-width: 768px) { .rubrica-grid { grid-template-columns: 1fr 1fr; } }
+
+    .nivel-btn {
+      background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px;
+      padding: 12px; text-align: left; cursor: pointer; transition: all 0.2s;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .nivel-btn:hover { border-color: var(--primary); background: #eff6ff; }
+    .nivel-btn.active {
+      border-color: var(--primary);
+      background-color: #eff6ff; box-shadow: 0 0 0 2px var(--primary);
+    }
+    .nivel-header { font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .nivel-desc { font-size: 0.8rem; color: #334155; }
+
+    .results-card {
+      background: #f0f9ff; border: 1px solid #bae6fd;
+      display: grid; grid-template-columns: 1fr 2fr; gap: 20px; align-items: center;
+    }
+    @media (max-width: 600px) { .results-card { grid-template-columns: 1fr; } }
+
+    .score-box { text-align: center; padding: 16px; background: white; border-radius: 10px; border: 1px solid #7dd3fc; }
+    .score-val { font-size: 2.8rem; font-weight: 800; color: var(--primary-dark); }
+    .score-label { font-size: 0.85rem; font-weight: 600; color: #0369a1; text-transform: uppercase; }
+
+    .seneca-box { background: white; padding: 16px; border-radius: 10px; border: 1px solid #7dd3fc; }
+    .seneca-title { font-weight: 700; font-size: 0.9rem; color: #0369a1; margin-bottom: 8px; }
+    .seneca-list { list-style: none; font-size: 0.9rem; }
+    .seneca-list li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #e0f2fe; }
+    .seneca-list li:last-child { border-bottom: none; }
+    .seneca-mark { font-weight: 700; color: #0284c7; }
+
+    .status-tag {
+      display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 3px 8px;
+      border-radius: 12px; margin-left: 8px;
+    }
+    .status-tag.saved { background: #dcfce7; color: #15803d; }
+    .status-tag.pending { background: #fef3c7; color: #b45309; }
+
+    .quick-nav-bar {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); flex-wrap: wrap;
+    }
+
+    .btn-next-student {
+      background: var(--primary); color: white; padding: 12px 20px; border-radius: 8px;
+      font-weight: 700; border: none; cursor: pointer; transition: background 0.2s;
+      display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem;
+    }
+    .btn-next-student:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn-next-student:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+    .btn-prev-student {
+      background: #64748b; color: white; padding: 12px 20px; border-radius: 8px;
+      font-weight: 600; border: none; cursor: pointer; transition: background 0.2s;
+      display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem;
+    }
+    .btn-prev-student:hover:not(:disabled) { background: #475569; }
+    .btn-prev-student:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+    .table-title-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+    .table-container { overflow-x: auto; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background-color: #f1f5f9; font-weight: 700; color: #334155; }
+    tbody tr { cursor: pointer; transition: background 0.15s; }
+    tbody tr:hover { background-color: #f0f9ff; }
+    tbody tr.active-row { background-color: #e0f2fe; font-weight: 600; }
+    
+    .badge-status { padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .badge-done { background: #dcfce7; color: #166534; }
+    .badge-pending { background: #f3f4f6; color: #6b7280; }
+    .badge-partial { background: #fef3c7; color: #92400e; }
+
+    .stats-bar { display: flex; gap: 20px; font-size: 0.85rem; font-weight: 600; color: #475569; }
+
+    .btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+    .btn {
+      padding: 10px 18px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer;
+      font-size: 0.9rem; transition: background 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: #e2e8f0; color: #334155; }
+    .btn-secondary:hover { background: #cbd5e1; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
+    <div>
+      <h1>Evaluador LOMLOE: Doblador de Ropa Mecanizado</h1>
+      <p>Tecnología y Digitalización - 2º ESO | Colegio La Hispanidad</p>
+    </div>
+    <a href="index.html" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:white; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:700; font-size:0.9rem; display:inline-flex; align-items:center; gap:6px;">🏠 Volver al Inicio</a>
+    <div>
+      <h1>Evaluador LOMLOE: Doblador de Ropa</h1>
+      <p>Tecnología y Digitalización - 2º ESO | Colegio La Hispanidad</p>
+    </div>
+    <div class="cloud-status">
+      <span class="status-dot" id="cloudDot"></span>
+      <span id="cloudStatusText">Conectando a Cloud Firestore...</span>
+    </div>
+  </header>
+
+  <div class="card selector-grid">
+    <div>
+      <label for="grupoSelect">Curso / Grupo:</label>
+      <select id="grupoSelect" onchange="cargarAlumnosGrupo()">
+        <option value="2A">2º ESO A</option>
+        <option value="2B">2º ESO B</option>
+      </select>
+    </div>
+    <div>
+      <label for="alumnoSelect">Alumno / Alumna: <span id="statusBadge"></span></label>
+      <div class="nav-select-wrapper">
+        <button class="btn-nav-icon" id="btnTopPrev" onclick="alumnoAnterior()" title="Alumno Anterior">◄</button>
+        <select id="alumnoSelect" onchange="cargarEvaluacionAlumno()">
+          <!-- Carga dinámica -->
+        </select>
+        <button class="btn-nav-icon" id="btnTopNext" onclick="alumnoSiguiente()" title="Siguiente Alumno">►</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rúbrica Criterio 1 -->
+  <div class="card criterio-card">
+    <div class="criterio-header">
+      <span class="criterio-code">TYD.2.3.1 (Peso: 40%)</span>
+      <div class="criterio-title">Fabricación, Trazado y Seguridad</div>
+      <div class="criterio-desc">Corte preciso del cartón (20x40 cm), montaje de bisagras articuladas y uso seguro del cutter/silicona.</div>
+    </div>
+    <div class="rubrica-grid" id="grid-c1">
+      <div class="nivel-btn" onclick="seleccionarNivel('c1', 2.5, this)">
+        <div class="nivel-header"><span>INSUFICIENTE</span><span>2.5</span></div>
+        <div class="nivel-desc">Cortes muy imprecisos o desiguales. Las bisagras no articulan o se desmontan. Uso inseguro de herramientas.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c1', 5.5, this)">
+        <div class="nivel-header"><span>EN PROCESO</span><span>5.5</span></div>
+        <div class="nivel-desc">Dimensiones con ligeros fallos. Pegado con pequeñas holguras. Uso aceptable del cutter con supervisión.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c1', 8.0, this)">
+        <div class="nivel-header"><span>NOTABLE</span><span>8.0</span></div>
+        <div class="nivel-desc">Paneles bien cortados (20x40 cm). Bisagras funcionales y resistentes. Uso correcto y seguro del taller.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c1', 10.0, this)">
+        <div class="nivel-header"><span>EXCELENTE</span><span>10.0</span></div>
+        <div class="nivel-desc">Corte impecable e idéntico de los 3 paneles. Marcaje central perfecto, articulación fluida y normas 100% cumplidas.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rúbrica Criterio 2 -->
+  <div class="card criterio-card">
+    <div class="criterio-header">
+      <span class="criterio-code">TYD.2.2.2 (Peso: 30%)</span>
+      <div class="criterio-title">Organización y Trabajo Cooperativo</div>
+      <div class="criterio-desc">Planificación del tiempo en la sesión, reparto de tareas y colaboración eficaz dentro del equipo.</div>
+    </div>
+    <div class="rubrica-grid" id="grid-c2">
+      <div class="nivel-btn" onclick="seleccionarNivel('c2', 2.5, this)">
+        <div class="nivel-header"><span>INSUFICIENTE</span><span>2.5</span></div>
+        <div class="nivel-desc">Muestra desorganización, no colabora con el grupo o distrae durante la sesión de taller.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c2', 5.5, this)">
+        <div class="nivel-header"><span>EN PROCESO</span><span>5.5</span></div>
+        <div class="nivel-desc">Asume tareas solo bajo indicación directa. Colaboración justa para terminar la actividad a tiempo.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c2', 8.0, this)">
+        <div class="nivel-header"><span>NOTABLE</span><span>8.0</span></div>
+        <div class="nivel-desc">Trabaja en equipo activamente, respeta los tiempos de la sesión y cuida el material compartido.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c2', 10.0, this)">
+        <div class="nivel-header"><span>EXCELENTE</span><span>10.0</span></div>
+        <div class="nivel-desc">Coordinación y proactividad modélica. Ayuda a optimizar los pasos de fabricación y mantiene el espacio impecable.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rúbrica Criterio 3 -->
+  <div class="card criterio-card">
+    <div class="criterio-header">
+      <span class="criterio-code">TYD.2.1.2 (Peso: 30%)</span>
+      <div class="criterio-title">Funcionalidad y Verificación del Producto</div>
+      <div class="criterio-desc">Comprobación del doblador con prendas de ropa (camisetas/pantalones) logrando un doblado prolijo.</div>
+    </div>
+    <div class="rubrica-grid" id="grid-c3">
+      <div class="nivel-btn" onclick="seleccionarNivel('c3', 2.5, this)">
+        <div class="nivel-header"><span>INSUFICIENTE</span><span>2.5</span></div>
+        <div class="nivel-desc">El doblador se traba o destruye al probarlo. Las camisetas quedan arrugadas o no dobla correctamente.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c3', 5.5, this)">
+        <div class="nivel-header"><span>EN PROCESO</span><span>5.5</span></div>
+        <div class="nivel-desc">Dobla la prenda de forma parcial; requiere recolocar o corregir a mano los pliegues constantemente.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c3', 8.0, this)">
+        <div class="nivel-header"><span>NOTABLE</span><span>8.0</span></div>
+        <div class="nivel-desc">Funciona con fluidez siguiendo la secuencia de 4 pasos. Dobla camisetas obteniendo un resultado limpio.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c3', 10.0, this)">
+        <div class="nivel-header"><span>EXCELENTE</span><span>10.0</span></div>
+        <div class="nivel-desc">Funcionamiento perfecto, rápido y ágil. Permite doblar camisetas y pantalones dejando un acabado impecable.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card results-card">
+    <div class="score-box">
+      <div class="score-label">Nota Proyecto</div>
+      <div class="score-val" id="globalScore">-.-</div>
+    </div>
+    <div class="seneca-box">
+      <div class="seneca-title">NOTAS PARA EL CUADERNO DE SÉNECA:</div>
+      <ul class="seneca-list">
+        <li><span>TYD.2.3.1 (Fabricación y Seguridad)</span> <span class="seneca-mark" id="mark-c1">-.-</span></li>
+        <li><span>TYD.2.2.2 (Trabajo Cooperativo)</span> <span class="seneca-mark" id="mark-c2">-.-</span></li>
+        <li><span>TYD.2.1.2 (Funcionalidad)</span> <span class="seneca-mark" id="mark-c3">-.-</span></li>
+      </ul>
+      
+      <div class="quick-nav-bar">
+        <button class="btn-prev-student" id="btnBottomPrev" onclick="alumnoAnterior()">◄ Alumno Anterior</button>
+        <button class="btn-next-student" id="btnBottomNext" onclick="alumnoSiguiente()">Siguiente Alumno ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-title-area">
+      <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">📊 Cuadro General de Calificaciones (2º ESO)</h2>
+      <div class="stats-bar">
+        <span>Evaluados: <strong id="statEvaluados">0/0</strong></span>
+        <span>Nota Media Grupo: <strong id="statMedia">-.-</strong></span>
+      </div>
+    </div>
+    <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 8px;">Haz clic en cualquier fila para seleccionar y evaluar directamente a ese alumno/a:</p>
+    
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40px;">#</th>
+            <th>Alumno / Alumna</th>
+            <th style="text-align: center;">TYD.2.3.1</th>
+            <th style="text-align: center;">TYD.2.2.2</th>
+            <th style="text-align: center;">TYD.2.1.2</th>
+            <th style="text-align: center;">Nota Final</th>
+            <th style="text-align: center;">Estado</th>
+          </tr>
+        </thead>
+        <tbody id="tablaResumenBody">
+          <!-- Carga dinámica -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="exportarCSV()">📥 Exportar Todo a CSV (Excel)</button>
+      <button class="btn btn-secondary" onclick="abrirImportadorCSV()">📤 Importar Notas desde CSV</button>
+      <input type="file" id="csvFileInput" accept=".csv" onchange="importarCSV(event)" style="display:none;">
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const firebaseConfig = { projectId: "cyberbreakout-hispanidad" };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let localCacheEvaluaciones = {};
+  let unsubscribeListener = null;
+
+  const alumnosData = {
+    "2A": [
+      "Bada Blanco, Ainara", "Bravo Rodríguez, Lucía", "Contreras Santiago, Manuel",
+      "Contreras Santiago, Paula", "Correa Rodríguez, Ainara", "Costa Redondo, Saray",
+      "Cruz Feria, Esteban", "Cuaresma Rodríguez, Indhira", "Cuaresma Rodríguez, Nayma",
+      "De la Luz Patricio, Elena", "Garcia Caparrós, Indira", "Garrido Fernández, Yamileth",
+      "Gómez Brito, Adriana", "Gómez López, Daniella", "Gutiérrez Valencia, Thomas",
+      "López Gómez, Hugo", "López Salguero, Héctor Jesús", "Mora Chico, Hugo",
+      "Mykhailyshyn, Iryna", "Presa Bueno, Luca", "Rengel Padilla, Alejandra",
+      "Reyes Pérez, Francisco José", "Rodríguez Domínguez, Antonio", "Silva López, Ainhoa",
+      "Torrescusa Borrero, Miguel"
+    ],
+    "2B": [
+      "Bautista Lepe, Izan", "Bueno Merino, Indira", "Diallo, Zoumana",
+      "Díaz Pinto, Giulia", "El Hajoui Moustekfy, Ryan", "El Hajoui Moustekfy, Yasmina",
+      "Funes Aranda, Jean Alessandro", "Gil Pire, Camila Sophia", "Gutiérrez Álvarez, Adriano",
+      "Hernández Tarriño, Estrella", "Herrán Góngora, Laura Sofía", "Hierro Masa, Ximena",
+      "Jiménez Vázquez, Indira", "Lemos Del Toro, Alejandro", "Masero Rodríguez, Ana de los Remedios",
+      "Moya Mera, Aitor", "Muñoz López, Yerai", "Núñez Álvarez, Jose",
+      "Pérez Márquez, Juan Marcelo", "Pozo Orta, Julia", "Rodríguez Enríquez, Daniela",
+      "Rodríguez Ospina, Juan David", "Sánchez Alonso, Libertad", "Sánchez Pérez, Erick",
+      "Sola Infantes, Lucía", "Tristán Wert, Aarón"
+    ]
+  };
+
+  let evalActual = { c1: null, c2: null, c3: null };
+
+  function init() {
+    conectarFirestore();
+    cargarAlumnosGrupo();
+  }
+
+  function conectarFirestore() {
+    db.collection("doblador_2eso_notas").limit(1).get()
+      .then(() => {
+        document.getElementById("cloudDot").classList.add("online");
+        document.getElementById("cloudStatusText").textContent = "Nube Conectada (2º ESO)";
+      }).catch(err => {
+        document.getElementById("cloudStatusText").textContent = "Error de Conexión Nube";
+      });
+  }
+
+  function escucharCambiosGrupo(grupo) {
+    if (unsubscribeListener) unsubscribeListener();
+
+    unsubscribeListener = db.collection("doblador_2eso_notas")
+      .where("grupo", "==", grupo)
+      .onSnapshot((snapshot) => {
+        snapshot.forEach((doc) => {
+          localCacheEvaluaciones[doc.id] = doc.data();
+        });
+        cargarEvaluacionAlumno();
+        renderTablaResumen();
+      });
+  }
+
+  function cargarAlumnosGrupo() {
+    const grupo = document.getElementById("grupoSelect").value;
+    const select = document.getElementById("alumnoSelect");
+    select.innerHTML = "";
+    alumnosData[grupo].forEach(alumno => {
+      const opt = document.createElement("option");
+      opt.value = alumno;
+      opt.textContent = alumno;
+      select.appendChild(opt);
+    });
+
+    escucharCambiosGrupo(grupo);
+    cargarEvaluacionAlumno();
+  }
+
+  function alumnoSiguiente() {
+    const select = document.getElementById("alumnoSelect");
+    if (select.selectedIndex < select.options.length - 1) {
+      select.selectedIndex++;
+      cargarEvaluacionAlumno();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  function alumnoAnterior() {
+    const select = document.getElementById("alumnoSelect");
+    if (select.selectedIndex > 0) {
+      select.selectedIndex--;
+      cargarEvaluacionAlumno();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  function actualizarBotonesNav() {
+    const select = document.getElementById("alumnoSelect");
+    const esPrimero = select.selectedIndex === 0;
+    const esUltimo = select.selectedIndex === select.options.length - 1;
+
+    document.getElementById("btnTopPrev").disabled = esPrimero;
+    document.getElementById("btnBottomPrev").disabled = esPrimero;
+
+    document.getElementById("btnTopNext").disabled = esUltimo;
+    document.getElementById("btnBottomNext").disabled = esUltimo;
+  }
+
+  function seleccionarNivel(criterio, valor, btnElem) {
+    evalActual[criterio] = valor;
+    const parent = btnElem.parentElement;
+    Array.from(parent.children).forEach(child => child.classList.remove("active"));
+    btnElem.classList.add("active");
+    
+    guardarAuto();
+  }
+
+  function esNum(v) { return typeof v === 'number' && !isNaN(v); }
+
+  function calcularNotas() {
+    document.getElementById("mark-c1").textContent = esNum(evalActual.c1) ? evalActual.c1.toFixed(1) : "-.-";
+    document.getElementById("mark-c2").textContent = esNum(evalActual.c2) ? evalActual.c2.toFixed(1) : "-.-";
+    document.getElementById("mark-c3").textContent = esNum(evalActual.c3) ? evalActual.c3.toFixed(1) : "-.-";
+
+    if (esNum(evalActual.c1) && esNum(evalActual.c2) && esNum(evalActual.c3)) {
+      const global = (evalActual.c1 * 0.40) + (evalActual.c2 * 0.30) + (evalActual.c3 * 0.30);
+      document.getElementById("globalScore").textContent = global.toFixed(1);
+    } else {
+      document.getElementById("globalScore").textContent = "-.-";
+    }
+  }
+
+  function guardarAuto() {
+    const grupo = document.getElementById("grupoSelect").value;
+    const alumno = document.getElementById("alumnoSelect").value;
+    const docId = `${grupo}_${alumno}`;
+
+    const payload = {
+      ...evalActual,
+      grupo: grupo,
+      alumno: alumno,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    localCacheEvaluaciones[docId] = payload;
+    localStorage.setItem(`doblador_${grupo}_${alumno}`, JSON.stringify(payload));
+
+    db.collection("doblador_2eso_notas").doc(docId).set(payload, { merge: true });
+
+    calcularNotas();
+    actualizarBadgeStatus();
+    renderTablaResumen();
+  }
+
+  function cargarEvaluacionAlumno() {
+    limpiarSeleccion();
+    const grupo = document.getElementById("grupoSelect").value;
+    const alumno = document.getElementById("alumnoSelect").value;
+    const docId = `${grupo}_${alumno}`;
+
+    const data = localCacheEvaluaciones[docId] || JSON.parse(localStorage.getItem(`doblador_${grupo}_${alumno}`));
+
+    if (data) {
+      evalActual = {
+        c1: esNum(data.c1) ? data.c1 : null,
+        c2: esNum(data.c2) ? data.c2 : null,
+        c3: esNum(data.c3) ? data.c3 : null
+      };
+      marcarBoton('grid-c1', evalActual.c1);
+      marcarBoton('grid-c2', evalActual.c2);
+      marcarBoton('grid-c3', evalActual.c3);
+    }
+    calcularNotas();
+    actualizarBadgeStatus();
+    actualizarBotonesNav();
+    renderTablaResumen();
+  }
+
+  function actualizarBadgeStatus() {
+    const badge = document.getElementById("statusBadge");
+    const esCompleto = esNum(evalActual.c1) && esNum(evalActual.c2) && esNum(evalActual.c3);
+    const esParcial = (esNum(evalActual.c1) || esNum(evalActual.c2) || esNum(evalActual.c3)) && !esCompleto;
+
+    if (esCompleto) {
+      badge.innerHTML = `<span class="status-tag saved">✓ Sincronizado Nube</span>`;
+    } else if (esParcial) {
+      badge.innerHTML = `<span class="status-tag pending">⏳ En proceso</span>`;
+    } else {
+      badge.innerHTML = `<span class="status-tag pending" style="background:#f3f4f6; color:#6b7280;">Sin evaluar</span>`;
+    }
+  }
+
+  function marcarBoton(gridId, valor) {
+    if (!esNum(valor)) return;
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    const btns = grid.getElementsByClassName("nivel-btn");
+    for (let btn of btns) {
+      if (btn.innerText.includes(valor.toFixed(1))) {
+        btn.classList.add("active");
+      }
+    }
+  }
+
+  function limpiarSeleccion() {
+    evalActual = { c1: null, c2: null, c3: null };
+    document.querySelectorAll(".nivel-btn").forEach(b => b.classList.remove("active"));
+  }
+
+  function seleccionarAlumnoDirecto(alumnoNombre) {
+    document.getElementById("alumnoSelect").value = alumnoNombre;
+    cargarEvaluacionAlumno();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function renderTablaResumen() {
+    const grupo = document.getElementById("grupoSelect").value;
+    const alumnoActual = document.getElementById("alumnoSelect").value;
+    const tbody = document.getElementById("tablaResumenBody");
+    tbody.innerHTML = "";
+
+    let totalEvaluados = 0;
+    let sumaNotas = 0;
+    const lista = alumnosData[grupo];
+
+    lista.forEach((alumno, idx) => {
+      const docId = `${grupo}_${alumno}`;
+      const data = localCacheEvaluaciones[docId] || JSON.parse(localStorage.getItem(`doblador_${grupo}_${alumno}`));
+      let c1Txt = "-", c2Txt = "-", c3Txt = "-", finalTxt = "-";
+      let statusBadge = `<span class="badge-status badge-pending">Pendiente</span>`;
+      let isSelected = (alumno === alumnoActual);
+
+      if (data) {
+        c1Txt = esNum(data.c1) ? data.c1.toFixed(1) : "-";
+        c2Txt = esNum(data.c2) ? data.c2.toFixed(1) : "-";
+        c3Txt = esNum(data.c3) ? data.c3.toFixed(1) : "-";
+
+        const esCompleto = esNum(data.c1) && esNum(data.c2) && esNum(data.c3);
+        if (esCompleto) {
+          const global = (data.c1 * 0.40) + (data.c2 * 0.30) + (data.c3 * 0.30);
+          finalTxt = global.toFixed(1);
+          statusBadge = `<span class="badge-status badge-done">Evaluado</span>`;
+          totalEvaluados++;
+          sumaNotas += global;
+        } else if (esNum(data.c1) || esNum(data.c2) || esNum(data.c3)) {
+          statusBadge = `<span class="badge-status badge-partial">Parcial</span>`;
+        }
+      }
+
+      const tr = document.createElement("tr");
+      if (isSelected) tr.classList.add("active-row");
+      tr.onclick = () => seleccionarAlumnoDirecto(alumno);
+
+      tr.innerHTML = `
+        <td>${idx + 1}</td>
+        <td><strong>${alumno}</strong></td>
+        <td style="text-align: center;">${c1Txt}</td>
+        <td style="text-align: center;">${c2Txt}</td>
+        <td style="text-align: center;">${c3Txt}</td>
+        <td style="text-align: center; font-weight:700; color:var(--primary-dark);">${finalTxt}</td>
+        <td style="text-align: center;">${statusBadge}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("statEvaluados").textContent = `${totalEvaluados}/${lista.length}`;
+    document.getElementById("statMedia").textContent = totalEvaluados > 0 ? (sumaNotas / totalEvaluados).toFixed(1) : "-.-";
+  }
+
+  function exportarCSV() {
+    let csv = "Grupo;Alumno;TYD.2.3.1 (Fabricacion);TYD.2.2.2 (Equipo);TYD.2.1.2 (Funcionalidad);Nota Final Proyecto\n";
+    ["2A", "2B"].forEach(grupo => {
+      alumnosData[grupo].forEach(alumno => {
+        const docId = `${grupo}_${alumno}`;
+        const data = localCacheEvaluaciones[docId] || JSON.parse(localStorage.getItem(`doblador_${grupo}_${alumno}`));
+        if (data) {
+          const c1 = esNum(data.c1) ? data.c1 : "";
+          const c2 = esNum(data.c2) ? data.c2 : "";
+          const c3 = esNum(data.c3) ? data.c3 : "";
+          let final = "";
+          if (c1 !== "" && c2 !== "" && c3 !== "") {
+            final = ((data.c1 * 0.40) + (data.c2 * 0.30) + (data.c3 * 0.30)).toFixed(1);
+          }
+          csv += `${grupo};"${alumno}";${c1};${c2};${c3};${final}\n`;
+        }
+      });
+    });
+
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "evaluacion_doblador_ropa_2ESO_Firestore.csv";
+    link.click();
+  }
+
+  function abrirImportadorCSV() {
+    document.getElementById('csvFileInput').click();
+  }
+
+  function parseCSVLine(text, delimiter = ';') {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === delimiter && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  }
+
+  function importarCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const lines = e.target.result.split(/\r?\n/);
+      let importados = 0;
+      const promises = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const cols = parseCSVLine(line, ';');
+        if (cols.length < 5) continue;
+
+        const grupo = cols[0].replace(/"/g, '').trim();
+        const alumno = cols[1].replace(/"/g, '').trim();
+        const c1 = parseFloat(cols[2].replace(',', '.'));
+        const c2 = parseFloat(cols[3].replace(',', '.'));
+        const c3 = parseFloat(cols[4].replace(',', '.'));
+
+        if (!grupo || !alumno) continue;
+
+        const docId = `${grupo}_${alumno}`;
+        const payload = {
+          grupo: grupo,
+          alumno: alumno,
+          c1: !isNaN(c1) ? c1 : null,
+          c2: !isNaN(c2) ? c2 : null,
+          c3: !isNaN(c3) ? c3 : null,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        localCacheEvaluaciones[docId] = payload;
+        localStorage.setItem(`doblador_${grupo}_${alumno}`, JSON.stringify(payload));
+        promises.push(db.collection("doblador_2eso_notas").doc(docId).set(payload, { merge: true }));
+        importados++;
+      }
+
+      Promise.all(promises).then(() => {
+        alert(`¡Importación completada! Se han subido ${importados} registros de 2º ESO a Cloud Firestore.`);
+        cargarEvaluacionAlumno();
+        renderTablaResumen();
+      }).catch(err => {
+        console.error(err);
+        alert("Ocurrió un error al subir los datos a Firestore.");
+      });
+    };
+    reader.readAsText(file, "UTF-8");
+    event.target.value = '';
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+</script>
+
+</body>
+</html>

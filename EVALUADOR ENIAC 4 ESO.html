@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaluador LOMLOE - De ENIAC a la Nube (4º ESO)</title>
+  
+  <!-- SDK de Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --team-accent: #0284c7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    
+    header {
+      background: linear-gradient(135deg, #0f172a, #2563eb);
+      color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    }
+    header h1 { font-size: 1.6rem; margin-bottom: 6px; }
+    header p { opacity: 0.9; font-size: 0.95rem; }
+
+    .cloud-status {
+      background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(4px);
+      padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;
+      display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; }
+    .status-dot.online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+
+    .card {
+      background: var(--card-bg); border-radius: 12px; padding: 20px;
+      margin-bottom: 20px; border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .selector-grid { display: grid; grid-template-columns: 1fr 2fr 1.6fr; gap: 16px; align-items: flex-end; }
+    @media (max-width: 850px) { .selector-grid { grid-template-columns: 1fr; } }
+
+    label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 0.9rem; color: #475569; }
+    select {
+      width: 100%; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid var(--border); background-color: #fff; font-size: 1rem;
+    }
+
+    .nav-select-wrapper { display: flex; gap: 6px; align-items: center; }
+    .btn-nav-icon {
+      background: #f1f5f9; border: 1px solid var(--border); color: #334155;
+      padding: 10px 14px; border-radius: 8px; cursor: pointer; font-weight: 700;
+      transition: all 0.15s; font-size: 1rem; flex-shrink: 0;
+    }
+    .btn-nav-icon:hover:not(:disabled) { background: var(--primary); color: white; border-color: var(--primary); }
+    .btn-nav-icon:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .team-panel {
+      background: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 8px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .team-toggle-box {
+      display: flex; align-items: center; gap: 8px; font-size: 0.88rem; font-weight: 700; color: #0369a1; cursor: pointer;
+    }
+    .team-toggle-box input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
+
+    .criterio-card { margin-bottom: 20px; border-left: 4px solid var(--primary); }
+    .criterio-header { margin-bottom: 12px; }
+    .criterio-code { font-weight: 700; color: var(--primary); font-size: 0.95rem; }
+    .criterio-title { font-size: 1.05rem; font-weight: 600; margin-top: 2px; }
+    .criterio-desc { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+
+    .rubrica-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px;
+    }
+    @media (max-width: 768px) { .rubrica-grid { grid-template-columns: 1fr 1fr; } }
+
+    .nivel-btn {
+      background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px;
+      padding: 12px; text-align: left; cursor: pointer; transition: all 0.2s;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .nivel-btn:hover { border-color: var(--primary); background: #eff6ff; }
+    .nivel-btn.active {
+      border-color: var(--primary);
+      background-color: #eff6ff; box-shadow: 0 0 0 2px var(--primary);
+    }
+    .nivel-header { font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .nivel-desc { font-size: 0.8rem; color: #334155; }
+
+    .results-card {
+      background: #f0f9ff; border: 1px solid #bae6fd;
+      display: grid; grid-template-columns: 1fr 2fr; gap: 20px; align-items: center;
+    }
+    @media (max-width: 600px) { .results-card { grid-template-columns: 1fr; } }
+
+    .score-box { text-align: center; padding: 16px; background: white; border-radius: 10px; border: 1px solid #7dd3fc; }
+    .score-val { font-size: 2.8rem; font-weight: 800; color: var(--primary-dark); }
+    .score-label { font-size: 0.85rem; font-weight: 600; color: #0369a1; text-transform: uppercase; }
+
+    .seneca-box { background: white; padding: 16px; border-radius: 10px; border: 1px solid #7dd3fc; }
+    .seneca-title { font-weight: 700; font-size: 0.9rem; color: #0369a1; margin-bottom: 8px; }
+    .seneca-list { list-style: none; font-size: 0.88rem; }
+    .seneca-list li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #e0f2fe; }
+    .seneca-list li:last-child { border-bottom: none; }
+    .seneca-mark { font-weight: 700; color: #0284c7; }
+
+    .status-tag {
+      display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 3px 8px;
+      border-radius: 12px; margin-left: 8px;
+    }
+    .status-tag.saved { background: #dcfce7; color: #15803d; }
+    .status-tag.pending { background: #fef3c7; color: #b45309; }
+    .status-tag.team-sync { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
+
+    .quick-nav-bar {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); flex-wrap: wrap;
+    }
+
+    .btn-next-student {
+      background: var(--primary); color: white; padding: 12px 20px; border-radius: 8px;
+      font-weight: 700; border: none; cursor: pointer; transition: background 0.2s;
+      display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem;
+    }
+    .btn-next-student:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn-next-student:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+    .btn-prev-student {
+      background: #64748b; color: white; padding: 12px 20px; border-radius: 8px;
+      font-weight: 600; border: none; cursor: pointer; transition: background 0.2s;
+      display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem;
+    }
+    .btn-prev-student:hover:not(:disabled) { background: #475569; }
+    .btn-prev-student:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+    .table-title-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+    .table-container { overflow-x: auto; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background-color: #f1f5f9; font-weight: 700; color: #334155; }
+    tbody tr { cursor: pointer; transition: background 0.15s; }
+    tbody tr:hover { background-color: #f0f9ff; }
+    tbody tr.active-row { background-color: #e0f2fe; font-weight: 600; }
+    
+    .badge-status { padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .badge-done { background: #dcfce7; color: #166534; }
+    .badge-pending { background: #f3f4f6; color: #6b7280; }
+    .badge-partial { background: #fef3c7; color: #92400e; }
+
+    .badge-team { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
+    .badge-team.none { background: #f1f5f9; color: #94a3b8; font-weight: 400; }
+
+    .stats-bar { display: flex; gap: 20px; font-size: 0.85rem; font-weight: 600; color: #475569; }
+
+    .btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+    .btn {
+      padding: 10px 18px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer;
+      font-size: 0.9rem; transition: background 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: #e2e8f0; color: #334155; }
+    .btn-secondary:hover { background: #cbd5e1; }
+
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px);
+      display: flex; justify-content: center; align-items: center; z-index: 1000;
+      padding: 20px;
+    }
+    .modal-card {
+      background: white; border-radius: 12px; width: 100%; max-width: 650px;
+      max-height: 85vh; display: flex; flex-direction: column;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      padding: 16px 20px; background: #f8fafc; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; border-radius: 12px 12px 0 0;
+    }
+    .modal-header h3 { font-size: 1.1rem; color: #0f172a; }
+    .btn-close-modal { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b; }
+    .modal-body { padding: 16px 20px; overflow-y: auto; flex-grow: 1; }
+    .modal-footer {
+      padding: 16px 20px; background: #f8fafc; border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; gap: 10px; border-radius: 0 0 12px 12px;
+    }
+    .team-grid-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 550px) { .team-grid-list { grid-template-columns: 1fr; } }
+    .team-row-item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;
+    }
+    .team-row-item span { font-size: 0.85rem; font-weight: 600; color: #334155; }
+    .team-row-item select { width: auto; padding: 4px 8px; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
+    <div>
+      <h1>Evaluador LOMLOE: De ENIAC a la Nube</h1>
+      <p>Digitalización - 4º ESO | Colegio La Hispanidad</p>
+    </div>
+    <a href="index.html" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:white; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:700; font-size:0.9rem; display:inline-flex; align-items:center; gap:6px;">🏠 Volver al Inicio</a>
+    <div>
+      <h1>Evaluador LOMLOE: De ENIAC a la Nube</h1>
+      <p>Digitalización - 4º ESO | Colegio La Hispanidad</p>
+    </div>
+    <div class="cloud-status">
+      <span class="status-dot" id="cloudDot"></span>
+      <span id="cloudStatusText">Conectando a Cloud Firestore...</span>
+    </div>
+  </header>
+
+  <div class="card selector-grid">
+    <div>
+      <label for="grupoSelect">Curso / Grupo:</label>
+      <select id="grupoSelect" onchange="cargarAlumnosGrupo()">
+        <option value="4A">4º ESO A</option>
+        <option value="4B">4º ESO B</option>
+      </select>
+    </div>
+    
+    <div>
+      <label for="alumnoSelect">Alumno / Alumna: <span id="statusBadge"></span></label>
+      <div class="nav-select-wrapper">
+        <button class="btn-nav-icon" id="btnTopPrev" onclick="alumnoAnterior()" title="Alumno Anterior">◄</button>
+        <select id="alumnoSelect" onchange="cargarEvaluacionAlumno()"></select>
+        <button class="btn-nav-icon" id="btnTopNext" onclick="alumnoSiguiente()" title="Siguiente Alumno">►</button>
+      </div>
+    </div>
+
+    <div class="team-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.85rem; font-weight:700; color:#0369a1;">Gestión de Equipos:</span>
+        <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.78rem;" onclick="abrirGestorEquipos()">⚙️ Gestor de Equipos</button>
+      </div>
+      <label class="team-toggle-box">
+        <input type="checkbox" id="chkReplicarEquipo" onchange="actualizarBadgeStatus()">
+        <span>🔗 Replicar nota al Equipo</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Criterio 1 -->
+  <div class="card criterio-card">
+    <div class="criterio-header">
+      <span class="criterio-code">DIG.4.1.3 (Peso: 20%)</span>
+      <div class="criterio-title">Arquitectura Hardware y Evolución Tecnológica</div>
+      <div class="criterio-desc">Identificación de componentes físicos históricos (válvulas, transistores, microprocesadores) y resolución de dudas técnicas.</div>
+    </div>
+    <div class="rubrica-grid" id="grid-c1">
+      <div class="nivel-btn" onclick="seleccionarNivel('c1', 2.5, this)">
+        <div class="nivel-header"><span>INSUFICIENTE</span><span>2.5</span></div>
+        <div class="nivel-desc">Confunde componentes básicos de la evolución del hardware o muestra vacíos conceptuales graves.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c1', 5.5, this)">
+        <div class="nivel-header"><span>EN PROCESO</span><span>5.5</span></div>
+        <div class="nivel-desc">Diferencia componentes principales (de ENIAC a PCs), aunque requiere apoyo técnico puntual.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c1', 8.0, this)">
+        <div class="nivel-header"><span>NOTABLE</span><span>8.0</span></div>
+        <div class="nivel-desc">Explica con claridad la evolución de los componentes y comprende la relación entre hardware y potencia de cálculo.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c1', 10.0, this)">
+        <div class="nivel-header"><span>EXCELENTE</span><span>10.0</span></div>
+        <div class="nivel-desc">Domina la evolución arquitectónica del hardware con precisión técnica y soluciona problemas de análisis con autonomía.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Criterio 2 -->
+  <div class="card criterio-card">
+    <div class="criterio-header">
+      <span class="criterio-code">DIG.4.2.2 (Peso: 15%)</span>
+      <div class="criterio-title">Búsqueda, Selección y Filtrado de Información</div>
+      <div class="criterio-desc">Investigación documentada sobre hitos tecnológicos, contraste de fuentes y curación crítica de contenidos.</div>
+    </div>
+    <div class="rubrica-grid" id="grid-c2">
+      <div class="nivel-btn" onclick="seleccionarNivel('c2', 2.5, this)">
+        <div class="nivel-header"><span>INSUFICIENTE</span><span>2.5</span></div>
+        <div class="nivel-desc">Copia información sin verificar fuentes ni filtrar contenidos relevantes para el trabajo.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c2', 5.5, this)">
+        <div class="nivel-header"><span>EN PROCESO</span><span>5.5</span></div>
+        <div class="nivel-desc">Busca información en fuentes estándar y selecciona datos correctos pero sin contraste crítico profundo.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c2', 8.0, this)">
+        <div class="nivel-header"><span>NOTABLE</span><span>8.0</span></div>
+        <div class="nivel-desc">Selecciona y contrasta fuentes fidedignas con sentido crítico, organizando la información adecuadamente.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c2', 10.0, this)">
+        <div class="nivel-header"><span>EXCELENTE</span><span>10.0</span></div>
+        <div class="nivel-desc">Curación de contenidos impecable. Utiliza fuentes académicas/técnicas avanzadas y fundamenta cada hallazgo.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Criterio 3 -->
+  <div class="card criterio-card">
+    <div class="criterio-header">
+      <span class="criterio-code">DIG.4.2.3 (Peso: 25%)</span>
+      <div class="criterio-title">Creación de Contenidos y Licencias Abiertas</div>
+      <div class="criterio-desc">Elaboración de la presentación/informe interactivo, integración multimedia y respeto estricto de licencias Creative Commons/Copyright.</div>
+    </div>
+    <div class="rubrica-grid" id="grid-c3">
+      <div class="nivel-btn" onclick="seleccionarNivel('c3', 2.5, this)">
+        <div class="nivel-header"><span>INSUFICIENTE</span><span>2.5</span></div>
+        <div class="nivel-desc">Contenido muy pobre o descuidado. Omite citas de autoría o usa imágenes/recursos con copyright sin permiso.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c3', 5.5, this)">
+        <div class="nivel-header"><span>EN PROCESO</span><span>5.5</span></div>
+        <div class="nivel-desc">Producto digital funcional. Incluye algunas licencias y referencias, aunque con omisiones menores.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c3', 8.0, this)">
+        <div class="nivel-header"><span>NOTABLE</span><span>8.0</span></div>
+        <div class="nivel-desc">Contenido creativo, atractivo y bien estructurado. Respeta los derechos de autor y cita adecuadamente.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c3', 10.0, this)">
+        <div class="nivel-header"><span>EXCELENTE</span><span>10.0</span></div>
+        <div class="nivel-desc">Producto interactivo de calidad profesional. Integración multimedia perfecta y atribución impecable de licencias CC.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Criterio 4 -->
+  <div class="card criterio-card">
+    <div class="criterio-header">
+      <span class="criterio-code">DIG.4.2.4 (Peso: 15%)</span>
+      <div class="criterio-title">Expresión Oral y Trabajo Colaborativo Virtual</div>
+      <div class="criterio-desc">Exposición clara de conclusiones y comunicación fluida en las herramientas colaborativas (Classroom/Drive).</div>
+    </div>
+    <div class="rubrica-grid" id="grid-c4">
+      <div class="nivel-btn" onclick="seleccionarNivel('c4', 2.5, this)">
+        <div class="nivel-header"><span>INSUFICIENTE</span><span>2.5</span></div>
+        <div class="nivel-desc">Expresión confusa durante la presentación o escasa participación en las herramientas del equipo.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c4', 5.5, this)">
+        <div class="nivel-header"><span>EN PROCESO</span><span>5.5</span></div>
+        <div class="nivel-desc">Exposición aceptable y participación en el entorno virtual ajustada a lo requerido.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c4', 8.0, this)">
+        <div class="nivel-header"><span>NOTABLE</span><span>8.0</span></div>
+        <div class="nivel-desc">Buena soltura expresiva, comunicación adaptada a la audiencia y trabajo activo en la plataforma virtual.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c4', 10.0, this)">
+        <div class="nivel-header"><span>EXCELENTE</span><span>10.0</span></div>
+        <div class="nivel-desc">Exposición brillante, rigurosa y dinámica. Liderazgo positivo e interacción modélica en entornos compartidos.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Criterio 5 -->
+  <div class="card criterio-card">
+    <div class="criterio-header">
+      <span class="criterio-code">DIG.4.4.4 (Peso: 25%)</span>
+      <div class="criterio-title">Análisis Ecosocial y Sostenibilidad Digital</div>
+      <div class="criterio-desc">Valoración crítica del impacto ambiental de los Data Centers, huella de carbono digital, obsolescencia y brecha de acceso.</div>
+    </div>
+    <div class="rubrica-grid" id="grid-c5">
+      <div class="nivel-btn" onclick="seleccionarNivel('c5', 2.5, this)">
+        <div class="nivel-header"><span>INSUFICIENTE</span><span>2.5</span></div>
+        <div class="nivel-desc">No reflexiona sobre el coste energético ni el impacto medioambiental de la nube y el consumo tecnológico.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c5', 5.5, this)">
+        <div class="nivel-header"><span>EN PROCESO</span><span>5.5</span></div>
+        <div class="nivel-desc">Identifica aspectos básicos del consumo de los servidores y propone hábitos razonables de sostenibilidad digital.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c5', 8.0, this)">
+        <div class="nivel-header"><span>NOTABLE</span><span>8.0</span></div>
+        <div class="nivel-desc">Analiza de forma crítica la huella de carbono digital, el enfriamiento de Data Centers y propone medidas ecosociales.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c5', 10.0, this)">
+        <div class="nivel-header"><span>EXCELENTE</span><span>10.0</span></div>
+        <div class="nivel-desc">Reflexión ecosocial profunda y cuantitativa sobre el modelo digital global, proponiendo alternativas éticas y sostenibles.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card results-card">
+    <div class="score-box">
+      <div class="score-label">Nota Proyecto</div>
+      <div class="score-val" id="globalScore">-.-</div>
+    </div>
+    <div class="seneca-box">
+      <div class="seneca-title">NOTAS PARA EL CUADERNO DE SÉNECA:</div>
+      <ul class="seneca-list">
+        <li><span>DIG.4.1.3 (Hardware y Evolución)</span> <span class="seneca-mark" id="mark-c1">-.-</span></li>
+        <li><span>DIG.4.2.2 (Búsqueda e Información)</span> <span class="seneca-mark" id="mark-c2">-.-</span></li>
+        <li><span>DIG.4.2.3 (Creación y Licencias)</span> <span class="seneca-mark" id="mark-c3">-.-</span></li>
+        <li><span>DIG.4.2.4 (Exposición y Colaboración)</span> <span class="seneca-mark" id="mark-c4">-.-</span></li>
+        <li><span>DIG.4.4.4 (Análisis Ecosocial)</span> <span class="seneca-mark" id="mark-c5">-.-</span></li>
+      </ul>
+      
+      <div class="quick-nav-bar">
+        <button class="btn-prev-student" id="btnBottomPrev" onclick="alumnoAnterior()">◄ Alumno Anterior</button>
+        <button class="btn-next-student" id="btnBottomNext" onclick="alumnoSiguiente()">Siguiente Alumno ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-title-area">
+      <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">📊 Cuadro General de Calificaciones (4º ESO)</h2>
+      <div class="stats-bar">
+        <span>Evaluados: <strong id="statEvaluados">0/0</strong></span>
+        <span>Nota Media Grupo: <strong id="statMedia">-.-</strong></span>
+      </div>
+    </div>
+    
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 35px;">#</th>
+            <th>Alumno / Alumna</th>
+            <th style="text-align: center;">Equipo</th>
+            <th style="text-align: center;">4.1.3</th>
+            <th style="text-align: center;">4.2.2</th>
+            <th style="text-align: center;">4.2.3</th>
+            <th style="text-align: center;">4.2.4</th>
+            <th style="text-align: center;">4.4.4</th>
+            <th style="text-align: center;">Nota Final</th>
+            <th style="text-align: center;">Estado</th>
+          </tr>
+        </thead>
+        <tbody id="tablaResumenBody"></tbody>
+      </table>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="exportarCSV()">📥 Exportar Todo a CSV (Excel)</button>
+      <button class="btn btn-secondary" onclick="abrirImportadorCSV()">📤 Importar Notas desde CSV</button>
+      <button class="btn btn-secondary" onclick="abrirGestorEquipos()">⚙️ Gestor Rápido de Equipos</button>
+      <input type="file" id="csvFileInput" accept=".csv" onchange="importarCSV(event)" style="display:none;">
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal Gestor de Equipos -->
+<div id="modalGestorEquipos" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>⚙️ Gestor Rápido de Equipos (<span id="modalGrupoLabel">4º ESO A</span>)</h3>
+      <button class="btn-close-modal" onclick="cerrarGestorEquipos()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="team-grid-list" id="modalEquiposList"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="resetearEquiposGrupo()">🗑️ Limpiar Todos los Equipos</button>
+      <button class="btn btn-primary" onclick="cerrarGestorEquipos()">✓ Guardar y Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const firebaseConfig = { projectId: "cyberbreakout-hispanidad" };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let localCacheEvaluaciones = {};
+  let localCacheEquipos = {};
+  let unsubscribeListener = null;
+
+  const alumnosData = {
+    "4A": [
+      "Arazo Pérez, Nahyra", "Bacedoni Camero, Minerva", "Cáceres Cruz, Andrea",
+      "Castellano Díaz, Paula", "De la Rosa Paredes, Claudia", "González Rodríguez, Miguel Ángel",
+      "López Borrero, José Francisco", "Luardo Pérez, David", "Marín García, Yaiza",
+      "Márquez Domínguez, Natalia", "Martin Gómez, Alicia", "Oliva Pernil, Eva",
+      "Ortiz Azaustre, Claudia", "Palomares Magro, Juan Manuel", "Paredes Díaz, Ainhoa",
+      "Paredes Gil, Sergio", "Pavón Barrera, Andrea", "Pérez Calvo, Angelo",
+      "Torrado Ternero, Estela"
+    ],
+    "4B": [
+      "Araujo Carrasco, José Manuel", "Borrero De Paula, José Antonio", "Boulal, Jilali",
+      "Escudero Limón, Daniela", "Kykish Toporovska, Diana", "Lobato Ramos, Hugo",
+      "Martin Venegas, Ester", "Naranjo Romero, Aitana", "Pérez Rodríguez, Pablo",
+      "Rivero Hernández, Diego Alejandro", "Rivero Hernández, Enrique Alejandro", "Rodríguez Brejano, Alexys",
+      "Salazar Fernández, Yamilet", "Sánchez Lozada, Sergio Enrique", "Sánchez Pérez, Induara",
+      "Sánchez Ternero, Alejandro", "Soto García, Ángela", "Terrón Quintero, José Antonio",
+      "Torres Hernández, Javier", "Wert Hermoso, Laura"
+    ]
+  };
+
+  const opcionesEquipos = ["Sin Equipo", "Equipo 1", "Equipo 2", "Equipo 3", "Equipo 4", "Equipo 5", "Equipo 6", "Equipo 7", "Equipo 8"];
+  let evalActual = { c1: null, c2: null, c3: null, c4: null, c5: null };
+
+  function init() {
+    conectarFirestore();
+    cargarAlumnosGrupo();
+  }
+
+  function conectarFirestore() {
+    db.collection("eniac_4eso_notas").limit(1).get()
+      .then(() => {
+        document.getElementById("cloudDot").classList.add("online");
+        document.getElementById("cloudStatusText").textContent = "Nube Conectada (4º ESO)";
+      }).catch(() => {
+        document.getElementById("cloudStatusText").textContent = "Error de Conexión Nube";
+      });
+  }
+
+  function escucharCambiosGrupo(grupo) {
+    if (unsubscribeListener) unsubscribeListener();
+
+    unsubscribeListener = db.collection("eniac_4eso_notas")
+      .where("grupo", "==", grupo)
+      .onSnapshot((snapshot) => {
+        snapshot.forEach((doc) => {
+          localCacheEvaluaciones[doc.id] = doc.data();
+        });
+        cargarEvaluacionAlumno();
+        renderTablaResumen();
+      });
+
+    db.collection("eniac_4eso_equipos")
+      .where("grupo", "==", grupo)
+      .onSnapshot((snapshot) => {
+        snapshot.forEach((doc) => {
+          localCacheEquipos[doc.id] = doc.data().equipo;
+        });
+        renderTablaResumen();
+      });
+  }
+
+  function cargarAlumnosGrupo() {
+    const grupo = document.getElementById("grupoSelect").value;
+    const select = document.getElementById("alumnoSelect");
+    select.innerHTML = "";
+    alumnosData[grupo].forEach(alumno => {
+      const opt = document.createElement("option"); opt.value = alumno; opt.textContent = alumno;
+      select.appendChild(opt);
+    });
+
+    escucharCambiosGrupo(grupo);
+    cargarEvaluacionAlumno();
+  }
+
+  function getEquipoAlumno(grupo, alumno) {
+    const docId = `${grupo}_${alumno}`;
+    if (localCacheEquipos[docId]) return localCacheEquipos[docId];
+    return localStorage.getItem(`eniac_team_${docId}`) || "Sin Equipo";
+  }
+
+  function guardarEquipoAlumno(grupo, alumno, equipo) {
+    const docId = `${grupo}_${alumno}`;
+    localCacheEquipos[docId] = equipo;
+    localStorage.setItem(`eniac_team_${docId}`, equipo);
+
+    db.collection("eniac_4eso_equipos").doc(docId).set({
+      grupo, alumno, equipo, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  function abrirGestorEquipos() {
+    const grupo = document.getElementById("grupoSelect").value;
+    document.getElementById("modalGrupoLabel").textContent = grupo === "4A" ? "4º ESO A" : "4º ESO B";
+    const container = document.getElementById("modalEquiposList");
+    container.innerHTML = "";
+
+    alumnosData[grupo].forEach(alumno => {
+      const eqActual = getEquipoAlumno(grupo, alumno);
+      const item = document.createElement("div"); item.className = "team-row-item";
+      let optsHtml = "";
+      opcionesEquipos.forEach(eq => {
+        optsHtml += `<option value="${eq}" ${eq === eqActual ? "selected" : ""}>${eq}</option>`;
+      });
+      item.innerHTML = `<span>${alumno}</span><select onchange="guardarEquipoAlumno('${grupo}', '${alumno}', this.value); renderTablaResumen();">${optsHtml}</select>`;
+      container.appendChild(item);
+    });
+    document.getElementById("modalGestorEquipos").style.display = "flex";
+  }
+
+  function cerrarGestorEquipos() { document.getElementById("modalGestorEquipos").style.display = "none"; renderTablaResumen(); }
+
+  function resetearEquiposGrupo() {
+    if (confirm("¿Quieres borrar la asignación de todos los equipos para este grupo?")) {
+      const grupo = document.getElementById("grupoSelect").value;
+      alumnosData[grupo].forEach(alumno => guardarEquipoAlumno(grupo, alumno, "Sin Equipo"));
+      abrirGestorEquipos();
+      renderTablaResumen();
+    }
+  }
+
+  function alumnoSiguiente() {
+    const select = document.getElementById("alumnoSelect");
+    if (select.selectedIndex < select.options.length - 1) { select.selectedIndex++; cargarEvaluacionAlumno(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  }
+
+  function alumnoAnterior() {
+    const select = document.getElementById("alumnoSelect");
+    if (select.selectedIndex > 0) { select.selectedIndex--; cargarEvaluacionAlumno(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  }
+
+  function seleccionarNivel(criterio, valor, btnElem) {
+    evalActual[criterio] = valor;
+    Array.from(btnElem.parentElement.children).forEach(child => child.classList.remove("active"));
+    btnElem.classList.add("active");
+    guardarAuto();
+
+    if (document.getElementById("chkReplicarEquipo").checked) {
+      const grupo = document.getElementById("grupoSelect").value;
+      const alumnoActual = document.getElementById("alumnoSelect").value;
+      const equipoActual = getEquipoAlumno(grupo, alumnoActual);
+
+      if (equipoActual !== "Sin Equipo") {
+        alumnosData[grupo].forEach(alumno => {
+          if (alumno !== alumnoActual && getEquipoAlumno(grupo, alumno) === equipoActual) {
+            const docId = `${grupo}_${alumno}`;
+            let evTarget = localCacheEvaluaciones[docId] || { c1: null, c2: null, c3: null, c4: null, c5: null };
+            evTarget[criterio] = valor; evTarget.grupo = grupo; evTarget.alumno = alumno;
+            localCacheEvaluaciones[docId] = evTarget;
+            db.collection("eniac_4eso_notas").doc(docId).set({ ...evTarget, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+          }
+        });
+        renderTablaResumen();
+      }
+    }
+  }
+
+  function esNum(v) { return typeof v === 'number' && !isNaN(v); }
+
+  function calcularNotas() {
+    document.getElementById("mark-c1").textContent = esNum(evalActual.c1) ? evalActual.c1.toFixed(1) : "-.-";
+    document.getElementById("mark-c2").textContent = esNum(evalActual.c2) ? evalActual.c2.toFixed(1) : "-.-";
+    document.getElementById("mark-c3").textContent = esNum(evalActual.c3) ? evalActual.c3.toFixed(1) : "-.-";
+    document.getElementById("mark-c4").textContent = esNum(evalActual.c4) ? evalActual.c4.toFixed(1) : "-.-";
+    document.getElementById("mark-c5").textContent = esNum(evalActual.c5) ? evalActual.c5.toFixed(1) : "-.-";
+
+    if (esNum(evalActual.c1) && esNum(evalActual.c2) && esNum(evalActual.c3) && esNum(evalActual.c4) && esNum(evalActual.c5)) {
+      const global = (evalActual.c1 * 0.20) + (evalActual.c2 * 0.15) + (evalActual.c3 * 0.25) + (evalActual.c4 * 0.15) + (evalActual.c5 * 0.25);
+      document.getElementById("globalScore").textContent = global.toFixed(1);
+    } else {
+      document.getElementById("globalScore").textContent = "-.-";
+    }
+  }
+
+  function guardarAuto() {
+    const grupo = document.getElementById("grupoSelect").value;
+    const alumno = document.getElementById("alumnoSelect").value;
+    const docId = `${grupo}_${alumno}`;
+
+    const payload = { ...evalActual, grupo, alumno, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+    localCacheEvaluaciones[docId] = payload;
+    localStorage.setItem(`eniac_${grupo}_${alumno}`, JSON.stringify(payload));
+
+    db.collection("eniac_4eso_notas").doc(docId).set(payload, { merge: true });
+
+    calcularNotas();
+    actualizarBadgeStatus();
+    renderTablaResumen();
+  }
+
+  function cargarEvaluacionAlumno() {
+    evalActual = { c1: null, c2: null, c3: null, c4: null, c5: null };
+    document.querySelectorAll(".nivel-btn").forEach(b => b.classList.remove("active"));
+
+    const grupo = document.getElementById("grupoSelect").value;
+    const alumno = document.getElementById("alumnoSelect").value;
+    const docId = `${grupo}_${alumno}`;
+
+    const data = localCacheEvaluaciones[docId] || JSON.parse(localStorage.getItem(`eniac_${grupo}_${alumno}`));
+
+    if (data) {
+      evalActual = {
+        c1: esNum(data.c1) ? data.c1 : null, c2: esNum(data.c2) ? data.c2 : null,
+        c3: esNum(data.c3) ? data.c3 : null, c4: esNum(data.c4) ? data.c4 : null,
+        c5: esNum(data.c5) ? data.c5 : null
+      };
+      marcarBoton('grid-c1', evalActual.c1); marcarBoton('grid-c2', evalActual.c2);
+      marcarBoton('grid-c3', evalActual.c3); marcarBoton('grid-c4', evalActual.c4);
+      marcarBoton('grid-c5', evalActual.c5);
+    }
+    calcularNotas();
+    actualizarBadgeStatus();
+    renderTablaResumen();
+  }
+
+  function actualizarBadgeStatus() {
+    const badge = document.getElementById("statusBadge");
+    const esCompleto = esNum(evalActual.c1) && esNum(evalActual.c2) && esNum(evalActual.c3) && esNum(evalActual.c4) && esNum(evalActual.c5);
+    const esParcial = (esNum(evalActual.c1) || esNum(evalActual.c2) || esNum(evalActual.c3) || esNum(evalActual.c4) || esNum(evalActual.c5)) && !esCompleto;
+
+    let syncHtml = document.getElementById("chkReplicarEquipo").checked ? `<span class="status-tag team-sync">🔗 Replicando al Equipo</span>` : ``;
+
+    if (esCompleto) {
+      badge.innerHTML = `<span class="status-tag saved">✓ Sincronizado Nube</span>${syncHtml}`;
+    } else if (esParcial) {
+      badge.innerHTML = `<span class="status-tag pending">⏳ En proceso</span>${syncHtml}`;
+    } else {
+      badge.innerHTML = `<span class="status-tag pending" style="background:#f3f4f6; color:#6b7280;">Sin evaluar</span>${syncHtml}`;
+    }
+  }
+
+  function marcarBoton(gridId, valor) {
+    if (!esNum(valor)) return;
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    for (let btn of grid.getElementsByClassName("nivel-btn")) {
+      if (btn.innerText.includes(valor.toFixed(1))) btn.classList.add("active");
+    }
+  }
+
+  function renderTablaResumen() {
+    const grupo = document.getElementById("grupoSelect").value;
+    const alumnoActual = document.getElementById("alumnoSelect").value;
+    const tbody = document.getElementById("tablaResumenBody");
+    tbody.innerHTML = "";
+
+    let totalEvaluados = 0;
+    let sumaNotas = 0;
+
+    alumnosData[grupo].forEach((alumno, idx) => {
+      const docId = `${grupo}_${alumno}`;
+      const equipo = getEquipoAlumno(grupo, alumno);
+      const data = localCacheEvaluaciones[docId] || JSON.parse(localStorage.getItem(`eniac_${grupo}_${alumno}`));
+
+      let c1="-", c2="-", c3="-", c4="-", c5="-", final="-", badge=`<span class="badge-status badge-pending">Pendiente</span>`;
+
+      if (data) {
+        c1 = esNum(data.c1) ? data.c1.toFixed(1) : "-";
+        c2 = esNum(data.c2) ? data.c2.toFixed(1) : "-";
+        c3 = esNum(data.c3) ? data.c3.toFixed(1) : "-";
+        c4 = esNum(data.c4) ? data.c4.toFixed(1) : "-";
+        c5 = esNum(data.c5) ? data.c5.toFixed(1) : "-";
+
+        const esCompleto = esNum(data.c1) && esNum(data.c2) && esNum(data.c3) && esNum(data.c4) && esNum(data.c5);
+        if (esCompleto) {
+          const global = (data.c1 * 0.20) + (data.c2 * 0.15) + (data.c3 * 0.25) + (data.c4 * 0.15) + (data.c5 * 0.25);
+          final = global.toFixed(1);
+          badge = `<span class="badge-status badge-done">Evaluado</span>`;
+          totalEvaluados++; sumaNotas += global;
+        } else if (esNum(data.c1) || esNum(data.c2) || esNum(data.c3) || esNum(data.c4) || esNum(data.c5)) {
+          badge = `<span class="badge-status badge-partial">Parcial</span>`;
+        }
+      }
+
+      const tr = document.createElement("tr");
+      if (alumno === alumnoActual) tr.classList.add("active-row");
+      tr.onclick = () => { document.getElementById("alumnoSelect").value = alumno; cargarEvaluacionAlumno(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+
+      tr.innerHTML = `
+        <td>${idx + 1}</td><td><strong>${alumno}</strong></td>
+        <td style="text-align: center;"><span class="${equipo === 'Sin Equipo' ? 'badge-team none' : 'badge-team'}">${equipo}</span></td>
+        <td style="text-align:center;">${c1}</td><td style="text-align:center;">${c2}</td>
+        <td style="text-align:center;">${c3}</td><td style="text-align:center;">${c4}</td>
+        <td style="text-align:center;">${c5}</td>
+        <td style="text-align:center; font-weight:700;">${final}</td>
+        <td style="text-align:center;">${badge}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("statEvaluados").textContent = `${totalEvaluados}/${alumnosData[grupo].length}`;
+    document.getElementById("statMedia").textContent = totalEvaluados > 0 ? (sumaNotas / totalEvaluados).toFixed(1) : "-.-";
+  }
+
+  function exportarCSV() {
+    let csv = "Grupo;Alumno;Equipo;DIG.4.1.3;DIG.4.2.2;DIG.4.2.3;DIG.4.2.4;DIG.4.4.4;Nota Final\n";
+    ["4A", "4B"].forEach(grupo => {
+      alumnosData[grupo].forEach(alumno => {
+        const docId = `${grupo}_${alumno}`;
+        const data = localCacheEvaluaciones[docId] || JSON.parse(localStorage.getItem(`eniac_${grupo}_${alumno}`));
+        if (data) {
+          const c1 = esNum(data.c1) ? data.c1 : ""; const c2 = esNum(data.c2) ? data.c2 : "";
+          const c3 = esNum(data.c3) ? data.c3 : ""; const c4 = esNum(data.c4) ? data.c4 : "";
+          const c5 = esNum(data.c5) ? data.c5 : "";
+          let final = "";
+          if (c1 !== "" && c2 !== "" && c3 !== "" && c4 !== "" && c5 !== "") {
+            final = ((data.c1 * 0.20) + (data.c2 * 0.15) + (data.c3 * 0.25) + (data.c4 * 0.15) + (data.c5 * 0.25)).toFixed(1);
+          }
+          csv += `${grupo};"${alumno}";"${getEquipoAlumno(grupo, alumno)}";${c1};${c2};${c3};${c4};${c5};${final}\n`;
+        }
+      });
+    });
+
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "evaluacion_eniac_4ESO_Firestore.csv";
+    link.click();
+  }
+
+  function abrirImportadorCSV() {
+    document.getElementById('csvFileInput').click();
+  }
+
+  function parseCSVLine(text, delimiter = ';') {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === delimiter && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  }
+
+  function importarCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const lines = e.target.result.split(/\r?\n/);
+      let importados = 0;
+      const promises = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const cols = parseCSVLine(line, ';');
+        if (cols.length < 8) continue;
+
+        const grupo = cols[0].replace(/"/g, '').trim();
+        const alumno = cols[1].replace(/"/g, '').trim();
+        const equipo = cols[2].replace(/"/g, '').trim();
+        const c1 = parseFloat(cols[3].replace(',', '.'));
+        const c2 = parseFloat(cols[4].replace(',', '.'));
+        const c3 = parseFloat(cols[5].replace(',', '.'));
+        const c4 = parseFloat(cols[6].replace(',', '.'));
+        const c5 = parseFloat(cols[7].replace(',', '.'));
+
+        if (!grupo || !alumno) continue;
+
+        const docId = `${grupo}_${alumno}`;
+        const payload = {
+          grupo: grupo,
+          alumno: alumno,
+          c1: !isNaN(c1) ? c1 : null,
+          c2: !isNaN(c2) ? c2 : null,
+          c3: !isNaN(c3) ? c3 : null,
+          c4: !isNaN(c4) ? c4 : null,
+          c5: !isNaN(c5) ? c5 : null,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        localCacheEvaluaciones[docId] = payload;
+        localStorage.setItem(`eniac_${grupo}_${alumno}`, JSON.stringify(payload));
+        promises.push(db.collection("eniac_4eso_notas").doc(docId).set(payload, { merge: true }));
+
+        if (equipo && equipo !== "Sin Equipo") {
+          guardarEquipoAlumno(grupo, alumno, equipo);
+        }
+
+        importados++;
+      }
+
+      Promise.all(promises).then(() => {
+        alert(`¡Importación completada! Se han subido ${importados} registros de 4º ESO a Cloud Firestore.`);
+        cargarEvaluacionAlumno();
+        renderTablaResumen();
+      }).catch(err => {
+        console.error(err);
+        alert("Ocurrió un error al subir los datos a Firestore.");
+      });
+    };
+    reader.readAsText(file, "UTF-8");
+    event.target.value = '';
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+</script>
+
+</body>
+</html>
