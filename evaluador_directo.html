@@ -16,11 +16,11 @@
       --bg: #f4f7f5;
       --card: #ffffff;
       --text: #1e293b;
-      --border: #e2e8f0;
+      --border: #94a3b8; /* Líneas más oscuras */
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
-    .container { max-width: 1300px; margin: 0 auto; }
+    .container { max-width: 1400px; margin: 0 auto; }
 
     header {
       background: linear-gradient(135deg, #052e16, #14532d, #15803d);
@@ -38,40 +38,43 @@
     }
     .btn-home:hover { background: rgba(255, 255, 255, 0.3); }
 
-    .card { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+    .card { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
 
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px; }
     label { font-size: 0.85rem; font-weight: 700; color: #334155; display: block; margin-bottom: 6px; }
-    select, input[type="text"] { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.95rem; }
+    select, input[type="text"] { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #94a3b8; font-size: 0.95rem; }
 
     /* Sección de historial de pruebas guardadas */
     .history-section {
-      background: #f0fdf4; border: 1px dashed #86efac; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px;
+      background: #f0fdf4; border: 1.5px dashed #4ade80; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px;
     }
     .history-title { font-size: 0.85rem; font-weight: 700; color: #166534; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
     .history-badges { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
     .badge-btn {
-      background: white; border: 1px solid #bbf7d0; color: #15803d; padding: 6px 12px; border-radius: 20px;
+      background: white; border: 1px solid #86efac; color: #15803d; padding: 6px 12px; border-radius: 20px;
       font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
     }
     .badge-btn:hover { background: #15803d; color: white; border-color: #15803d; }
-    .badge-btn.active { background: #15803d; color: white; border-color: #15803d; box-shadow: 0 2px 4px rgba(21,128,61,0.2); }
-    .badge-new { background: #e0f2fe; border-color: #bae6fd; color: #0369a1; }
+    .badge-btn.active { background: #15803d; color: white; border-color: #15803d; box-shadow: 0 2px 4px rgba(21,128,61,0.25); }
+    .badge-new { background: #e0f2fe; border-color: #7dd3fc; color: #0369a1; }
     .badge-new:hover { background: #0284c7; color: white; border-color: #0284c7; }
 
-    .crit-selector { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; margin-top: 10px; background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0; }
-    .crit-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; background: white; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); }
+    .crit-selector { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; margin-top: 10px; background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid #cbd5e1; }
+    .crit-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; background: white; padding: 8px 10px; border-radius: 6px; border: 1px solid #94a3b8; }
     .crit-item input { cursor: pointer; width: 16px; height: 16px; }
 
-    .table-container { overflow-x: auto; margin-top: 15px; }
+    .table-container { overflow-x: auto; margin-top: 15px; border-radius: 8px; border: 1.5px solid #64748b; }
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    th, td { padding: 9px 12px; text-align: center; border: 1px solid var(--border); }
-    th { background-color: #f1f5f9; font-weight: 700; color: #334155; }
-    td.alno-col { text-align: left; font-weight: 600; white-space: nowrap; padding-left: 12px; }
+    th, td { padding: 9px 12px; text-align: center; border: 1px solid #94a3b8; }
+    th { background-color: #e2e8f0; font-weight: 700; color: #1e293b; border-bottom: 2px solid #64748b; }
+    td.alno-col { text-align: left; font-weight: 600; white-space: nowrap; padding-left: 12px; background-color: #f8fafc; }
 
-    input[type="number"] { width: 65px; padding: 6px; text-align: center; border-radius: 6px; border: 1px solid var(--border); font-weight: 700; font-size: 0.9rem; }
+    tbody tr:nth-child(even) { background-color: #f1f5f9; }
+    tbody tr:hover { background-color: #e0f2fe; }
+
+    input[type="number"] { width: 65px; padding: 6px; text-align: center; border-radius: 6px; border: 1px solid #64748b; font-weight: 700; font-size: 0.9rem; }
     
-    .cell-media { font-weight: 800; color: #0369a1; background-color: #e0f2fe; }
+    .cell-media { font-weight: 800; color: #0369a1; background-color: #bae6fd; }
 
     .btn { padding: 10px 20px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; }
     .btn-primary { background: var(--primary); color: white; }
@@ -117,7 +120,7 @@
 
       <div>
         <label for="nombrePrueba">Nombre de la Prueba / Unidad:</label>
-        <input type="text" id="nombrePrueba" placeholder="Ej: Examen Tema 1 Mecanismos" value="Examen Tema 1">
+        <input type="text" id="nombrePrueba" placeholder="Ej: Examen 1. La Tecnología" value="Examen 1. La Tecnología">
       </div>
     </div>
 
@@ -211,7 +214,7 @@
   };
 
   let criteriosSeleccionados = [];
-  let pruebasMapGrupo = {}; // Almacena pruebas encontradas para el grupo actual
+  let pruebasMapGrupo = {}; // { "examen1latecnologia": { display: "Examen 1. La Tecnología", criterios: Set } }
 
   function alCambiarGrupo() {
     cargarCriteriosYAlumnos();
@@ -239,6 +242,10 @@
     document.getElementById("cardTabla").style.display = "none";
   }
 
+  function sanitizarKey(str) {
+    return str.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
   async function cargarHistorialPruebas() {
     const curso = document.getElementById("selectCurso").value;
     const container = document.getElementById("historyContainer");
@@ -255,9 +262,14 @@
       snap.forEach(doc => {
         const data = doc.data();
         if (data.prueba) {
-          if (!pruebasMapGrupo[data.prueba]) pruebasMapGrupo[data.prueba] = new Set();
+          const keyClean = sanitizarKey(data.prueba);
+          const nameDisp = data.nombreDisplay || data.prueba;
+
+          if (!pruebasMapGrupo[keyClean]) {
+            pruebasMapGrupo[keyClean] = { display: nameDisp, criterios: new Set() };
+          }
           Object.keys(data).forEach(k => {
-            if (k.includes(".")) pruebasMapGrupo[data.prueba].add(k);
+            if (k.includes(".")) pruebasMapGrupo[keyClean].criterios.add(k);
           });
         }
       });
@@ -270,34 +282,42 @@
         try {
           const data = JSON.parse(localStorage.getItem(key));
           if (data.prueba) {
-            if (!pruebasMapGrupo[data.prueba]) pruebasMapGrupo[data.prueba] = new Set();
-            Object.keys(data).forEach(k => { if (k.includes(".")) pruebasMapGrupo[data.prueba].add(k); });
+            const keyClean = sanitizarKey(data.prueba);
+            const nameDisp = data.nombreDisplay || data.prueba;
+
+            if (!pruebasMapGrupo[keyClean]) {
+              pruebasMapGrupo[keyClean] = { display: nameDisp, criterios: new Set() };
+            }
+            Object.keys(data).forEach(k => {
+              if (k.includes(".")) pruebasMapGrupo[keyClean].criterios.add(k);
+            });
           }
         } catch(e){}
       }
     }
 
-    const listaPruebas = Object.keys(pruebasMapGrupo);
-    if (listaPruebas.length === 0) {
+    const listaKeys = Object.keys(pruebasMapGrupo);
+    if (listaKeys.length === 0) {
       labelStatus.textContent = "Ninguna prueba guardada en este grupo aún.";
     } else {
-      labelStatus.textContent = `${listaPruebas.length} prueba(s) guardada(s)`;
-      listaPruebas.forEach(pName => {
-        const critCount = pruebasMapGrupo[pName].size;
+      labelStatus.textContent = `${listaKeys.length} prueba(s) guardada(s)`;
+      listaKeys.forEach(k => {
+        const item = pruebasMapGrupo[k];
+        const critCount = item.criterios.size;
         const btn = document.createElement("button");
         btn.className = "badge-btn";
-        btn.innerHTML = `📝 ${pName.toUpperCase()} <span style="opacity:0.75; font-size:0.75rem;">(${critCount} crit.)</span>`;
-        btn.onclick = () => seleccionarPruebaHistorial(pName, pruebasMapGrupo[pName], btn);
+        btn.innerHTML = `📝 ${item.display} <span style="opacity:0.75; font-size:0.75rem;">(${critCount} crit.)</span>`;
+        btn.onclick = () => seleccionarPruebaHistorial(item.display, item.criterios, btn);
         container.appendChild(btn);
       });
     }
   }
 
-  function seleccionarPruebaHistorial(nombrePruebaClean, conjuntoCriterios, btnElem) {
+  function seleccionarPruebaHistorial(nombreRealDisplay, conjuntoCriterios, btnElem) {
     document.querySelectorAll(".badge-btn").forEach(b => b.classList.remove("active"));
     if (btnElem) btnElem.classList.add("active");
 
-    document.getElementById("nombrePrueba").value = nombrePruebaClean.toUpperCase();
+    document.getElementById("nombrePrueba").value = nombreRealDisplay;
 
     // Marcar solo los criterios que pertenecen a esta prueba
     document.querySelectorAll(".chk-crit").forEach(chk => {
@@ -360,7 +380,7 @@
     const head = document.getElementById("headTabla");
     const body = document.getElementById("bodyTabla");
 
-    let headHtml = `<tr><th style="width:30px;">#</th><th style="text-align:left;">Alumno / Alumna</th>`;
+    let headHtml = `<tr><th style="width:35px;">#</th><th style="text-align:left;">Alumno / Alumna</th>`;
     criteriosSeleccionados.forEach(c => {
       headHtml += `<th>${c.code}<br><span style="font-weight:normal; font-size:0.75rem; color:#64748b;">${c.label}</span></th>`;
     });
@@ -368,7 +388,8 @@
     head.innerHTML = headHtml;
 
     let bodyHtml = "";
-    const idPruebaClean = document.getElementById("nombrePrueba").value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const rawNombrePrueba = document.getElementById("nombrePrueba").value.trim();
+    const idPruebaClean = sanitizarKey(rawNombrePrueba);
 
     for (let idx = 0; idx < alumnos.length; idx++) {
       const alno = alumnos[idx];
@@ -415,7 +436,8 @@
   async function guardarNotasDirectas() {
     const curso = document.getElementById("selectCurso").value;
     const alumnos = alumnosData[curso] || [];
-    const idPruebaClean = document.getElementById("nombrePrueba").value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const rawNombrePrueba = document.getElementById("nombrePrueba").value.trim();
+    const idPruebaClean = sanitizarKey(rawNombrePrueba);
 
     if (!idPruebaClean) {
       alert("Introduce un nombre para la prueba antes de guardar.");
@@ -430,6 +452,7 @@
         curso: curso,
         alumno: alno,
         prueba: idPruebaClean,
+        nombreDisplay: rawNombrePrueba, // Conserva el nombre bonito con espacios y puntos
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       let tieneNotas = false;
