@@ -16,10 +16,10 @@
       --bg: #f8fafc;
       --card-bg: #ffffff;
       --text: #1e293b;
-      --border: #e2e8f0;
+      --border: #cbd5e1;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
     .container { max-width: 1600px; margin: 0 auto; }
 
@@ -39,23 +39,66 @@
     }
     .btn-home:hover { background: rgba(255, 255, 255, 0.3); }
 
-    .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
 
     .filter-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-    select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.95rem; font-weight: 600; background: white; }
+    select { padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; font-weight: 600; background: white; }
 
-    .table-container { overflow-x: auto; margin-top: 10px; max-width: 100%; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-    th, td { padding: 8px 6px; text-align: center; border: 1px solid var(--border); }
+    /* Contenedor con Scroll Horizontal y Sticky Columns */
+    .table-container {
+      overflow-x: auto;
+      max-width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      position: relative;
+    }
+    
+    table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.8rem; }
+    th, td { padding: 9px 8px; text-align: center; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; }
+    
     th { background-color: #f1f5f9; font-weight: 700; color: #334155; white-space: nowrap; }
-    td.alno-col { text-align: left; font-weight: 600; white-space: nowrap; background-color: #fafafa; padding-left: 10px; padding-right: 10px; }
-    tbody tr:hover { background-color: #f0f9ff; }
 
-    .mark-val { font-weight: 700; color: #0284c7; }
+    /* Fila Cebra Intercalada */
+    tbody tr:nth-child(odd) { background-color: #ffffff; }
+    tbody tr:nth-child(even) { background-color: #f8fafc; }
+    tbody tr:hover { background-color: #e0f2fe !important; }
+
+    /* COLUMNA 1 (#) FIJA EN SCROLL */
+    th.col-fixed-num, td.col-fixed-num {
+      position: sticky;
+      left: 0;
+      z-index: 10;
+      width: 35px;
+      min-width: 35px;
+      background-color: inherit;
+      border-right: 1px solid #cbd5e1;
+    }
+
+    /* COLUMNA 2 (ALUMNO) FIJA EN SCROLL CON SOMBRA LATERAL */
+    th.col-fixed-name, td.col-fixed-name {
+      position: sticky;
+      left: 35px;
+      z-index: 10;
+      text-align: left;
+      font-weight: 700;
+      white-space: nowrap;
+      padding-left: 12px;
+      padding-right: 12px;
+      background-color: inherit;
+      border-right: 3px solid #94a3b8;
+      box-shadow: 4px 0 6px -2px rgba(0,0,0,0.12);
+    }
+
+    th.col-fixed-num, th.col-fixed-name {
+      z-index: 20;
+      background-color: #f1f5f9;
+    }
+
+    .mark-val { font-weight: 800; color: #0284c7; }
     .mark-empty { color: #cbd5e1; font-weight: 400; }
-    .mark-final { font-weight: 800; color: #0369a1; background-color: #e0f2fe; }
+    .mark-final { font-weight: 900; color: #0369a1; background-color: #bae6fd !important; }
 
-    .btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; font-size: 0.88rem; transition: background 0.2s; }
+    .btn { padding: 9px 18px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; font-size: 0.88rem; transition: background 0.2s; }
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: var(--primary-dark); }
   </style>
@@ -75,7 +118,7 @@
     <div class="filter-bar">
       <div>
         <h2 style="font-size: 1.15rem; font-weight: 700; color: #0f172a;">📋 Matriz Completa por Criterios de Evaluación</h2>
-        <p style="font-size: 0.82rem; color: #64748b;">Sincronizado en tiempo real desde Cloud Firestore y memoria local.</p>
+        <p style="font-size: 0.82rem; color: #64748b;">⬅️ Desplázate horizontalmente para ver todos los criterios. Los nombres permanecen fijos.</p>
       </div>
       <div>
         <label for="selectCurso" style="font-size:0.88rem; font-weight:700; color:#475569; margin-right:8px;">Seleccionar Curso:</label>
@@ -99,7 +142,7 @@
 
     <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
       <button class="btn btn-primary" onclick="exportarMatrizCSV()">📥 Exportar Matriz a CSV (Excel)</button>
-      <span style="font-size: 0.8rem; color: #64748b;" id="infoRegistros">Cargando datos desde la nube...</span>
+      <span style="font-size: 0.82rem; font-weight:600; color: #475569;" id="infoRegistros">Cargando datos desde la nube...</span>
     </div>
   </div>
 
@@ -205,7 +248,7 @@
       }
     });
 
-    // 2. Escanear LocalStorage (Resguardo local)
+    // 2. Escanear LocalStorage
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.includes(grupo) && key.includes(alumno)) {
@@ -230,7 +273,7 @@
       }
     }
 
-    // Medias
+    // Medias por criterio
     const mediasResumen = {};
     Object.keys(notasPorCriterio).forEach(code => {
       const arr = notasPorCriterio[code];
@@ -253,11 +296,11 @@
     const head = document.getElementById("headMatriz");
     const body = document.getElementById("bodyMatriz");
 
-    let headHtml = `<tr><th style="width:30px;">#</th><th style="text-align:left;">Alumno / Alumna</th>`;
+    let headHtml = `<tr><th class="col-fixed-num">#</th><th class="col-fixed-name">Alumno / Alumna</th>`;
     criteriosList.forEach(c => {
       headHtml += `<th title="${c.label}">${c.code}<br><span style="font-weight:normal; font-size:0.7rem; color:#64748b;">${c.label}</span></th>`;
     });
-    headHtml += `<th style="background:#e0f2fe; color:#0369a1;">Nota Media</th></tr>`;
+    headHtml += `<th style="background:#e0f2fe; color:#0369a1; min-width:80px;">Nota Media</th></tr>`;
     head.innerHTML = headHtml;
 
     let bodyHtml = "";
@@ -266,7 +309,7 @@
     listaAlumnos.forEach((alumno, idx) => {
       const medias = obtenerNotasAlumno(curso, alumno);
       
-      bodyHtml += `<tr><td>${idx + 1}</td><td class="alno-col">${alumno}</td>`;
+      bodyHtml += `<tr><td class="col-fixed-num">${idx + 1}</td><td class="col-fixed-name">${alumno}</td>`;
 
       let sumaTotal = 0;
       let cont = 0;
@@ -289,7 +332,7 @@
     });
 
     body.innerHTML = bodyHtml;
-    document.getElementById("infoRegistros").textContent = `☁️ Sincronizado. Registradas calificaciones de ${totalEvaluados} alumnos de ${curso}.`;
+    document.getElementById("infoRegistros").textContent = `☁️ Sincronizado en tiempo real. ${totalEvaluados} de ${listaAlumnos.length} alumnos evaluados en ${curso}.`;
   }
 
   function exportarMatrizCSV() {

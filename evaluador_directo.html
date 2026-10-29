@@ -11,51 +11,67 @@
 
   <style>
     :root {
-      --primary: #2563eb;
-      --primary-dark: #1d4ed8;
-      --bg: #f8fafc;
+      --primary: #15803d;
+      --primary-dark: #166534;
+      --bg: #f4f7f5;
       --card: #ffffff;
       --text: #1e293b;
       --border: #e2e8f0;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
     .container { max-width: 1300px; margin: 0 auto; }
 
     header {
-      background: linear-gradient(135deg, #0f172a, #1e3a8a);
-      color: white; padding: 24px; border-radius: 12px; margin-bottom: 20px;
+      background: linear-gradient(135deg, #052e16, #14532d, #15803d);
+      color: white; padding: 24px; border-radius: 14px; margin-bottom: 20px;
       display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
     }
     header h1 { font-size: 1.5rem; }
-    header p { opacity: 0.85; font-size: 0.9rem; }
+    header p { opacity: 0.9; font-size: 0.9rem; }
 
     .btn-home {
-      background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.18); border: 1px solid rgba(255, 255, 255, 0.3);
       color: white; padding: 10px 18px; border-radius: 8px; text-decoration: none;
       font-weight: 700; font-size: 0.9rem; transition: background 0.2s;
     }
     .btn-home:hover { background: rgba(255, 255, 255, 0.3); }
 
-    .card { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .card { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
 
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px; }
-    label { font-size: 0.85rem; font-weight: 700; color: #475569; display: block; margin-bottom: 6px; }
+    label { font-size: 0.85rem; font-weight: 700; color: #334155; display: block; margin-bottom: 6px; }
     select, input[type="text"] { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.95rem; }
 
-    .crit-selector { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; margin-top: 10px; background: #f1f5f9; padding: 14px; border-radius: 8px; }
+    /* Sección de historial de pruebas guardadas */
+    .history-section {
+      background: #f0fdf4; border: 1px dashed #86efac; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px;
+    }
+    .history-title { font-size: 0.85rem; font-weight: 700; color: #166534; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .history-badges { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .badge-btn {
+      background: white; border: 1px solid #bbf7d0; color: #15803d; padding: 6px 12px; border-radius: 20px;
+      font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .badge-btn:hover { background: #15803d; color: white; border-color: #15803d; }
+    .badge-btn.active { background: #15803d; color: white; border-color: #15803d; box-shadow: 0 2px 4px rgba(21,128,61,0.2); }
+    .badge-new { background: #e0f2fe; border-color: #bae6fd; color: #0369a1; }
+    .badge-new:hover { background: #0284c7; color: white; border-color: #0284c7; }
+
+    .crit-selector { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; margin-top: 10px; background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0; }
     .crit-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; background: white; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); }
     .crit-item input { cursor: pointer; width: 16px; height: 16px; }
 
     .table-container { overflow-x: auto; margin-top: 15px; }
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    th, td { padding: 8px 10px; text-align: center; border: 1px solid var(--border); }
+    th, td { padding: 9px 12px; text-align: center; border: 1px solid var(--border); }
     th { background-color: #f1f5f9; font-weight: 700; color: #334155; }
-    td.alno-col { text-align: left; font-weight: 600; white-space: nowrap; padding-left: 10px; }
+    td.alno-col { text-align: left; font-weight: 600; white-space: nowrap; padding-left: 12px; }
 
     input[type="number"] { width: 65px; padding: 6px; text-align: center; border-radius: 6px; border: 1px solid var(--border); font-weight: 700; font-size: 0.9rem; }
     
-    .cell-media { font-weight: 800; color: #0284c7; background-color: #e0f2fe; }
+    .cell-media { font-weight: 800; color: #0369a1; background-color: #e0f2fe; }
 
     .btn { padding: 10px 20px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; }
     .btn-primary { background: var(--primary); color: white; }
@@ -79,7 +95,7 @@
     <div class="form-grid">
       <div>
         <label for="selectCurso">Curso y Grupo:</label>
-        <select id="selectCurso" onchange="cargarCriteriosYAlumnos()">
+        <select id="selectCurso" onchange="alCambiarGrupo()">
           <option value="2A">2º ESO A (Tecnología y Dig.)</option>
           <option value="2B">2º ESO B (Tecnología y Dig.)</option>
           <option value="3A" selected>3º ESO A (Tecnología y Dig.)</option>
@@ -105,10 +121,21 @@
       </div>
     </div>
 
+    <!-- Panel de Pruebas Registradas en este Grupo -->
+    <div class="history-section">
+      <div class="history-title">
+        <span>📂 Pruebas registradas en este grupo:</span>
+        <span id="historyStatus" style="font-weight:normal; font-size:0.78rem; color:#4b5563;">Escaneando...</span>
+      </div>
+      <div class="history-badges" id="historyContainer">
+        <button class="badge-btn badge-new" onclick="prepararNuevaPrueba()">✨ + Crear Nueva Prueba</button>
+      </div>
+    </div>
+
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; margin-bottom:8px;">
       <label style="margin:0;">Selecciona los Criterios que evalúa esta prueba:</label>
       <div style="font-size:0.8rem;">
-        <a href="#" onclick="marcarTodos(true); return false;" style="color:#2563eb; font-weight:600; margin-right:10px;">Marcar Todos</a>
+        <a href="#" onclick="marcarTodos(true); return false;" style="color:#15803d; font-weight:700; margin-right:10px;">Marcar Todos</a>
         <a href="#" onclick="marcarTodos(false); return false;" style="color:#64748b; font-weight:600;">Desmarcar Todos</a>
       </div>
     </div>
@@ -184,6 +211,12 @@
   };
 
   let criteriosSeleccionados = [];
+  let pruebasMapGrupo = {}; // Almacena pruebas encontradas para el grupo actual
+
+  function alCambiarGrupo() {
+    cargarCriteriosYAlumnos();
+    cargarHistorialPruebas();
+  }
 
   function cargarCriteriosYAlumnos() {
     const curso = document.getElementById("selectCurso").value;
@@ -203,6 +236,81 @@
       `;
       container.appendChild(div);
     });
+    document.getElementById("cardTabla").style.display = "none";
+  }
+
+  async function cargarHistorialPruebas() {
+    const curso = document.getElementById("selectCurso").value;
+    const container = document.getElementById("historyContainer");
+    const labelStatus = document.getElementById("historyStatus");
+
+    container.innerHTML = `<button class="badge-btn badge-new" onclick="prepararNuevaPrueba()">✨ + Crear Nueva Prueba</button>`;
+    labelStatus.textContent = "Buscando pruebas...";
+
+    pruebasMapGrupo = {};
+
+    // 1. Consultar Firestore
+    try {
+      const snap = await db.collection("evaluacion_directa").where("curso", "==", curso).get();
+      snap.forEach(doc => {
+        const data = doc.data();
+        if (data.prueba) {
+          if (!pruebasMapGrupo[data.prueba]) pruebasMapGrupo[data.prueba] = new Set();
+          Object.keys(data).forEach(k => {
+            if (k.includes(".")) pruebasMapGrupo[data.prueba].add(k);
+          });
+        }
+      });
+    } catch(e) {}
+
+    // 2. Consultar LocalStorage
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(`directo_${curso}_`)) {
+        try {
+          const data = JSON.parse(localStorage.getItem(key));
+          if (data.prueba) {
+            if (!pruebasMapGrupo[data.prueba]) pruebasMapGrupo[data.prueba] = new Set();
+            Object.keys(data).forEach(k => { if (k.includes(".")) pruebasMapGrupo[data.prueba].add(k); });
+          }
+        } catch(e){}
+      }
+    }
+
+    const listaPruebas = Object.keys(pruebasMapGrupo);
+    if (listaPruebas.length === 0) {
+      labelStatus.textContent = "Ninguna prueba guardada en este grupo aún.";
+    } else {
+      labelStatus.textContent = `${listaPruebas.length} prueba(s) guardada(s)`;
+      listaPruebas.forEach(pName => {
+        const critCount = pruebasMapGrupo[pName].size;
+        const btn = document.createElement("button");
+        btn.className = "badge-btn";
+        btn.innerHTML = `📝 ${pName.toUpperCase()} <span style="opacity:0.75; font-size:0.75rem;">(${critCount} crit.)</span>`;
+        btn.onclick = () => seleccionarPruebaHistorial(pName, pruebasMapGrupo[pName], btn);
+        container.appendChild(btn);
+      });
+    }
+  }
+
+  function seleccionarPruebaHistorial(nombrePruebaClean, conjuntoCriterios, btnElem) {
+    document.querySelectorAll(".badge-btn").forEach(b => b.classList.remove("active"));
+    if (btnElem) btnElem.classList.add("active");
+
+    document.getElementById("nombrePrueba").value = nombrePruebaClean.toUpperCase();
+
+    // Marcar solo los criterios que pertenecen a esta prueba
+    document.querySelectorAll(".chk-crit").forEach(chk => {
+      chk.checked = conjuntoCriterios.has(chk.value);
+    });
+
+    generarTablaCalificacion();
+  }
+
+  function prepararNuevaPrueba() {
+    document.querySelectorAll(".badge-btn").forEach(b => b.classList.remove("active"));
+    document.getElementById("nombrePrueba").value = `Examen Tema ${Object.keys(pruebasMapGrupo).length + 1}`;
+    marcarTodos(false);
     document.getElementById("cardTabla").style.display = "none";
   }
 
@@ -226,11 +334,7 @@
 
     const elemMedia = document.getElementById(`media_row_${idx}`);
     if (elemMedia) {
-      if (cont > 0) {
-        elemMedia.textContent = (suma / cont).toFixed(1);
-      } else {
-        elemMedia.textContent = "-";
-      }
+      elemMedia.textContent = cont > 0 ? (suma / cont).toFixed(1) : "-";
     }
   }
 
@@ -302,7 +406,7 @@
     document.getElementById("cardTabla").style.display = "block";
     document.getElementById("msgGuardado").textContent = "";
 
-    // Calcular medias iniciales para las notas precargadas
+    // Calcular medias iniciales
     for (let idx = 0; idx < alumnos.length; idx++) {
       calcularMediaFila(idx);
     }
@@ -356,9 +460,12 @@
     } catch(err) {
       document.getElementById("msgGuardado").textContent = `💾 Guardadas localmente (${guardadosCount} alumnos).`;
     }
+
+    // Actualizar historial
+    cargarHistorialPruebas();
   }
 
-  window.onload = cargarCriteriosYAlumnos;
+  window.onload = alCambiarGrupo;
 </script>
 
 </body>
