@@ -55,6 +55,8 @@
 
     input[type="number"] { width: 65px; padding: 6px; text-align: center; border-radius: 6px; border: 1px solid var(--border); font-weight: 700; font-size: 0.9rem; }
     
+    .cell-media { font-weight: 800; color: #0284c7; background-color: #e0f2fe; }
+
     .btn { padding: 10px 20px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; }
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: var(--primary-dark); }
@@ -208,6 +210,30 @@
     document.querySelectorAll(".chk-crit").forEach(chk => chk.checked = estado);
   }
 
+  function calcularMediaFila(idx) {
+    let suma = 0;
+    let cont = 0;
+    criteriosSeleccionados.forEach(c => {
+      const input = document.getElementById(`input_${idx}_${c.code}`);
+      if (input && input.value !== "") {
+        const val = parseFloat(input.value);
+        if (!isNaN(val)) {
+          suma += val;
+          cont++;
+        }
+      }
+    });
+
+    const elemMedia = document.getElementById(`media_row_${idx}`);
+    if (elemMedia) {
+      if (cont > 0) {
+        elemMedia.textContent = (suma / cont).toFixed(1);
+      } else {
+        elemMedia.textContent = "-";
+      }
+    }
+  }
+
   async function generarTablaCalificacion() {
     const curso = document.getElementById("selectCurso").value;
     const nivel = curso.charAt(0);
@@ -234,7 +260,7 @@
     criteriosSeleccionados.forEach(c => {
       headHtml += `<th>${c.code}<br><span style="font-weight:normal; font-size:0.75rem; color:#64748b;">${c.label}</span></th>`;
     });
-    headHtml += `</tr>`;
+    headHtml += `<th style="background-color:#e0f2fe; color:#0369a1;">📊 Media Examen</th></tr>`;
     head.innerHTML = headHtml;
 
     let bodyHtml = "";
@@ -264,15 +290,22 @@
                  id="input_${idx}_${c.code}" 
                  data-alumno="${alno}" 
                  data-criterio="${c.code}" 
-                 value="${valPrevio}">
+                 value="${valPrevio}"
+                 oninput="calcularMediaFila(${idx})">
         </td>`;
       });
-      bodyHtml += `</tr>`;
+
+      bodyHtml += `<td id="media_row_${idx}" class="cell-media">-</td></tr>`;
     }
 
     body.innerHTML = bodyHtml;
     document.getElementById("cardTabla").style.display = "block";
     document.getElementById("msgGuardado").textContent = "";
+
+    // Calcular medias iniciales para las notas precargadas
+    for (let idx = 0; idx < alumnos.length; idx++) {
+      calcularMediaFila(idx);
+    }
   }
 
   async function guardarNotasDirectas() {
