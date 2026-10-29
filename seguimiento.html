@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cuadro de Mando y Matriz de Seguimiento LOMLOE - La Hispanidad</title>
+  <title>Cuadro de Mando y Matriz Completa LOMLOE - La Hispanidad</title>
 
   <!-- SDK Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -66,17 +66,16 @@
   <header>
     <div>
       <h1>📊 Cuadro de Mando y Matriz Completa de Criterios</h1>
-      <p>Cuaderno General de Evaluación por Asignatura | Colegio La Hispanidad</p>
+      <p>Cuaderno General de Evaluación | Colegio La Hispanidad</p>
     </div>
     <a href="index.html" class="btn-home">🏠 Volver al Inicio</a>
   </header>
 
-  <!-- MATRIZ GENERAL -->
   <div class="card">
     <div class="filter-bar">
       <div>
-        <h2 style="font-size: 1.15rem; font-weight: 700; color: #0f172a;">📋 Matriz Completa del Alumnado por Criterios de Evaluación</h2>
-        <p style="font-size: 0.82rem; color: #64748b;">Muestra TODOS los criterios oficiales de la materia. Calcula automáticamente la nota media acumulada de cada criterio procedente de Rúbricas o Evaluaciones Directas.</p>
+        <h2 style="font-size: 1.15rem; font-weight: 700; color: #0f172a;">📋 Matriz Completa por Criterios de Evaluación</h2>
+        <p style="font-size: 0.82rem; color: #64748b;">Sincronizado en tiempo real desde Cloud Firestore y memoria local.</p>
       </div>
       <div>
         <label for="selectCurso" style="font-size:0.88rem; font-weight:700; color:#475569; margin-right:8px;">Seleccionar Curso:</label>
@@ -99,19 +98,22 @@
     </div>
 
     <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-      <button class="btn btn-primary" onclick="exportarMatrizCSV()">📥 Exportar Matriz del Curso a CSV (Excel)</button>
-      <span style="font-size: 0.8rem; color: #64748b;" id="infoRegistros">Escaneando registros...</span>
+      <button class="btn btn-primary" onclick="exportarMatrizCSV()">📥 Exportar Matriz a CSV (Excel)</button>
+      <span style="font-size: 0.8rem; color: #64748b;" id="infoRegistros">Cargando datos desde la nube...</span>
     </div>
   </div>
 
   <div style="text-align: center; margin-top: 10px;">
     <a href="index.html" class="btn btn-primary" style="text-decoration:none; display:inline-block;">🏠 Volver al Inicio</a>
   </div>
-
 </div>
 
 <script>
-  // Listados Oficiales del Centro
+  // Inicialización de Firebase
+  const firebaseConfig = { projectId: "cyberbreakout-hispanidad" };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
   const alumnosData = {
     "2A": ["Bada Blanco, Ainara","Bravo Rodríguez, Lucía","Contreras Santiago, Manuel","Contreras Santiago, Paula","Correa Rodríguez, Ainara","Costa Redondo, Saray","Cruz Feria, Esteban","Cuaresma Rodríguez, Indhira","Cuaresma Rodríguez, Nayma","De la Luz Patricio, Elena","Garcia Caparrós, Indira","Garrido Fernández, Yamileth","Gómez Brito, Adriana","Gómez López, Daniella","Gutiérrez Valencia, Thomas","López Gómez, Hugo","López Salguero, Héctor Jesús","Mora Chico, Hugo","Mykhailyshyn, Iryna","Presa Bueno, Luca","Rengel Padilla, Alejandra","Reyes Pérez, Francisco José","Rodríguez Domínguez, Antonio","Silva López, Ainhoa","Torrescusa Borrero, Miguel"],
     "2B": ["Bautista Lepe, Izan","Bueno Merino, Indira","Diallo, Zoumana","Díaz Pinto, Giulia","El Hajoui Moustekfy, Ryan","El Hajoui Moustekfy, Yasmina","Funes Aranda, Jean Alessandro","Gil Pire, Camila Sophia","Gutiérrez Álvarez, Adriano","Hernández Tarriño, Estrella","Herrán Góngora, Laura Sofía","Hierro Masa, Ximena","Jiménez Vázquez, Indira","Lemos Del Toro, Alejandro","Masero Rodríguez, Ana de los Remedios","Moya Mera, Aitor","Muñoz López, Yerai","Núñez Álvarez, Jose","Pérez Márquez, Juan Marcelo","Pozo Orta, Julia","Rodríguez Enríquez, Daniela","Rodríguez Ospina, Juan David","Sánchez Alonso, Libertad","Sánchez Pérez, Erick","Sola Infantes, Lucía","Tristán Wert, Aarón"],
@@ -121,135 +123,137 @@
     "4B": ["Araujo Carrasco, José Manuel","Borrero De Paula, José Antonio","Boulal, Jilali","Escudero Limón, Daniela","Kykish Toporovska, Diana","Lobato Ramos, Hugo","Martin Venegas, Ester","Naranjo Romero, Aitana","Pérez Rodríguez, Pablo","Rivero Hernández, Diego Alejandro","Rivero Hernández, Enrique Alejandro","Rodríguez Brejano, Alexys","Salazar Fernández, Yamilet","Sánchez Lozada, Sergio Enrique","Sánchez Pérez, Induara","Sánchez Ternero, Alejandro","Soto García, Ángela","Terrón Quintero, José Antonio","Torres Hernández, Javier","Wert Hermoso, Laura"]
   };
 
-  // Catálogo COMPLETO Oficial LOMLOE extraído del PDF oficial
   const catálogoCriterios = {
     "2": [
-      { code: "TYD.2.1.1", label: "Búsqueda y Fiabilidad" },
-      { code: "TYD.2.1.2", label: "Análisis de Productos" },
-      { code: "TYD.2.1.3", label: "Protección y Salud Digital" },
-      { code: "TYD.2.2.1", label: "Diseño Sostenible e Innovación" },
-      { code: "TYD.2.2.2", label: "Planificación y Trabajo Cooperativo" },
-      { code: "TYD.2.3.1", label: "Fabricación y Seguridad" },
-      { code: "TYD.2.4.1", label: "Comunicación y Documentación Técnica" },
-      { code: "TYD.2.5.1", label: "Algoritmos y Diagramas de Flujo" },
-      { code: "TYD.2.5.2", label: "Programación de Aplicaciones e IA" },
-      { code: "TYD.2.5.3", label: "Automatización, Robots y Control" },
-      { code: "TYD.2.6.1", label: "Uso Eficiente y Seguro de Dispositivos" },
-      { code: "TYD.2.6.2", label: "Creación y Difusión de Contenidos" },
-      { code: "TYD.2.6.3", label: "Almacenamiento Seguro de Información" },
-      { code: "TYD.2.7.1", label: "Influencia Tecnológica y Desarrollo Sostenible" },
+      { code: "TYD.2.1.1", label: "Búsqueda y Fiabilidad" }, { code: "TYD.2.1.2", label: "Análisis de Productos" },
+      { code: "TYD.2.1.3", label: "Protección y Salud Digital" }, { code: "TYD.2.2.1", label: "Diseño Sostenible e Innovación" },
+      { code: "TYD.2.2.2", label: "Planificación y Trabajo Cooperativo" }, { code: "TYD.2.3.1", label: "Fabricación y Seguridad" },
+      { code: "TYD.2.4.1", label: "Comunicación y Documentación Técnica" }, { code: "TYD.2.5.1", label: "Algoritmos y Diagramas de Flujo" },
+      { code: "TYD.2.5.2", label: "Programación de Aplicaciones e IA" }, { code: "TYD.2.5.3", label: "Automatización, Robots y Control" },
+      { code: "TYD.2.6.1", label: "Uso Eficiente y Seguro de Dispositivos" }, { code: "TYD.2.6.2", label: "Creación y Difusión de Contenidos" },
+      { code: "TYD.2.6.3", label: "Almacenamiento Seguro de Información" }, { code: "TYD.2.7.1", label: "Influencia Tecnológica y Sostenibilidad" },
       { code: "TYD.2.7.2", label: "Tecnologías Emergentes y Bienestar" }
     ],
     "3": [
-      { code: "TYD.3.1.1", label: "Búsqueda y Fiabilidad" },
-      { code: "TYD.3.1.2", label: "Análisis de Productos y Simulación" },
-      { code: "TYD.3.1.3", label: "Protección y Salud Digital" },
-      { code: "TYD.3.2.1", label: "Soluciones Sostenibles / ODS" },
-      { code: "TYD.3.2.2", label: "Planificación y Trabajo Cooperativo" },
-      { code: "TYD.3.3.1", label: "Fabricación y Seguridad" },
-      { code: "TYD.3.4.1", label: "Exposición y Lenguaje Técnico" },
-      { code: "TYD.3.5.1", label: "Algoritmos y Diagramas de Flujo" },
-      { code: "TYD.3.5.2", label: "Programación de Aplicaciones e IA" },
-      { code: "TYD.3.5.3", label: "Automatización y Robótica" },
-      { code: "TYD.3.6.1", label: "Uso Eficiente de Dispositivos" },
-      { code: "TYD.3.6.2", label: "Creación de Contenidos y Licencias" },
-      { code: "TYD.3.6.3", label: "Almacenamiento Seguro" },
-      { code: "TYD.3.7.1", label: "Impacto Histórico y Desarrollo Sostenible" },
-      { code: "TYD.3.7.2", label: "Tecnologías Emergentes e Igualdad en Andalucía" }
+      { code: "TYD.3.1.1", label: "Búsqueda y Fiabilidad" }, { code: "TYD.3.1.2", label: "Análisis de Productos y Simulación" },
+      { code: "TYD.3.1.3", label: "Protección y Salud Digital" }, { code: "TYD.3.2.1", label: "Soluciones Sostenibles / ODS" },
+      { code: "TYD.3.2.2", label: "Planificación y Trabajo Cooperativo" }, { code: "TYD.3.3.1", label: "Fabricación y Seguridad" },
+      { code: "TYD.3.4.1", label: "Exposición y Lenguaje Técnico" }, { code: "TYD.3.5.1", label: "Algoritmos y Diagramas de Flujo" },
+      { code: "TYD.3.5.2", label: "Programación de Aplicaciones e IA" }, { code: "TYD.3.5.3", label: "Automatización y Robótica" },
+      { code: "TYD.3.6.1", label: "Uso Eficiente de Dispositivos" }, { code: "TYD.3.6.2", label: "Creación de Contenidos y Licencias" },
+      { code: "TYD.3.6.3", label: "Almacenamiento Seguro" }, { code: "TYD.3.7.1", label: "Impacto Histórico y Sostenibilidad" },
+      { code: "TYD.3.7.2", label: "Tecnologías Emergentes e Igualdad" }
     ],
     "4": [
-      { code: "DIG.4.1.1", label: "Redes Locales y Comunicación" },
-      { code: "DIG.4.1.2", label: "Instalación de Sistemas Operativos" },
-      { code: "DIG.4.1.3", label: "Hardware y Resolución de Problemas" },
-      { code: "DIG.4.2.1", label: "Gestión del Entorno Personal de Aprendizaje" },
-      { code: "DIG.4.2.2", label: "Búsqueda y Curación de Información" },
-      { code: "DIG.4.2.3", label: "Creación y Licencias CC" },
-      { code: "DIG.4.2.4", label: "Plataformas Colaborativas Virtuales" },
-      { code: "DIG.4.3.1", label: "Privacidad y Huella Digital" },
-      { code: "DIG.4.3.2", label: "Seguridad, Contraseñas y Antivirus" },
-      { code: "DIG.4.3.3", label: "Prevención de Amenazas en Red y Salud" },
-      { code: "DIG.4.4.1", label: "Uso Ético y Etiqueta Digital" },
-      { code: "DIG.4.4.2", label: "Comercio Electrónico y Brecha Digital" },
-      { code: "DIG.4.4.3", label: "Análisis Crítico de Mensajes Digitales" },
-      { code: "DIG.4.4.4", label: "Sostenibilidad y Huella Ecosocial Digital" }
+      { code: "DIG.4.1.1", label: "Redes Locales y Comunicación" }, { code: "DIG.4.1.2", label: "Instalación de Sistemas Operativos" },
+      { code: "DIG.4.1.3", label: "Hardware y Resolución de Problemas" }, { code: "DIG.4.2.1", label: "Gestión del Entorno Personal" },
+      { code: "DIG.4.2.2", label: "Búsqueda y Curación de Información" }, { code: "DIG.4.2.3", label: "Creación y Licencias CC" },
+      { code: "DIG.4.2.4", label: "Plataformas Colaborativas Virtuales" }, { code: "DIG.4.3.1", label: "Privacidad y Huella Digital" },
+      { code: "DIG.4.3.2", label: "Seguridad, Contraseñas y Antivirus" }, { code: "DIG.4.3.3", label: "Prevención de Amenazas en Red" },
+      { code: "DIG.4.4.1", label: "Uso Ético y Etiqueta Digital" }, { code: "DIG.4.4.2", label: "Comercio Electrónico y Brecha Digital" },
+      { code: "DIG.4.4.3", label: "Análisis Crítico de Mensajes Digitales" }, { code: "DIG.4.4.4", label: "Sostenibilidad y Huella Ecosocial" }
     ]
   };
 
-  // Mapeo flexible de claves de rúbricas específicas a sus códigos exactos
   const mapaEquivalenciasProyectos = {
     "doblador": { "c1": "TYD.2.3.1", "c2": "TYD.2.2.2", "c3": "TYD.2.1.2" },
     "retos3eso": { "c1": "TYD.3.1.1", "c2": "TYD.3.1.3", "c3": "TYD.3.2.1", "c4": "TYD.3.2.2", "c5": "TYD.3.4.1", "c6": "TYD.3.7.1" },
     "eniac": { "c1": "DIG.4.1.3", "c2": "DIG.4.2.2", "c3": "DIG.4.2.3", "c4": "DIG.4.2.4", "c5": "DIG.4.4.4" }
   };
 
-  function obtenerNivelCurso(curso) {
-    return curso.charAt(0);
+  let cacheCloud = {};
+
+  async function cargarDatosCloud() {
+    cacheCloud = {};
+    const colecciones = ["doblador_2eso_notas", "eniac_4eso_notas", "evaluacion_directa"];
+
+    for (const col of colecciones) {
+      try {
+        const snap = await db.collection(col).get();
+        snap.forEach(doc => {
+          cacheCloud[`${col}_${doc.id}`] = doc.data();
+        });
+      } catch(e) {}
+    }
   }
 
-  function esNumero(v) {
-    return typeof v === 'number' && !isNaN(v);
-  }
+  function esNumero(v) { return typeof v === 'number' && !isNaN(v); }
 
   function obtenerNotasAlumno(grupo, alumno) {
     const notasPorCriterio = {};
 
+    // 1. Escanear Cloud Firestore
+    Object.keys(cacheCloud).forEach(key => {
+      if (key.includes(grupo) && key.includes(alumno)) {
+        const data = cacheCloud[key];
+        let projKey = "";
+        if (key.includes("doblador")) projKey = "doblador";
+        else if (key.includes("eniac")) projKey = "eniac";
+
+        Object.keys(data).forEach(prop => {
+          let critCode = prop;
+          if (projKey && mapaEquivalenciasProyectos[projKey] && mapaEquivalenciasProyectos[projKey][prop]) {
+            critCode = mapaEquivalenciasProyectos[projKey][prop];
+          }
+
+          const val = parseFloat(data[prop]);
+          if (esNumero(val)) {
+            if (!notasPorCriterio[critCode]) notasPorCriterio[critCode] = [];
+            notasPorCriterio[critCode].push(val);
+          }
+        });
+      }
+    });
+
+    // 2. Escanear LocalStorage (Resguardo local)
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (!key) continue;
-
-      if (key.includes(grupo) && key.includes(alumno)) {
+      if (key && key.includes(grupo) && key.includes(alumno)) {
         try {
-          const raw = localStorage.getItem(key);
-          if (!raw) continue;
-          const data = JSON.parse(raw);
-
+          const data = JSON.parse(localStorage.getItem(key));
           let projKey = "";
           if (key.startsWith("doblador")) projKey = "doblador";
-          else if (key.startsWith("retos3eso")) projKey = "retos3eso";
           else if (key.startsWith("eniac")) projKey = "eniac";
 
           Object.keys(data).forEach(prop => {
             let critCode = prop;
-
             if (projKey && mapaEquivalenciasProyectos[projKey] && mapaEquivalenciasProyectos[projKey][prop]) {
               critCode = mapaEquivalenciasProyectos[projKey][prop];
             }
-
             const val = parseFloat(data[prop]);
             if (esNumero(val)) {
               if (!notasPorCriterio[critCode]) notasPorCriterio[critCode] = [];
               notasPorCriterio[critCode].push(val);
             }
           });
-        } catch(e) {}
+        } catch(e){}
       }
     }
 
+    // Medias
     const mediasResumen = {};
     Object.keys(notasPorCriterio).forEach(code => {
       const arr = notasPorCriterio[code];
       if (arr.length > 0) {
-        const suma = arr.reduce((a, b) => a + b, 0);
-        mediasResumen[code] = suma / arr.length;
+        mediasResumen[code] = arr.reduce((a, b) => a + b, 0) / arr.length;
       }
     });
 
     return mediasResumen;
   }
 
-  function renderMatriz() {
+  async function renderMatriz() {
+    await cargarDatosCloud();
+
     const curso = document.getElementById("selectCurso").value;
-    const nivel = obtenerNivelCurso(curso);
+    const nivel = curso.charAt(0);
     const criteriosList = catálogoCriterios[nivel] || [];
     const listaAlumnos = alumnosData[curso] || [];
 
     const head = document.getElementById("headMatriz");
     const body = document.getElementById("bodyMatriz");
 
-    let headHtml = `<tr>
-      <th style="width:30px;">#</th>
-      <th style="text-align:left;">Alumno / Alumna</th>`;
-    
+    let headHtml = `<tr><th style="width:30px;">#</th><th style="text-align:left;">Alumno / Alumna</th>`;
     criteriosList.forEach(c => {
       headHtml += `<th title="${c.label}">${c.code}<br><span style="font-weight:normal; font-size:0.7rem; color:#64748b;">${c.label}</span></th>`;
     });
@@ -262,45 +266,39 @@
     listaAlumnos.forEach((alumno, idx) => {
       const medias = obtenerNotasAlumno(curso, alumno);
       
-      bodyHtml += `<tr>
-        <td>${idx + 1}</td>
-        <td class="alno-col">${alumno}</td>`;
+      bodyHtml += `<tr><td>${idx + 1}</td><td class="alno-col">${alumno}</td>`;
 
       let sumaTotal = 0;
-      let contCriteriosEvaluados = 0;
+      let cont = 0;
 
       criteriosList.forEach(c => {
         const score = medias[c.code];
         if (esNumero(score)) {
           bodyHtml += `<td><span class="mark-val">${score.toFixed(1)}</span></td>`;
           sumaTotal += score;
-          contCriteriosEvaluados++;
+          cont++;
         } else {
           bodyHtml += `<td><span class="mark-empty">-</span></td>`;
         }
       });
 
-      let finalMediaTxt = "-";
-      if (contCriteriosEvaluados > 0) {
-        finalMediaTxt = (sumaTotal / contCriteriosEvaluados).toFixed(1);
-        totalEvaluados++;
-      }
+      const finalVal = cont > 0 ? (sumaTotal / cont).toFixed(1) : "-";
+      if (cont > 0) totalEvaluados++;
 
-      bodyHtml += `<td class="mark-final">${finalMediaTxt}</td></tr>`;
+      bodyHtml += `<td class="mark-final">${finalVal}</td></tr>`;
     });
 
     body.innerHTML = bodyHtml;
-    document.getElementById("infoRegistros").textContent = `Procesados ${listaAlumnos.length} alumnos de ${curso} (${totalEvaluados} con calificaciones registradas).`;
+    document.getElementById("infoRegistros").textContent = `☁️ Sincronizado. Registradas calificaciones de ${totalEvaluados} alumnos de ${curso}.`;
   }
 
   function exportarMatrizCSV() {
     const curso = document.getElementById("selectCurso").value;
-    const nivel = obtenerNivelCurso(curso);
+    const nivel = curso.charAt(0);
     const criteriosList = catálogoCriterios[nivel] || [];
     const listaAlumnos = alumnosData[curso] || [];
 
-    let csv = `Curso;Alumno;` + criteriosList.map(c => `${c.code} (${c.label})`).join(";") + `;Nota Media Global
-`;
+    let csv = `Curso;Alumno;` + criteriosList.map(c => `${c.code} (${c.label})`).join(";") + `;Nota Media Global\n`;
 
     listaAlumnos.forEach(alumno => {
       const medias = obtenerNotasAlumno(curso, alumno);
@@ -321,12 +319,11 @@
       });
 
       const finalVal = cont > 0 ? (sumaTotal / cont).toFixed(1) : "";
-      line += `;${finalVal}
-`;
+      line += `;${finalVal}\n`;
       csv += line;
     });
 
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = `matriz_completa_criterios_${curso}.csv`;

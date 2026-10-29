@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Evaluador Directo - Colegio La Hispanidad</title>
+
+  <!-- SDK Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
   <style>
     :root {
       --primary: #2563eb;
@@ -61,12 +66,11 @@
   <header>
     <div>
       <h1>📝 Evaluador Directo</h1>
-      <p>Calificación directa por Criterios de Evaluación Oficiales | Colegio La Hispanidad</p>
+      <p>Calificación por Criterios Oficiales con Sincronización en la Nube | Colegio La Hispanidad</p>
     </div>
     <a href="index.html" class="btn-home">🏠 Volver al Inicio</a>
   </header>
 
-  <!-- CONFIGURACIÓN DE LA PRUEBA -->
   <div class="card">
     <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: #0f172a;">1. Configuración del Instrumento</h2>
     
@@ -113,7 +117,6 @@
     </div>
   </div>
 
-  <!-- TABLA DE CALIFICACIÓN DIRECTA -->
   <div class="card" id="cardTabla" style="display:none;">
     <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: #0f172a;" id="tituloTabla">2. Registro de Notas</h2>
     
@@ -125,13 +128,18 @@
     </div>
 
     <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-      <button class="btn btn-primary" onclick="guardarNotasDirectas()">💾 Guardar Notas en el Cuaderno General</button>
+      <button class="btn btn-primary" onclick="guardarNotasDirectas()">💾 Guardar y Sincronizar en la Nube</button>
       <span id="msgGuardado" style="font-weight: 700; color: #16a34a; font-size: 0.9rem;"></span>
     </div>
   </div>
 </div>
 
 <script>
+  // Inicialización de Firebase
+  const firebaseConfig = { projectId: "cyberbreakout-hispanidad" };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
   const alumnosData = {
     "2A": ["Bada Blanco, Ainara","Bravo Rodríguez, Lucía","Contreras Santiago, Manuel","Contreras Santiago, Paula","Correa Rodríguez, Ainara","Costa Redondo, Saray","Cruz Feria, Esteban","Cuaresma Rodríguez, Indhira","Cuaresma Rodríguez, Nayma","De la Luz Patricio, Elena","Garcia Caparrós, Indira","Garrido Fernández, Yamileth","Gómez Brito, Adriana","Gómez López, Daniella","Gutiérrez Valencia, Thomas","López Gómez, Hugo","López Salguero, Héctor Jesús","Mora Chico, Hugo","Mykhailyshyn, Iryna","Presa Bueno, Luca","Rengel Padilla, Alejandra","Reyes Pérez, Francisco José","Rodríguez Domínguez, Antonio","Silva López, Ainhoa","Torrescusa Borrero, Miguel"],
     "2B": ["Bautista Lepe, Izan","Bueno Merino, Indira","Diallo, Zoumana","Díaz Pinto, Giulia","El Hajoui Moustekfy, Ryan","El Hajoui Moustekfy, Yasmina","Funes Aranda, Jean Alessandro","Gil Pire, Camila Sophia","Gutiérrez Álvarez, Adriano","Hernández Tarriño, Estrella","Herrán Góngora, Laura Sofía","Hierro Masa, Ximena","Jiménez Vázquez, Indira","Lemos Del Toro, Alejandro","Masero Rodríguez, Ana de los Remedios","Moya Mera, Aitor","Muñoz López, Yerai","Núñez Álvarez, Jose","Pérez Márquez, Juan Marcelo","Pozo Orta, Julia","Rodríguez Enríquez, Daniela","Rodríguez Ospina, Juan David","Sánchez Alonso, Libertad","Sánchez Pérez, Erick","Sola Infantes, Lucía","Tristán Wert, Aarón"],
@@ -143,54 +151,33 @@
 
   const catálogoCriterios = {
     "2": [
-      { code: "TYD.2.1.1", label: "Búsqueda y Fiabilidad" },
-      { code: "TYD.2.1.2", label: "Análisis de Productos" },
-      { code: "TYD.2.1.3", label: "Protección y Salud Digital" },
-      { code: "TYD.2.2.1", label: "Diseño Sostenible e Innovación" },
-      { code: "TYD.2.2.2", label: "Planificación y Trabajo Cooperativo" },
-      { code: "TYD.2.3.1", label: "Fabricación y Seguridad" },
-      { code: "TYD.2.4.1", label: "Comunicación y Documentación Técnica" },
-      { code: "TYD.2.5.1", label: "Algoritmos y Diagramas de Flujo" },
-      { code: "TYD.2.5.2", label: "Programación de Aplicaciones e IA" },
-      { code: "TYD.2.5.3", label: "Automatización, Robots y Control" },
-      { code: "TYD.2.6.1", label: "Uso Eficiente y Seguro de Dispositivos" },
-      { code: "TYD.2.6.2", label: "Creación y Difusión de Contenidos" },
-      { code: "TYD.2.6.3", label: "Almacenamiento Seguro de Información" },
-      { code: "TYD.2.7.1", label: "Influencia Tecnológica y Desarrollo Sostenible" },
+      { code: "TYD.2.1.1", label: "Búsqueda y Fiabilidad" }, { code: "TYD.2.1.2", label: "Análisis de Productos" },
+      { code: "TYD.2.1.3", label: "Protección y Salud Digital" }, { code: "TYD.2.2.1", label: "Diseño Sostenible e Innovación" },
+      { code: "TYD.2.2.2", label: "Planificación y Trabajo Cooperativo" }, { code: "TYD.2.3.1", label: "Fabricación y Seguridad" },
+      { code: "TYD.2.4.1", label: "Comunicación y Documentación Técnica" }, { code: "TYD.2.5.1", label: "Algoritmos y Diagramas de Flujo" },
+      { code: "TYD.2.5.2", label: "Programación de Aplicaciones e IA" }, { code: "TYD.2.5.3", label: "Automatización, Robots y Control" },
+      { code: "TYD.2.6.1", label: "Uso Eficiente y Seguro de Dispositivos" }, { code: "TYD.2.6.2", label: "Creación y Difusión de Contenidos" },
+      { code: "TYD.2.6.3", label: "Almacenamiento Seguro de Información" }, { code: "TYD.2.7.1", label: "Influencia Tecnológica y Sostenibilidad" },
       { code: "TYD.2.7.2", label: "Tecnologías Emergentes y Bienestar" }
     ],
     "3": [
-      { code: "TYD.3.1.1", label: "Búsqueda y Fiabilidad" },
-      { code: "TYD.3.1.2", label: "Análisis de Productos y Simulación" },
-      { code: "TYD.3.1.3", label: "Protección y Salud Digital" },
-      { code: "TYD.3.2.1", label: "Soluciones Sostenibles / ODS" },
-      { code: "TYD.3.2.2", label: "Planificación y Trabajo Cooperativo" },
-      { code: "TYD.3.3.1", label: "Fabricación y Seguridad" },
-      { code: "TYD.3.4.1", label: "Exposición y Lenguaje Técnico" },
-      { code: "TYD.3.5.1", label: "Algoritmos y Diagramas de Flujo" },
-      { code: "TYD.3.5.2", label: "Programación de Aplicaciones e IA" },
-      { code: "TYD.3.5.3", label: "Automatización y Robótica" },
-      { code: "TYD.3.6.1", label: "Uso Eficiente de Dispositivos" },
-      { code: "TYD.3.6.2", label: "Creación de Contenidos y Licencias" },
-      { code: "TYD.3.6.3", label: "Almacenamiento Seguro" },
-      { code: "TYD.3.7.1", label: "Impacto Histórico y Desarrollo Sostenible" },
-      { code: "TYD.3.7.2", label: "Tecnologías Emergentes e Igualdad en Andalucía" }
+      { code: "TYD.3.1.1", label: "Búsqueda y Fiabilidad" }, { code: "TYD.3.1.2", label: "Análisis de Productos y Simulación" },
+      { code: "TYD.3.1.3", label: "Protección y Salud Digital" }, { code: "TYD.3.2.1", label: "Soluciones Sostenibles / ODS" },
+      { code: "TYD.3.2.2", label: "Planificación y Trabajo Cooperativo" }, { code: "TYD.3.3.1", label: "Fabricación y Seguridad" },
+      { code: "TYD.3.4.1", label: "Exposición y Lenguaje Técnico" }, { code: "TYD.3.5.1", label: "Algoritmos y Diagramas de Flujo" },
+      { code: "TYD.3.5.2", label: "Programación de Aplicaciones e IA" }, { code: "TYD.3.5.3", label: "Automatización y Robótica" },
+      { code: "TYD.3.6.1", label: "Uso Eficiente de Dispositivos" }, { code: "TYD.3.6.2", label: "Creación de Contenidos y Licencias" },
+      { code: "TYD.3.6.3", label: "Almacenamiento Seguro" }, { code: "TYD.3.7.1", label: "Impacto Histórico y Sostenibilidad" },
+      { code: "TYD.3.7.2", label: "Tecnologías Emergentes e Igualdad" }
     ],
     "4": [
-      { code: "DIG.4.1.1", label: "Redes Locales y Comunicación" },
-      { code: "DIG.4.1.2", label: "Instalación de Sistemas Operativos" },
-      { code: "DIG.4.1.3", label: "Hardware y Resolución de Problemas" },
-      { code: "DIG.4.2.1", label: "Gestión del Entorno Personal de Aprendizaje" },
-      { code: "DIG.4.2.2", label: "Búsqueda y Curación de Información" },
-      { code: "DIG.4.2.3", label: "Creación y Licencias CC" },
-      { code: "DIG.4.2.4", label: "Plataformas Colaborativas Virtuales" },
-      { code: "DIG.4.3.1", label: "Privacidad y Huella Digital" },
-      { code: "DIG.4.3.2", label: "Seguridad, Contraseñas y Antivirus" },
-      { code: "DIG.4.3.3", label: "Prevención de Amenazas en Red y Salud" },
-      { code: "DIG.4.4.1", label: "Uso Ético y Etiqueta Digital" },
-      { code: "DIG.4.4.2", label: "Comercio Electrónico y Brecha Digital" },
-      { code: "DIG.4.4.3", label: "Análisis Crítico de Mensajes Digitales" },
-      { code: "DIG.4.4.4", label: "Sostenibilidad y Huella Ecosocial Digital" }
+      { code: "DIG.4.1.1", label: "Redes Locales y Comunicación" }, { code: "DIG.4.1.2", label: "Instalación de Sistemas Operativos" },
+      { code: "DIG.4.1.3", label: "Hardware y Resolución de Problemas" }, { code: "DIG.4.2.1", label: "Gestión del Entorno Personal" },
+      { code: "DIG.4.2.2", label: "Búsqueda y Curación de Información" }, { code: "DIG.4.2.3", label: "Creación y Licencias CC" },
+      { code: "DIG.4.2.4", label: "Plataformas Colaborativas Virtuales" }, { code: "DIG.4.3.1", label: "Privacidad y Huella Digital" },
+      { code: "DIG.4.3.2", label: "Seguridad, Contraseñas y Antivirus" }, { code: "DIG.4.3.3", label: "Prevención de Amenazas en Red" },
+      { code: "DIG.4.4.1", label: "Uso Ético y Etiqueta Digital" }, { code: "DIG.4.4.2", label: "Comercio Electrónico y Brecha Digital" },
+      { code: "DIG.4.4.3", label: "Análisis Crítico de Mensajes Digitales" }, { code: "DIG.4.4.4", label: "Sostenibilidad y Huella Ecosocial" }
     ]
   };
 
@@ -221,7 +208,7 @@
     document.querySelectorAll(".chk-crit").forEach(chk => chk.checked = estado);
   }
 
-  function generarTablaCalificacion() {
+  async function generarTablaCalificacion() {
     const curso = document.getElementById("selectCurso").value;
     const nivel = curso.charAt(0);
     const catálogo = catálogoCriterios[nivel] || [];
@@ -253,15 +240,22 @@
     let bodyHtml = "";
     const idPruebaClean = document.getElementById("nombrePrueba").value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
 
-    alumnos.forEach((alno, idx) => {
+    for (let idx = 0; idx < alumnos.length; idx++) {
+      const alno = alumnos[idx];
       bodyHtml += `<tr><td>${idx + 1}</td><td class="alno-col">${alno}</td>`;
       
-      const keyStorage = `directo_${curso}_${alno}_${idPruebaClean}`;
+      const docId = `directo_${curso}_${alno}_${idPruebaClean}`;
       let notasPrevias = {};
+
       try {
-        const raw = localStorage.getItem(keyStorage);
-        if (raw) notasPrevias = JSON.parse(raw);
-      } catch(e){}
+        const snap = await db.collection("evaluacion_directa").doc(docId).get();
+        if (snap.exists) {
+          notasPrevias = snap.data();
+        } else {
+          const raw = localStorage.getItem(docId);
+          if (raw) notasPrevias = JSON.parse(raw);
+        }
+      } catch(e) {}
 
       criteriosSeleccionados.forEach(c => {
         const valPrevio = notasPrevias[c.code] !== undefined ? notasPrevias[c.code] : "";
@@ -274,14 +268,14 @@
         </td>`;
       });
       bodyHtml += `</tr>`;
-    });
+    }
 
     body.innerHTML = bodyHtml;
     document.getElementById("cardTabla").style.display = "block";
     document.getElementById("msgGuardado").textContent = "";
   }
 
-  function guardarNotasDirectas() {
+  async function guardarNotasDirectas() {
     const curso = document.getElementById("selectCurso").value;
     const alumnos = alumnosData[curso] || [];
     const idPruebaClean = document.getElementById("nombrePrueba").value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -292,9 +286,15 @@
     }
 
     let guardadosCount = 0;
+    const batch = db.batch();
 
     alumnos.forEach((alno, idx) => {
-      const payload = {};
+      const payload = {
+        curso: curso,
+        alumno: alno,
+        prueba: idPruebaClean,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
       let tieneNotas = false;
 
       criteriosSeleccionados.forEach(c => {
@@ -309,14 +309,20 @@
       });
 
       if (tieneNotas) {
-        const keyStorage = `directo_${curso}_${alno}_${idPruebaClean}`;
-        localStorage.setItem(keyStorage, JSON.stringify(payload));
+        const docId = `directo_${curso}_${alno}_${idPruebaClean}`;
+        const ref = db.collection("evaluacion_directa").doc(docId);
+        batch.set(ref, payload, { merge: true });
+        localStorage.setItem(docId, JSON.stringify(payload));
         guardadosCount++;
       }
     });
 
-    const msg = document.getElementById("msgGuardado");
-    msg.textContent = `✅ Guardadas correctamente las notas de ${guardadosCount} alumnos. Sincronizado con Seguimiento.`;
+    try {
+      await batch.commit();
+      document.getElementById("msgGuardado").textContent = `☁️ Guardadas y sincronizadas en la nube las notas de ${guardadosCount} alumnos.`;
+    } catch(err) {
+      document.getElementById("msgGuardado").textContent = `💾 Guardadas localmente (${guardadosCount} alumnos).`;
+    }
   }
 
   window.onload = cargarCriteriosYAlumnos;
