@@ -16,7 +16,7 @@
       --bg: #f8fafc;
       --card-bg: #ffffff;
       --text: #1e293b;
-      --border-dark: #64748b; /* Líneas de separación oscuras */
+      --border-dark: #64748b;
       --border-cell: #94a3b8;
     }
 
@@ -45,10 +45,10 @@
     .filter-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
     select { padding: 8px 12px; border-radius: 8px; border: 1px solid #64748b; font-size: 0.95rem; font-weight: 600; background: white; }
 
-    /* CONTENEDOR CON SCROLL DOBLE (VERTICAL Y HORIZONTAL) Y STICKY TOTAL */
+    /* CONTENEDOR CON SCROLL DOBLE Y STICKY TOTAL */
     .table-container {
-      max-height: 70vh; /* Permite scroll vertical */
-      overflow: auto;   /* Permite scroll horizontal y vertical */
+      max-height: 70vh;
+      overflow: auto;
       max-width: 100%;
       border-radius: 8px;
       border: 2px solid var(--border-dark);
@@ -64,7 +64,6 @@
       border-bottom: 1px solid var(--border-cell);
     }
     
-    /* ENCABEZADOS FIJOS ARRIBA (STICKY TOP) */
     thead th {
       position: sticky;
       top: 0;
@@ -76,12 +75,10 @@
       border-bottom: 2px solid var(--border-dark);
     }
 
-    /* FILA CEBRA INTERCALADA */
     tbody tr:nth-child(odd) { background-color: #ffffff; }
     tbody tr:nth-child(even) { background-color: #f1f5f9; }
     tbody tr:hover { background-color: #bae6fd !important; }
 
-    /* COLUMNA 1 (#) FIJA A LA IZQUIERDA Y ARRIBA */
     th.col-fixed-num, td.col-fixed-num {
       position: sticky;
       left: 0;
@@ -91,7 +88,6 @@
       border-right: 1px solid var(--border-cell);
     }
 
-    /* COLUMNA 2 (ALUMNO) FIJA A LA IZQUIERDA Y ARRIBA CON BORDE Y SOMBRA MARCADOS */
     th.col-fixed-name, td.col-fixed-name {
       position: sticky;
       left: 38px;
@@ -105,7 +101,6 @@
       box-shadow: 4px 0 6px -2px rgba(0,0,0,0.15);
     }
 
-    /* CAPA Z MÁS ALTA PARA LAS CELDAS DE ESQUINA (ENCABEZADOS + NOMBRES) */
     thead th.col-fixed-num, thead th.col-fixed-name {
       z-index: 40;
       background-color: #cbd5e1;
@@ -115,10 +110,15 @@
       z-index: 10;
     }
 
-    /* Estilos de Notas y Tooltips */
+    /* Celdas interactivas */
     .mark-cell {
-      cursor: help;
+      cursor: pointer;
       position: relative;
+      user-select: none;
+      -webkit-tap-highlight-color: rgba(2, 132, 199, 0.2);
+    }
+    .mark-cell:active {
+      background-color: #7dd3fc !important;
     }
     .mark-val { font-weight: 800; color: #0284c7; }
     .mark-empty { color: #94a3b8; font-weight: 400; }
@@ -127,6 +127,43 @@
     .btn { padding: 9px 18px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; font-size: 0.88rem; transition: background 0.2s; }
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: var(--primary-dark); }
+
+    /* MODAL POPUP PARA MÓVIL Y TABLET */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(3px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-card {
+      background: white;
+      border-radius: 14px;
+      max-width: 480px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      border: 1px solid #cbd5e1;
+      animation: popup 0.2s ease-out;
+    }
+    @keyframes popup {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+    .modal-title { font-size: 1.1rem; font-weight: 800; color: #0f172a; }
+    .modal-subtitle { font-size: 0.85rem; color: #0284c7; font-weight: 700; margin-top: 2px; }
+    .modal-close { background: #f1f5f9; border: none; font-size: 1.2rem; font-weight: 700; color: #64748b; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+    .modal-body { font-size: 0.9rem; color: #334155; line-height: 1.6; }
+    .desglose-list { list-style: none; margin-top: 10px; padding: 0; }
+    .desglose-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 6px; border: 1px solid #e2e8f0; }
+    .desglose-origen { font-weight: 600; color: #1e293b; }
+    .desglose-nota { font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 6px; }
+    .desglose-media { margin-top: 12px; padding: 10px 12px; background: #0284c7; color: white; border-radius: 8px; display: flex; justify-content: space-between; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -144,7 +181,7 @@
     <div class="filter-bar">
       <div>
         <h2 style="font-size: 1.15rem; font-weight: 700; color: #0f172a;">📋 Matriz Completa por Criterios de Evaluación</h2>
-        <p style="font-size: 0.82rem; color: #475569;">💡 <strong>Consejo:</strong> Pasa el ratón o mantén pulsada una nota para ver el desglose de dónde procede la calificación.</p>
+        <p style="font-size: 0.82rem; color: #475569;">📱 <strong>Móvil / Tablet:</strong> Toca cualquier nota para abrir la ventana con el desglose detallado.</p>
       </div>
       <div>
         <label for="selectCurso" style="font-size:0.88rem; font-weight:700; color:#475569; margin-right:8px;">Seleccionar Curso:</label>
@@ -174,6 +211,27 @@
 
   <div style="text-align: center; margin-top: 10px;">
     <a href="index.html" class="btn btn-primary" style="text-decoration:none; display:inline-block;">🏠 Volver al Inicio</a>
+  </div>
+</div>
+
+<!-- VENTANA MODAL PARA DESGLOSE EN MÓVIL Y TABLET -->
+<div class="modal-overlay" id="modalDesglose" onclick="cerrarModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalAlumno">Nombre Alumno</div>
+        <div class="modal-subtitle" id="modalCriterio">Criterio TYD.X.X.X</div>
+      </div>
+      <button class="modal-close" onclick="cerrarModalDirecto()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-weight: 700; font-size:0.85rem; color:#64748b; margin-bottom: 6px;">ORIGEN DE LAS CALIFICACIONES:</div>
+      <div id="modalListaDesglose" class="desglose-list"></div>
+      <div class="desglose-media">
+        <span>Nota Media Obtenida:</span>
+        <span id="modalNotaMedia" style="font-size:1.05rem;">0.0</span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -249,9 +307,8 @@
   function esNumero(v) { return typeof v === 'number' && !isNaN(v); }
 
   function obtenerNotasAlumno(grupo, alumno) {
-    const notasPorCriterio = {}; // { "TYD.3.1.1": [ { origen: "Examen 1. La Tecnología", nota: 7.5 } ] }
+    const notasPorCriterio = {};
 
-    // 1. Escanear Cloud Firestore
     Object.keys(cacheCloud).forEach(key => {
       if (key.includes(grupo) && key.includes(alumno)) {
         const data = cacheCloud[key];
@@ -285,7 +342,6 @@
       }
     });
 
-    // 2. Escanear LocalStorage (si no estaba en la nube)
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.includes(grupo) && key.includes(alumno)) {
@@ -305,7 +361,6 @@
             const val = parseFloat(data[prop]);
             if (esNumero(val)) {
               if (!notasPorCriterio[critCode]) notasPorCriterio[critCode] = [];
-              // Evitar duplicados exactos de origen
               const existe = notasPorCriterio[critCode].some(o => o.origen === origenNombre && o.nota === val);
               if (!existe) {
                 notasPorCriterio[critCode].push({ origen: origenNombre, nota: val });
@@ -316,19 +371,51 @@
       }
     }
 
-    // Medias y Tooltips
     const resumen = {};
     Object.keys(notasPorCriterio).forEach(code => {
       const arr = notasPorCriterio[code];
       if (arr.length > 0) {
         const suma = arr.reduce((a, b) => a + b.nota, 0);
         const media = suma / arr.length;
-        const desgloseStr = arr.map(item => `${item.origen}: ${item.nota}`).join(" | ");
-        resumen[code] = { media: media, detalle: desgloseStr };
+        resumen[code] = { media: media, items: arr };
       }
     });
 
     return resumen;
+  }
+
+  // FUNCIÓN PARA ABRIR EL MODAL AL TOCAR/HACER CLIC EN CUALQUIER NOTA
+  function abrirDesgloseModal(alumno, criterioCode, criterioLabel, mediaVal, itemsJSON) {
+    const items = JSON.parse(decodeURIComponent(itemsJSON));
+    document.getElementById("modalAlumno").textContent = alumno;
+    document.getElementById("modalCriterio").textContent = `${criterioCode} - ${criterioLabel}`;
+    document.getElementById("modalNotaMedia").textContent = mediaVal.toFixed(1);
+
+    const container = document.getElementById("modalListaDesglose");
+    container.innerHTML = "";
+
+    items.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "desglose-item";
+      div.innerHTML = `
+        <span class="desglose-origen">📝 ${item.origen}</span>
+        <span class="desglose-nota">${item.nota.toFixed(1)}</span>
+      `;
+      container.appendChild(div);
+    });
+
+    const overlay = document.getElementById("modalDesglose");
+    overlay.style.display = "flex";
+  }
+
+  function cerrarModal(e) {
+    if (e.target.id === "modalDesglose") {
+      document.getElementById("modalDesglose").style.display = "none";
+    }
+  }
+
+  function cerrarModalDirecto() {
+    document.getElementById("modalDesglose").style.display = "none";
   }
 
   async function renderMatriz() {
@@ -363,7 +450,10 @@
       criteriosList.forEach(c => {
         const item = resumenNotas[c.code];
         if (item && esNumero(item.media)) {
-          bodyHtml += `<td class="mark-cell" title="📌 Desglose (${c.code}):\n${item.detalle}"><span class="mark-val">${item.media.toFixed(1)}</span></td>`;
+          const itemsEncoded = encodeURIComponent(JSON.stringify(item.items));
+          bodyHtml += `<td class="mark-cell" onclick="abrirDesgloseModal('${alumno.replace(/'/g, "\'")}', '${c.code}', '${c.label.replace(/'/g, "\'")}', ${item.media}, '${itemsEncoded}')">
+            <span class="mark-val">${item.media.toFixed(1)}</span>
+          </td>`;
           sumaTotal += item.media;
           cont++;
         } else {
@@ -374,7 +464,7 @@
       const finalVal = cont > 0 ? (sumaTotal / cont).toFixed(1) : "-";
       if (cont > 0) totalEvaluados++;
 
-      bodyHtml += `<td class="mark-final" title="Nota media global calculada sobre ${cont} criterios evaluados.">${finalVal}</td></tr>`;
+      bodyHtml += `<td class="mark-final">${finalVal}</td></tr>`;
     });
 
     body.innerHTML = bodyHtml;
