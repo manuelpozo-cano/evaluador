@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaluador LOMLOE - SdA 2: Presupuestos de Ordenadores (4º ESO)</title>
+
+  <!-- SDK Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --team-accent: #0284c7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    
+    header {
+      background: linear-gradient(135deg, #0f172a, #0284c7);
+      color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+    }
+    header h1 { font-size: 1.6rem; margin-bottom: 4px; }
+    header p { opacity: 0.9; font-size: 0.95rem; }
+
+    .btn-home {
+      background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white; padding: 10px 18px; border-radius: 8px; text-decoration: none;
+      font-weight: 700; font-size: 0.9rem; transition: background 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-home:hover { background: rgba(255, 255, 255, 0.3); }
+
+    .card {
+      background: var(--card-bg); border-radius: 12px; padding: 20px;
+      margin-bottom: 20px; border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .selector-grid { display: grid; grid-template-columns: 1fr 2fr 1.6fr; gap: 16px; align-items: flex-end; }
+    @media (max-width: 850px) { .selector-grid { grid-template-columns: 1fr; } }
+
+    label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 0.9rem; color: #475569; }
+    select {
+      width: 100%; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid var(--border); background-color: #fff; font-size: 1rem;
+    }
+
+    .nav-select-wrapper { display: flex; gap: 6px; align-items: center; }
+    .btn-nav-icon {
+      background: #f1f5f9; border: 1px solid var(--border); color: #334155;
+      padding: 10px 14px; border-radius: 8px; cursor: pointer; font-weight: 700;
+      transition: all 0.15s; font-size: 1rem; flex-shrink: 0;
+    }
+    .btn-nav-icon:hover:not(:disabled) { background: var(--primary); color: white; border-color: var(--primary); }
+    .btn-nav-icon:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Panel Control de Equipos */
+    .team-panel {
+      background: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 8px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .team-toggle-box {
+      display: flex; align-items: center; gap: 8px; font-size: 0.88rem; font-weight: 700; color: #0369a1; cursor: pointer;
+    }
+    .team-toggle-box input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
+
+    .criterio-card { margin-bottom: 20px; border-left: 4px solid var(--primary); }
+    .criterio-header { margin-bottom: 12px; }
+    .criterio-code { font-weight: 700; color: var(--primary); font-size: 0.95rem; }
+    .criterio-title { font-size: 1.05rem; font-weight: 600; margin-top: 2px; }
+    .criterio-desc { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+
+    .rubrica-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px;
+    }
+    @media (max-width: 768px) { .rubrica-grid { grid-template-columns: 1fr 1fr; } }
+
+    .nivel-btn {
+      background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px;
+      padding: 12px; text-align: left; cursor: pointer; transition: all 0.2s;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .nivel-btn:hover { border-color: var(--primary); background: #f0f9ff; }
+    .nivel-btn.active {
+      border-color: var(--primary);
+      background-color: #f0f9ff; box-shadow: 0 0 0 2px var(--primary);
+    }
+    .nivel-header { font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .nivel-desc { font-size: 0.8rem; color: #334155; }
+
+    .results-card {
+      background: #f0f9ff; border: 1px solid #bae6fd;
+      display: grid; grid-template-columns: 1fr 2fr; gap: 20px; align-items: center;
+    }
+    @media (max-width: 600px) { .results-card { grid-template-columns: 1fr; } }
+
+    .score-box { text-align: center; padding: 16px; background: white; border-radius: 10px; border: 1px solid #7dd3fc; }
+    .score-val { font-size: 2.8rem; font-weight: 800; color: var(--primary-dark); }
+    .score-label { font-size: 0.85rem; font-weight: 600; color: #0369a1; text-transform: uppercase; }
+
+    .seneca-box { background: white; padding: 16px; border-radius: 10px; border: 1px solid #7dd3fc; }
+    .seneca-title { font-weight: 700; font-size: 0.9rem; color: #0369a1; margin-bottom: 8px; }
+    .seneca-list { list-style: none; font-size: 0.88rem; }
+    .seneca-list li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #e0f2fe; }
+    .seneca-list li:last-child { border-bottom: none; }
+    .seneca-mark { font-weight: 700; color: #0284c7; }
+
+    .status-tag {
+      display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 3px 8px;
+      border-radius: 12px; margin-left: 8px;
+    }
+    .status-tag.saved { background: #dcfce7; color: #15803d; }
+    .status-tag.pending { background: #fef3c7; color: #b45309; }
+    .status-tag.team-sync { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
+
+    .quick-nav-bar {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); flex-wrap: wrap;
+    }
+
+    .btn-next-student {
+      background: var(--primary); color: white; padding: 12px 20px; border-radius: 8px;
+      font-weight: 700; border: none; cursor: pointer; transition: background 0.2s;
+      display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem;
+    }
+    .btn-next-student:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn-next-student:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+    .btn-prev-student {
+      background: #64748b; color: white; padding: 12px 20px; border-radius: 8px;
+      font-weight: 600; border: none; cursor: pointer; transition: background 0.2s;
+      display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem;
+    }
+    .btn-prev-student:hover:not(:disabled) { background: #475569; }
+    .btn-prev-student:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+    /* Tabla Resumen */
+    .table-title-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+    .table-container { overflow-x: auto; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background-color: #f1f5f9; font-weight: 700; color: #334155; }
+    tbody tr { cursor: pointer; transition: background 0.15s; }
+    tbody tr:hover { background-color: #f0f9ff; }
+    tbody tr.active-row { background-color: #e0f2fe; font-weight: 600; }
+    
+    .badge-status { padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .badge-done { background: #dcfce7; color: #166534; }
+    .badge-pending { background: #f3f4f6; color: #6b7280; }
+    .badge-partial { background: #fef3c7; color: #92400e; }
+
+    .badge-team { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
+    .badge-team.none { background: #f1f5f9; color: #94a3b8; font-weight: 400; }
+
+    .stats-bar { display: flex; gap: 20px; font-size: 0.85rem; font-weight: 600; color: #475569; }
+
+    .btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+    .btn {
+      padding: 10px 18px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer;
+      font-size: 0.9rem; transition: background 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: #e2e8f0; color: #334155; }
+    .btn-secondary:hover { background: #cbd5e1; }
+
+    /* Modal Gestor Equipos */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px);
+      display: flex; justify-content: center; align-items: center; z-index: 1000;
+      padding: 20px;
+    }
+    .modal-card {
+      background: white; border-radius: 12px; width: 100%; max-width: 650px;
+      max-height: 85vh; display: flex; flex-direction: column;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      padding: 16px 20px; background: #f8fafc; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; border-radius: 12px 12px 0 0;
+    }
+    .modal-header h3 { font-size: 1.1rem; color: #0f172a; }
+    .btn-close-modal { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b; }
+    .modal-body { padding: 16px 20px; overflow-y: auto; flex-grow: 1; }
+    .modal-footer {
+      padding: 16px 20px; background: #f8fafc; border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; gap: 10px; border-radius: 0 0 12px 12px;
+    }
+    .team-grid-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 550px) { .team-grid-list { grid-template-columns: 1fr; } }
+    .team-row-item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;
+    }
+    .team-row-item span { font-size: 0.85rem; font-weight: 600; color: #334155; }
+    .team-row-item select { width: auto; padding: 4px 8px; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div>
+      <h1>🖥️ SdA 2: Presupuestos de Ordenadores</h1>
+      <p>Digitalización - 4º ESO | Colegio La Hispanidad</p>
+    </div>
+    <a href="index.html" class="btn-home">🏠 Volver al Inicio</a>
+  </header>
+
+  <!-- Selección de Curso, Alumno y Control de Equipo -->
+  <div class="card selector-grid">
+    <div>
+      <label for="grupoSelect">Curso / Grupo:</label>
+      <select id="grupoSelect" onchange="cargarAlumnosGrupo()">
+        <option value="4A">4º ESO A</option>
+        <option value="4B">4º ESO B</option>
+      </select>
+    </div>
+    
+    <div>
+      <label for="alumnoSelect">Alumno / Alumna: <span id="statusBadge"></span></label>
+      <div class="nav-select-wrapper">
+        <button class="btn-nav-icon" id="btnTopPrev" onclick="alumnoAnterior()" title="Alumno Anterior">◄</button>
+        <select id="alumnoSelect" onchange="cargarEvaluacionAlumno()">
+          <!-- Carga dinámica -->
+        </select>
+        <button class="btn-nav-icon" id="btnTopNext" onclick="alumnoSiguiente()" title="Siguiente Alumno">►</button>
+      </div>
+    </div>
+
+    <!-- Módulo de Evaluación por Equipos -->
+    <div class="team-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.85rem; font-weight:700; color:#0369a1;">Gestión de Equipos:</span>
+        <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.78rem;" onclick="abrirGestorEquipos()">⚙️ Gestor de Equipos</button>
+      </div>
+      <label class="team-toggle-box" title="Al calificar a este alumno, las notas se replicarán automáticamente a todos los integrantes de su mismo equipo">
+        <input type="checkbox" id="chkReplicarEquipo" onchange="actualizarBadgeStatus()">
+        <span>🔗 Replicar nota al Equipo</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Criterio 1: Hardware, Ensamblaje y Compatibilidad -->
+  <div class="card criterio-card">
+    <div class="criterio-header">
+      <span class="criterio-code">DIG.4.1.3 (Peso: 25%)</span>
+      <div class="criterio-title">Hardware, Ensamblaje y Compatibilidad</div>
+      <div class="criterio-desc">Identificación de piezas de PC, verificación de compatibilidades y práctica de montaje/desmontaje en taller.</div>
+    </div>
+    <div class="rubrica-grid" id="grid-c1">
+      <div class="nivel-btn" onclick="seleccionarNivel('c1', 2.5, this)">
+        <div class="nivel-header"><span>INSUFICIENTE</span><span>2.5</span></div>
+        <div class="nivel-desc">No identifica las piezas básicas de hardware ni verifica la compatibilidad de los componentes.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c1', 5.5, this)">
+        <div class="nivel-header"><span>EN PROCESO</span><span>5.5</span></div>
+        <div class="nivel-desc">Identifica piezas principales con ayuda y comete errores leves al verificar la compatibilidad o al montar en taller.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c1', 8.0, this)">
+        <div class="nivel-header"><span>NOTABLE</span><span>8.0</span></div>
+        <div class="nivel-desc">Selecciona componentes compatibles para ambas configuraciones (SMR/Bachillerato) y demuestra autonomía en montaje.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c1', 10.0, this)">
+        <div class="nivel-header"><span>EXCELENTE</span><span>10.0</span></div>
+        <div class="nivel-desc">Justifica técnicamente cada componente, verifica compatibilidad experta y realiza montaje/desmontaje impecable.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Criterio 2: Búsqueda y Presupuesto de Componentes -->
+  <div class="card criterio-card">
+    <div class="criterio-header">
+      <span class="criterio-code">DIG.4.2.2 (Peso: 25%)</span>
+      <div class="criterio-title">Búsqueda y Presupuesto de Componentes</div>
+      <div class="criterio-desc">Búsqueda de piezas online (PC Componentes/tiendas), ajuste a requerimientos técnicos específicos y relación calidad/precio.</div>
+    </div>
+    <div class="rubrica-grid" id="grid-c2">
+      <div class="nivel-btn" onclick="seleccionarNivel('c2', 2.5, this)">
+        <div class="nivel-header"><span>INSUFICIENTE</span><span>2.5</span></div>
+        <div class="nivel-desc">No busca adecuadamente las piezas o ignora los requerimientos solicitados para cada tipo de equipo.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c2', 5.5, this)">
+        <div class="nivel-header"><span>EN PROCESO</span><span>5.5</span></div>
+        <div class="nivel-desc">Realiza presupuestos incompletos o con pequeños desajustes en las especificaciones requeridas.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c2', 8.0, this)">
+        <div class="nivel-header"><span>NOTABLE</span><span>8.0</span></div>
+        <div class="nivel-desc">Encuentra y presupuesta correctamente todas las piezas requeridas adaptándolas con criterio al uso indicado.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c2', 10.0, this)">
+        <div class="nivel-header"><span>EXCELENTE</span><span>10.0</span></div>
+        <div class="nivel-desc">Optimiza al máximo la relación calidad/precio, incluye todos los periféricos solicitados e investiga alternativas avanzadas.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Criterio 3: Documento y Comparativa Gráfica -->
+  <div class="card criterio-card">
+    <div class="criterio-header">
+      <span class="criterio-code">DIG.4.2.3 (Peso: 25%)</span>
+      <div class="criterio-title">Documento y Comparativa Gráfica</div>
+      <div class="criterio-desc">Elaboración del informe final con enlaces funcionales a presupuestos y gráfica comparativa entre ambas configuraciones.</div>
+    </div>
+    <div class="rubrica-grid" id="grid-c3">
+      <div class="nivel-btn" onclick="seleccionarNivel('c3', 2.5, this)">
+        <div class="nivel-header"><span>INSUFICIENTE</span><span>2.5</span></div>
+        <div class="nivel-desc">No entrega el documento o no incluye los enlaces a los presupuestos ni representación gráfica.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c3', 5.5, this)">
+        <div class="nivel-header"><span>EN PROCESO</span><span>5.5</span></div>
+        <div class="nivel-desc">Entrega documento básico, con enlaces o gráfica que requieren mejoras de formato o claridad.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c3', 8.0, this)">
+        <div class="nivel-header"><span>NOTABLE</span><span>8.0</span></div>
+        <div class="nivel-desc">Presenta un documento bien estructurado con enlaces verificados y gráfica comparativa de precios clara.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c3', 10.0, this)">
+        <div class="nivel-header"><span>EXCELENTE</span><span>10.0</span></div>
+        <div class="nivel-desc">Informe con formato profesional, análisis gráfico impecable y justificación comparativa de costes detallada.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Criterio 4: Sistemas Operativos y Licencias -->
+  <div class="card criterio-card">
+    <div class="criterio-header">
+      <span class="criterio-code">DIG.4.1.2 (Peso: 25%)</span>
+      <div class="criterio-title">Sistemas Operativos y Configuración</div>
+      <div class="criterio-desc">Diferenciación e integración de versiones de SO (Windows 11 Home para Bachillerato vs Windows 11 Pro para SMR) y licencias.</div>
+    </div>
+    <div class="rubrica-grid" id="grid-c4">
+      <div class="nivel-btn" onclick="seleccionarNivel('c4', 2.5, this)">
+        <div class="nivel-header"><span>INSUFICIENTE</span><span>2.5</span></div>
+        <div class="nivel-desc">Confunde o no incluye las licencias y versiones de sistemas operativos indicadas.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c4', 5.5, this)">
+        <div class="nivel-header"><span>EN PROCESO</span><span>5.5</span></div>
+        <div class="nivel-desc">Incluye los sistemas operativos pedidos pero sin diferenciar con claridad las características de Win 11 Home y Pro.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c4', 8.0, this)">
+        <div class="nivel-header"><span>NOTABLE</span><span>8.0</span></div>
+        <div class="nivel-desc">Selecciona e integra correctamente Windows 11 Pro para SMR y Home para Bachillerato argumentando su utilidad.</div>
+      </div>
+      <div class="nivel-btn" onclick="seleccionarNivel('c4', 10.0, this)">
+        <div class="nivel-header"><span>EXCELENTE</span><span>10.0</span></div>
+        <div class="nivel-desc">Analiza detalladamente las diferencias técnicas entre versiones, requisitos de instalación y modelo de licencias.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de Resultados del Alumno Actual -->
+  <div class="card results-card">
+    <div class="score-box">
+      <div class="score-label">Nota Proyecto</div>
+      <div class="score-val" id="globalScore">-.-</div>
+    </div>
+    <div class="seneca-box">
+      <div class="seneca-title">NOTAS PARA EL CUADERNO DE SÉNECA:</div>
+      <ul class="seneca-list">
+        <li><span>DIG.4.1.3 (Hardware y Compatibilidad)</span> <span class="seneca-mark" id="mark-c1">-.-</span></li>
+        <li><span>DIG.4.2.2 (Búsqueda y Presupuestos)</span> <span class="seneca-mark" id="mark-c2">-.-</span></li>
+        <li><span>DIG.4.2.3 (Documento y Gráfica)</span> <span class="seneca-mark" id="mark-c3">-.-</span></li>
+        <li><span>DIG.4.1.2 (Sistemas Operativos)</span> <span class="seneca-mark" id="mark-c4">-.-</span></li>
+      </ul>
+      
+      <!-- Navegación rápida inferior -->
+      <div class="quick-nav-bar">
+        <button class="btn-prev-student" id="btnBottomPrev" onclick="alumnoAnterior()">◄ Alumno Anterior</button>
+        <button class="btn-next-student" id="btnBottomNext" onclick="alumnoSiguiente()">Siguiente Alumno ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla Resumen Comparativa -->
+  <div class="card">
+    <div class="table-title-area">
+      <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">📊 Cuadro General de Calificaciones (4º ESO)</h2>
+      <div class="stats-bar">
+        <span>Evaluados: <strong id="statEvaluados">0/0</strong></span>
+        <span>Nota Media Grupo: <strong id="statMedia">-.-</strong></span>
+      </div>
+    </div>
+    <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 8px;">Haz clic en cualquier fila para evaluar directamente a ese alumno/a:</p>
+    
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 35px;">#</th>
+            <th>Alumno / Alumna</th>
+            <th style="text-align: center;">Equipo</th>
+            <th style="text-align: center;">4.1.3</th>
+            <th style="text-align: center;">4.2.2</th>
+            <th style="text-align: center;">4.2.3</th>
+            <th style="text-align: center;">4.1.2</th>
+            <th style="text-align: center;">Nota Final</th>
+            <th style="text-align: center;">Estado</th>
+          </tr>
+        </thead>
+        <tbody id="tablaResumenBody">
+          <!-- Carga dinámica -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="exportarCSV()">📥 Exportar Todo a CSV (Excel)</button>
+      <button class="btn btn-secondary" onclick="abrirGestorEquipos()">⚙️ Gestor Rápido de Equipos</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal Gestor de Equipos -->
+<div id="modalGestorEquipos" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>⚙️ Gestor Rápido de Equipos (<span id="modalGrupoLabel">4º ESO A</span>)</h3>
+      <button class="btn-close-modal" onclick="cerrarGestorEquipos()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.83rem; color:#64748b; margin-bottom:12px;">Asigna o cambia el equipo de cada alumno para esta SdA. Haz clic en "Limpiar Equipos" para empezar un nuevo tema desde cero.</p>
+      <div class="team-grid-list" id="modalEquiposList">
+        <!-- Carga dinámica -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="resetearEquiposGrupo()">🗑️ Limpiar Todos los Equipos</button>
+      <button class="btn btn-primary" onclick="cerrarGestorEquipos()">✓ Guardar y Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Inicialización Firebase
+  const firebaseConfig = { projectId: "cyberbreakout-hispanidad" };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // Listados Oficiales de 4º ESO
+  const alumnosData = {
+    "4A": [
+      "Arazo Pérez, Nahyra", "Bacedoni Camero, Minerva", "Cáceres Cruz, Andrea",
+      "Castellano Díaz, Paula", "De la Rosa Paredes, Claudia", "González Rodríguez, Miguel Ángel",
+      "López Borrero, José Francisco", "Luardo Pérez, David", "Marín García, Yaiza",
+      "Márquez Domínguez, Natalia", "Martin Gómez, Alicia", "Oliva Pernil, Eva",
+      "Ortiz Azaustre, Claudia", "Palomares Magro, Juan Manuel", "Paredes Díaz, Ainhoa",
+      "Paredes Gil, Sergio", "Pavón Barrera, Andrea", "Pérez Calvo, Angelo",
+      "Torrado Ternero, Estela"
+    ],
+    "4B": [
+      "Araujo Carrasco, José Manuel", "Borrero De Paula, José Antonio", "Boulal, Jilali",
+      "Escudero Limón, Daniela", "Kykish Toporovska, Diana", "Lobato Ramos, Hugo",
+      "Martin Venegas, Ester", "Naranjo Romero, Aitana", "Pérez Rodríguez, Pablo",
+      "Rivero Hernández, Diego Alejandro", "Rivero Hernández, Enrique Alejandro", "Rodríguez Brejano, Alexys",
+      "Salazar Fernández, Yamilet", "Sánchez Lozada, Sergio Enrique", "Sánchez Pérez, Induara",
+      "Sánchez Ternero, Alejandro", "Soto García, Ángela", "Terrón Quintero, José Antonio",
+      "Torres Hernández, Javier", "Wert Hermoso, Laura"
+    ]
+  };
+
+  const opcionesEquipos = ["Sin Equipo", "Equipo 1", "Equipo 2", "Equipo 3", "Equipo 4", "Equipo 5", "Equipo 6", "Equipo 7", "Equipo 8"];
+
+  let evalActual = { c1: null, c2: null, c3: null, c4: null };
+
+  function init() {
+    cargarAlumnosGrupo();
+  }
+
+  function cargarAlumnosGrupo() {
+    const grupo = document.getElementById("grupoSelect").value;
+    const select = document.getElementById("alumnoSelect");
+    select.innerHTML = "";
+    if (alumnosData[grupo]) {
+      alumnosData[grupo].forEach(alumno => {
+        const opt = document.createElement("option");
+        opt.value = alumno;
+        opt.textContent = alumno;
+        select.appendChild(opt);
+      });
+    }
+    cargarEvaluacionAlumno();
+  }
+
+  function getEquipoAlumno(grupo, alumno) {
+    const key = `presupuestospc_team_${grupo}_${alumno}`;
+    const savedTeam = localStorage.getItem(key);
+    return savedTeam || "Sin Equipo";
+  }
+
+  function guardarEquipoAlumno(grupo, alumno, equipo) {
+    const key = `presupuestospc_team_${grupo}_${alumno}`;
+    if (equipo === "Sin Equipo") {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, equipo);
+    }
+  }
+
+  function abrirGestorEquipos() {
+    const grupo = document.getElementById("grupoSelect").value;
+    document.getElementById("modalGrupoLabel").textContent = grupo === "4A" ? "4º ESO A" : "4º ESO B";
+    const container = document.getElementById("modalEquiposList");
+    container.innerHTML = "";
+
+    const lista = alumnosData[grupo] || [];
+    lista.forEach(alumno => {
+      const eqActual = getEquipoAlumno(grupo, alumno);
+      
+      const item = document.createElement("div");
+      item.className = "team-row-item";
+      
+      let optsHtml = "";
+      opcionesEquipos.forEach(eq => {
+        const sel = eq === eqActual ? "selected" : "";
+        optsHtml += `<option value="${eq}" ${sel}>${eq}</option>`;
+      });
+
+      item.innerHTML = `
+        <span>${alumno}</span>
+        <select onchange="guardarEquipoAlumno('${grupo}', '${alumno}', this.value); renderTablaResumen();">
+          ${optsHtml}
+        </select>
+      `;
+      container.appendChild(item);
+    });
+
+    document.getElementById("modalGestorEquipos").style.display = "flex";
+  }
+
+  function cerrarGestorEquipos() {
+    document.getElementById("modalGestorEquipos").style.display = "none";
+    renderTablaResumen();
+  }
+
+  function resetearEquiposGrupo() {
+    if (confirm("¿Quieres borrar la asignación de todos los equipos para este grupo?")) {
+      const grupo = document.getElementById("grupoSelect").value;
+      alumnosData[grupo].forEach(alumno => {
+        localStorage.removeItem(`presupuestospc_team_${grupo}_${alumno}`);
+      });
+      abrirGestorEquipos();
+      renderTablaResumen();
+    }
+  }
+
+  function alumnoSiguiente() {
+    const select = document.getElementById("alumnoSelect");
+    if (select.selectedIndex < select.options.length - 1) {
+      select.selectedIndex++;
+      cargarEvaluacionAlumno();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  function alumnoAnterior() {
+    const select = document.getElementById("alumnoSelect");
+    if (select.selectedIndex > 0) {
+      select.selectedIndex--;
+      cargarEvaluacionAlumno();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  function actualizarBotonesNav() {
+    const select = document.getElementById("alumnoSelect");
+    const esPrimero = select.selectedIndex <= 0;
+    const esUltimo = select.selectedIndex >= select.options.length - 1;
+
+    document.getElementById("btnTopPrev").disabled = esPrimero;
+    document.getElementById("btnBottomPrev").disabled = esPrimero;
+
+    document.getElementById("btnTopNext").disabled = esUltimo;
+    document.getElementById("btnBottomNext").disabled = esUltimo;
+  }
+
+  function seleccionarNivel(criterio, valor, btnElem) {
+    evalActual[criterio] = valor;
+    const parent = btnElem.parentElement;
+    Array.from(parent.children).forEach(child => child.classList.remove("active"));
+    btnElem.classList.add("active");
+    
+    guardarAuto();
+
+    // Replicar a todo el equipo si el interruptor está activo
+    const replicar = document.getElementById("chkReplicarEquipo").checked;
+    if (replicar) {
+      const grupo = document.getElementById("grupoSelect").value;
+      const alumnoActual = document.getElementById("alumnoSelect").value;
+      const equipoActual = getEquipoAlumno(grupo, alumnoActual);
+
+      if (equipoActual !== "Sin Equipo") {
+        alumnosData[grupo].forEach(alumno => {
+          if (alumno !== alumnoActual && getEquipoAlumno(grupo, alumno) === equipoActual) {
+            const key = getKey(grupo, alumno);
+            let evTarget = { c1: null, c2: null, c3: null, c4: null };
+            const dataTarget = localStorage.getItem(key);
+            if (dataTarget) {
+              try { evTarget = JSON.parse(dataTarget); } catch(e){}
+            }
+            evTarget[criterio] = valor;
+            localStorage.setItem(key, JSON.stringify(evTarget));
+            guardarFirebaseAlumno(grupo, alumno, evTarget);
+          }
+        });
+        renderTablaResumen();
+      }
+    }
+  }
+
+  function esNum(val) {
+    return typeof val === 'number' && !isNaN(val);
+  }
+
+  function calcularNotas() {
+    document.getElementById("mark-c1").textContent = esNum(evalActual.c1) ? evalActual.c1.toFixed(1) : "-.-";
+    document.getElementById("mark-c2").textContent = esNum(evalActual.c2) ? evalActual.c2.toFixed(1) : "-.-";
+    document.getElementById("mark-c3").textContent = esNum(evalActual.c3) ? evalActual.c3.toFixed(1) : "-.-";
+    document.getElementById("mark-c4").textContent = esNum(evalActual.c4) ? evalActual.c4.toFixed(1) : "-.-";
+
+    if (esNum(evalActual.c1) && esNum(evalActual.c2) && esNum(evalActual.c3) && esNum(evalActual.c4)) {
+      const global = (evalActual.c1 * 0.25) + (evalActual.c2 * 0.25) + (evalActual.c3 * 0.25) + (evalActual.c4 * 0.25);
+      document.getElementById("globalScore").textContent = global.toFixed(1);
+    } else {
+      document.getElementById("globalScore").textContent = "-.-";
+    }
+  }
+
+  function getKey(grupoParam, alumnoParam) {
+    const grupo = grupoParam || document.getElementById("grupoSelect").value;
+    const alumno = alumnoParam || document.getElementById("alumnoSelect").value;
+    return `presupuestospc_${grupo}_${alumno}`;
+  }
+
+  async function guardarFirebaseAlumno(grupo, alumno, evObj) {
+    const docId = `directo_${grupo}_${alumno}_sda2presupuestospc`;
+    const payload = {
+      curso: grupo,
+      alumno: alumno,
+      prueba: "sda2presupuestospc",
+      nombreDisplay: "SdA 2: Presupuestos PC",
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if (esNum(evObj.c1)) payload["DIG.4.1.3"] = evObj.c1;
+    if (esNum(evObj.c2)) payload["DIG.4.2.2"] = evObj.c2;
+    if (esNum(evObj.c3)) payload["DIG.4.2.3"] = evObj.c3;
+    if (esNum(evObj.c4)) payload["DIG.4.1.2"] = evObj.c4;
+
+    try {
+      await db.collection("evaluacion_directa").doc(docId).set(payload, { merge: true });
+    } catch(e) {}
+  }
+
+  function guardarAuto() {
+    const grupo = document.getElementById("grupoSelect").value;
+    const alumno = document.getElementById("alumnoSelect").value;
+    const key = getKey(grupo, alumno);
+    localStorage.setItem(key, JSON.stringify(evalActual));
+    guardarFirebaseAlumno(grupo, alumno, evalActual);
+    
+    calcularNotas();
+    actualizarBadgeStatus();
+    renderTablaResumen();
+  }
+
+  function cargarEvaluacionAlumno() {
+    limpiarSeleccion();
+    const grupo = document.getElementById("grupoSelect").value;
+    const alumno = document.getElementById("alumnoSelect").value;
+
+    const key = getKey(grupo, alumno);
+    const data = localStorage.getItem(key);
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        evalActual = {
+          c1: esNum(parsed.c1) ? parsed.c1 : null,
+          c2: esNum(parsed.c2) ? parsed.c2 : null,
+          c3: esNum(parsed.c3) ? parsed.c3 : null,
+          c4: esNum(parsed.c4) ? parsed.c4 : null
+        };
+        marcarBoton('grid-c1', evalActual.c1);
+        marcarBoton('grid-c2', evalActual.c2);
+        marcarBoton('grid-c3', evalActual.c3);
+        marcarBoton('grid-c4', evalActual.c4);
+      } catch (e) {}
+    }
+    calcularNotas();
+    actualizarBadgeStatus();
+    actualizarBotonesNav();
+    renderTablaResumen();
+  }
+
+  function actualizarBadgeStatus() {
+    const badge = document.getElementById("statusBadge");
+    const esCompleto = esNum(evalActual.c1) && esNum(evalActual.c2) && esNum(evalActual.c3) && esNum(evalActual.c4);
+    const esParcial = (esNum(evalActual.c1) || esNum(evalActual.c2) || esNum(evalActual.c3) || esNum(evalActual.c4)) && !esCompleto;
+    const replicar = document.getElementById("chkReplicarEquipo").checked;
+
+    let syncHtml = replicar ? `<span class="status-tag team-sync">🔗 Replicando al Equipo</span>` : ``;
+
+    if (esCompleto) {
+      badge.innerHTML = `<span class="status-tag saved">✓ Guardado</span>${syncHtml}`;
+    } else if (esParcial) {
+      badge.innerHTML = `<span class="status-tag pending">⏳ En proceso</span>${syncHtml}`;
+    } else {
+      badge.innerHTML = `<span class="status-tag pending" style="background:#f3f4f6; color:#6b7280;">Sin evaluar</span>${syncHtml}`;
+    }
+  }
+
+  function marcarBoton(gridId, valor) {
+    if (!esNum(valor)) return;
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    const btns = grid.getElementsByClassName("nivel-btn");
+    for (let btn of btns) {
+      if (btn.innerText.includes(valor.toFixed(1))) {
+        btn.classList.add("active");
+      }
+    }
+  }
+
+  function limpiarSeleccion() {
+    evalActual = { c1: null, c2: null, c3: null, c4: null };
+    document.querySelectorAll(".nivel-btn").forEach(b => b.classList.remove("active"));
+  }
+
+  function seleccionarAlumnoDirecto(alumnoNombre) {
+    document.getElementById("alumnoSelect").value = alumnoNombre;
+    cargarEvaluacionAlumno();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function renderTablaResumen() {
+    const grupo = document.getElementById("grupoSelect").value;
+    const alumnoActual = document.getElementById("alumnoSelect").value;
+    const tbody = document.getElementById("tablaResumenBody");
+    tbody.innerHTML = "";
+
+    let totalEvaluados = 0;
+    let sumaNotas = 0;
+    const lista = alumnosData[grupo] || [];
+
+    lista.forEach((alumno, idx) => {
+      const key = getKey(grupo, alumno);
+      const equipo = getEquipoAlumno(grupo, alumno);
+      const data = localStorage.getItem(key);
+      let c1Txt = "-", c2Txt = "-", c3Txt = "-", c4Txt = "-", finalTxt = "-";
+      let statusBadge = `<span class="badge-status badge-pending">Pendiente</span>`;
+      let isSelected = (alumno === alumnoActual);
+
+      const eqClass = equipo === "Sin Equipo" ? "badge-team none" : "badge-team";
+
+      if (data) {
+        try {
+          const ev = JSON.parse(data);
+          c1Txt = esNum(ev.c1) ? ev.c1.toFixed(1) : "-";
+          c2Txt = esNum(ev.c2) ? ev.c2.toFixed(1) : "-";
+          c3Txt = esNum(ev.c3) ? ev.c3.toFixed(1) : "-";
+          c4Txt = esNum(ev.c4) ? ev.c4.toFixed(1) : "-";
+
+          const esCompleto = esNum(ev.c1) && esNum(ev.c2) && esNum(ev.c3) && esNum(ev.c4);
+          if (esCompleto) {
+            const global = (ev.c1 * 0.25) + (ev.c2 * 0.25) + (ev.c3 * 0.25) + (ev.c4 * 0.25);
+            finalTxt = global.toFixed(1);
+            statusBadge = `<span class="badge-status badge-done">Evaluado</span>`;
+            totalEvaluados++;
+            sumaNotas += global;
+          } else if (esNum(ev.c1) || esNum(ev.c2) || esNum(ev.c3) || esNum(ev.c4)) {
+            statusBadge = `<span class="badge-status badge-partial">Parcial</span>`;
+          }
+        } catch (e) {}
+      }
+
+      const tr = document.createElement("tr");
+      if (isSelected) tr.classList.add("active-row");
+      tr.onclick = () => seleccionarAlumnoDirecto(alumno);
+
+      tr.innerHTML = `
+        <td>${idx + 1}</td>
+        <td><strong>${alumno}</strong></td>
+        <td style="text-align: center;"><span class="${eqClass}">${equipo}</span></td>
+        <td style="text-align: center;">${c1Txt}</td>
+        <td style="text-align: center;">${c2Txt}</td>
+        <td style="text-align: center;">${c3Txt}</td>
+        <td style="text-align: center;">${c4Txt}</td>
+        <td style="text-align: center; font-weight:700; color:var(--primary-dark);">${finalTxt}</td>
+        <td style="text-align: center;">${statusBadge}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("statEvaluados").textContent = `${totalEvaluados}/${lista.length}`;
+    document.getElementById("statMedia").textContent = totalEvaluados > 0 ? (sumaNotas / totalEvaluados).toFixed(1) : "-.-";
+  }
+
+  function exportarCSV() {
+    let csv = "Grupo;Alumno;Equipo;DIG.4.1.3 (Hardware);DIG.4.2.2 (Busqueda);DIG.4.2.3 (Documento);DIG.4.1.2 (Sistemas Operativos);Nota Final SdA2
+";
+    ["4A", "4B"].forEach(grupo => {
+      alumnosData[grupo].forEach(alumno => {
+        const key = getKey(grupo, alumno);
+        const equipo = getEquipoAlumno(grupo, alumno);
+        const data = localStorage.getItem(key);
+        if (data) {
+          try {
+            const ev = JSON.parse(data);
+            const c1 = esNum(ev.c1) ? ev.c1 : "";
+            const c2 = esNum(ev.c2) ? ev.c2 : "";
+            const c3 = esNum(ev.c3) ? ev.c3 : "";
+            const c4 = esNum(ev.c4) ? ev.c4 : "";
+            let final = "";
+            if (c1 !== "" && c2 !== "" && c3 !== "" && c4 !== "") {
+              final = ((ev.c1 * 0.25) + (ev.c2 * 0.25) + (ev.c3 * 0.25) + (ev.c4 * 0.25)).toFixed(1);
+            }
+            csv += `${grupo};"${alumno}";"${equipo}";${c1};${c2};${c3};${c4};${final}
+`;
+          } catch(e){}
+        }
+      });
+    });
+
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "evaluacion_sda2_presupuestos_pc_4ESO.csv";
+    link.click();
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+</script>
+
+</body>
+</html>
