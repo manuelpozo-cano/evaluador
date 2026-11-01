@@ -25,7 +25,7 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
-    .container { max-width: 1200px; margin: 0 auto; }
+    .container { max-width: 1250px; margin: 0 auto; }
     
     header {
       background: linear-gradient(135deg, #0f172a, #0284c7);
@@ -77,38 +77,81 @@
     }
     .team-toggle-box input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
 
-    .criterio-card { margin-bottom: 20px; border-left: 4px solid var(--primary); }
-    .criterio-header { margin-bottom: 12px; }
+    .criterio-card { margin-bottom: 24px; border-left: 4px solid var(--primary); }
+    .criterio-header { margin-bottom: 14px; }
     .criterio-code { font-weight: 700; color: var(--primary); font-size: 0.95rem; }
     .criterio-title { font-size: 1.05rem; font-weight: 600; margin-top: 2px; }
     .criterio-desc { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
 
-    /* RÚBRICA CON 5 NIVELES DE SÉNECA */
+    /* RÚBRICA GRID CON CABECERA DE LOGROS FUERA DE LA CAJA */
     .rubrica-grid {
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 12px;
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px;
     }
     @media (max-width: 900px) { .rubrica-grid { grid-template-columns: 1fr; } }
 
-    .nivel-btn {
-      background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px;
-      padding: 10px 12px; text-align: left; cursor: pointer; transition: all 0.2s;
-      display: flex; flex-direction: column; justify-content: space-between;
+    .nivel-col {
+      display: flex; flex-direction: column; height: 100%;
     }
-    .nivel-btn:hover { border-color: var(--primary); background: #f0f9ff; }
+
+    /* Etiqueta / Encabezado fuera del recuadro */
+    .nivel-header-outer {
+      padding: 6px 8px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .nivel-header-outer .title { text-transform: uppercase; letter-spacing: 0.3px; font-size: 0.82rem; }
+    .nivel-header-outer .range { font-size: 0.72rem; opacity: 0.88; font-weight: 600; }
+
+    /* Colores para las etiquetas exteriores */
+    .hdr-1 { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .hdr-2 { background: #ffedd5; color: #9a3412; border: 1px solid #fdba74; }
+    .hdr-3 { background: #fef3c7; color: #92400e; border: 1px solid #fde047; }
+    .hdr-4 { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+    .hdr-5 { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+
+    /* Recuadro de la nota (botón seleccionable) */
+    .nivel-btn {
+      flex-grow: 1;
+      background: #ffffff;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .nivel-btn:hover { border-color: var(--primary); background: #f0f9ff; transform: translateY(-1px); }
     .nivel-btn.active {
       border-color: var(--primary);
-      background-color: #f0f9ff; box-shadow: 0 0 0 2px var(--primary);
+      background-color: #f0f9ff;
+      box-shadow: 0 0 0 2px var(--primary);
     }
-    .nivel-header { font-weight: 800; font-size: 0.82rem; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
-    .nivel-tag { font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
-    
-    .lvl-1 { background: #fee2e2; color: #991b1b; }
-    .lvl-2 { background: #ffedd5; color: #9a3412; }
-    .lvl-3 { background: #fef3c7; color: #92400e; }
-    .lvl-4 { background: #dbeafe; color: #1e40af; }
-    .lvl-5 { background: #dcfce7; color: #166534; }
 
-    .nivel-desc { font-size: 0.78rem; color: #334155; line-height: 1.35; }
+    .nivel-desc { font-size: 0.8rem; color: #334155; line-height: 1.4; margin-bottom: 8px; }
+    .score-tag-inside {
+      align-self: flex-end;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .nivel-btn.active .score-tag-inside {
+      background: var(--primary);
+      color: white;
+    }
 
     .results-card {
       background: #f0f9ff; border: 1px solid #bae6fd;
@@ -272,25 +315,40 @@
       <div class="criterio-desc">Identificación de piezas de PC, verificación de compatibilidades y práctica de montaje/desmontaje en taller.</div>
     </div>
     <div class="rubrica-grid" id="grid-c1">
-      <div class="nivel-btn" onclick="seleccionarNivel('c1', 2.0, this)">
-        <div class="nivel-header"><span>Nivel 1 (1.0-2.9)</span> <span class="nivel-tag lvl-1">2.0</span></div>
-        <div class="nivel-desc">No identifica las piezas básicas de hardware ni verifica la compatibilidad de componentes.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-1"><span class="title">Iniciado</span><span class="range">1.0 - 2.9</span></div>
+        <div class="nivel-btn" data-score="2.0" onclick="seleccionarNivel('c1', 2.0, this)">
+          <div class="nivel-desc">No identifica las piezas básicas de hardware ni verifica la compatibilidad de componentes.</div>
+          <span class="score-tag-inside">2.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c1', 4.0, this)">
-        <div class="nivel-header"><span>Nivel 2 (3.0-4.9)</span> <span class="nivel-tag lvl-2">4.0</span></div>
-        <div class="nivel-desc">Identifica piezas principales con ayuda pero comete errores al verificar compatibilidades o ensamblar.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-2"><span class="title">En Proceso</span><span class="range">3.0 - 4.9</span></div>
+        <div class="nivel-btn" data-score="4.0" onclick="seleccionarNivel('c1', 4.0, this)">
+          <div class="nivel-desc">Identifica piezas principales con ayuda pero comete errores al verificar compatibilidades o ensamblar.</div>
+          <span class="score-tag-inside">4.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c1', 6.0, this)">
-        <div class="nivel-header"><span>Nivel 3 (5.0-6.9)</span> <span class="nivel-tag lvl-3">6.0</span></div>
-        <div class="nivel-desc">Selecciona componentes compatibles para los equipos pedida y realiza el montaje con supervisión.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-3"><span class="title">Conseguido</span><span class="range">5.0 - 6.9</span></div>
+        <div class="nivel-btn" data-score="6.0" onclick="seleccionarNivel('c1', 6.0, this)">
+          <div class="nivel-desc">Selecciona componentes compatibles para los equipos pedidos y realiza el montaje con supervisión.</div>
+          <span class="score-tag-inside">6.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c1', 8.0, this)">
-        <div class="nivel-header"><span>Nivel 4 (7.0-8.9)</span> <span class="nivel-tag lvl-4">8.0</span></div>
-        <div class="nivel-desc">Selecciona componentes perfectamente compatibles para ambas configuraciones con autonomía en taller.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-4"><span class="title">Avanzado</span><span class="range">7.0 - 8.9</span></div>
+        <div class="nivel-btn" data-score="8.0" onclick="seleccionarNivel('c1', 8.0, this)">
+          <div class="nivel-desc">Selecciona componentes perfectamente compatibles para ambas configuraciones con autonomía en taller.</div>
+          <span class="score-tag-inside">8.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c1', 10.0, this)">
-        <div class="nivel-header"><span>Nivel 5 (9.0-10.0)</span> <span class="nivel-tag lvl-5">10.0</span></div>
-        <div class="nivel-desc">Justifica técnicamente cada pieza, verifica compatibilidad avanzada y demuestra soltura excelente en taller.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-5"><span class="title">Excelente</span><span class="range">9.0 - 10.0</span></div>
+        <div class="nivel-btn" data-score="10.0" onclick="seleccionarNivel('c1', 10.0, this)">
+          <div class="nivel-desc">Justifica técnicamente cada pieza, verifica compatibilidad avanzada y demuestra soltura excelente en taller.</div>
+          <span class="score-tag-inside">10.0</span>
+        </div>
       </div>
     </div>
   </div>
@@ -303,25 +361,40 @@
       <div class="criterio-desc">Búsqueda de piezas online (PC Componentes/tiendas), ajuste a requerimientos técnicos específicos y relación calidad/precio.</div>
     </div>
     <div class="rubrica-grid" id="grid-c2">
-      <div class="nivel-btn" onclick="seleccionarNivel('c2', 2.0, this)">
-        <div class="nivel-header"><span>Nivel 1 (1.0-2.9)</span> <span class="nivel-tag lvl-1">2.0</span></div>
-        <div class="nivel-desc">No busca adecuadamente las piezas o ignora los requerimientos solicitados para cada tipo de equipo.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-1"><span class="title">Iniciado</span><span class="range">1.0 - 2.9</span></div>
+        <div class="nivel-btn" data-score="2.0" onclick="seleccionarNivel('c2', 2.0, this)">
+          <div class="nivel-desc">No busca adecuadamente las piezas o ignora los requerimientos solicitados para cada tipo de equipo.</div>
+          <span class="score-tag-inside">2.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c2', 4.0, this)">
-        <div class="nivel-header"><span>Nivel 2 (3.0-4.9)</span> <span class="nivel-tag lvl-2">4.0</span></div>
-        <div class="nivel-desc">Realiza presupuestos incompletos o desajustados con respecto a las especificaciones pedidas.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-2"><span class="title">En Proceso</span><span class="range">3.0 - 4.9</span></div>
+        <div class="nivel-btn" data-score="4.0" onclick="seleccionarNivel('c2', 4.0, this)">
+          <div class="nivel-desc">Realiza presupuestos incompletos o desajustados con respecto a las especificaciones pedidas.</div>
+          <span class="score-tag-inside">4.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c2', 6.0, this)">
-        <div class="nivel-header"><span>Nivel 3 (5.0-6.9)</span> <span class="nivel-tag lvl-3">6.0</span></div>
-        <div class="nivel-desc">Encuentra y presupuesta correctamente todas las piezas requeridas para las dos configuraciones.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-3"><span class="title">Conseguido</span><span class="range">5.0 - 6.9</span></div>
+        <div class="nivel-btn" data-score="6.0" onclick="seleccionarNivel('c2', 6.0, this)">
+          <div class="nivel-desc">Encuentra y presupuesta correctamente todas las piezas requeridas para las dos configuraciones.</div>
+          <span class="score-tag-inside">6.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c2', 8.0, this)">
-        <div class="nivel-header"><span>Nivel 4 (7.0-8.9)</span> <span class="nivel-tag lvl-4">8.0</span></div>
-        <div class="nivel-desc">Realiza búsquedas eficientes comparando precios y ajustando los componentes a la finalidad pedida.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-4"><span class="title">Avanzado</span><span class="range">7.0 - 8.9</span></div>
+        <div class="nivel-btn" data-score="8.0" onclick="seleccionarNivel('c2', 8.0, this)">
+          <div class="nivel-desc">Realiza búsquedas eficientes comparando precios y ajustando los componentes a la finalidad pedida.</div>
+          <span class="score-tag-inside">8.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c2', 10.0, this)">
-        <div class="nivel-header"><span>Nivel 5 (9.0-10.0)</span> <span class="nivel-tag lvl-5">10.0</span></div>
-        <div class="nivel-desc">Optimiza la relación calidad/precio, incluye todos los periféricos solicitados e investiga alternativas avanzadas.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-5"><span class="title">Excelente</span><span class="range">9.0 - 10.0</span></div>
+        <div class="nivel-btn" data-score="10.0" onclick="seleccionarNivel('c2', 10.0, this)">
+          <div class="nivel-desc">Optimiza la relación calidad/precio, incluye todos los periféricos solicitados e investiga alternativas avanzadas.</div>
+          <span class="score-tag-inside">10.0</span>
+        </div>
       </div>
     </div>
   </div>
@@ -334,25 +407,40 @@
       <div class="criterio-desc">Elaboración del informe final con enlaces funcionales a presupuestos y gráfica comparativa entre ambas configuraciones.</div>
     </div>
     <div class="rubrica-grid" id="grid-c3">
-      <div class="nivel-btn" onclick="seleccionarNivel('c3', 2.0, this)">
-        <div class="nivel-header"><span>Nivel 1 (1.0-2.9)</span> <span class="nivel-tag lvl-1">2.0</span></div>
-        <div class="nivel-desc">No entrega el documento o no incluye los enlaces a los presupuestos ni representación gráfica.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-1"><span class="title">Iniciado</span><span class="range">1.0 - 2.9</span></div>
+        <div class="nivel-btn" data-score="2.0" onclick="seleccionarNivel('c3', 2.0, this)">
+          <div class="nivel-desc">No entrega el documento o no incluye los enlaces a los presupuestos ni representación gráfica.</div>
+          <span class="score-tag-inside">2.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c3', 4.0, this)">
-        <div class="nivel-header"><span>Nivel 2 (3.0-4.9)</span> <span class="nivel-tag lvl-2">4.0</span></div>
-        <div class="nivel-desc">Entrega documento básico con enlaces incompletos o con la gráfica comparativa deficiente.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-2"><span class="title">En Proceso</span><span class="range">3.0 - 4.9</span></div>
+        <div class="nivel-btn" data-score="4.0" onclick="seleccionarNivel('c3', 4.0, this)">
+          <div class="nivel-desc">Entrega documento básico con enlaces incompletos o con la gráfica comparativa deficiente.</div>
+          <span class="score-tag-inside">4.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c3', 6.0, this)">
-        <div class="nivel-header"><span>Nivel 3 (5.0-6.9)</span> <span class="nivel-tag lvl-3">6.0</span></div>
-        <div class="nivel-desc">Elabora el documento completo con enlaces a los presupuestos y gráfica comparativa de precios.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-3"><span class="title">Conseguido</span><span class="range">5.0 - 6.9</span></div>
+        <div class="nivel-btn" data-score="6.0" onclick="seleccionarNivel('c3', 6.0, this)">
+          <div class="nivel-desc">Elabora el documento completo con enlaces a los presupuestos y gráfica comparativa de precios.</div>
+          <span class="score-tag-inside">6.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c3', 8.0, this)">
-        <div class="nivel-header"><span>Nivel 4 (7.0-8.9)</span> <span class="nivel-tag lvl-4">8.0</span></div>
-        <div class="nivel-desc">Presenta un documento estructurado, enlaces verificados y representación gráfica clara.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-4"><span class="title">Avanzado</span><span class="range">7.0 - 8.9</span></div>
+        <div class="nivel-btn" data-score="8.0" onclick="seleccionarNivel('c3', 8.0, this)">
+          <div class="nivel-desc">Presenta un documento estructurado, enlaces verificados y representación gráfica clara.</div>
+          <span class="score-tag-inside">8.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c3', 10.0, this)">
-        <div class="nivel-header"><span>Nivel 5 (9.0-10.0)</span> <span class="nivel-tag lvl-5">10.0</span></div>
-        <div class="nivel-desc">Informe con formato profesional, análisis gráfico impecable y justificación comparativa de costes.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-5"><span class="title">Excelente</span><span class="range">9.0 - 10.0</span></div>
+        <div class="nivel-btn" data-score="10.0" onclick="seleccionarNivel('c3', 10.0, this)">
+          <div class="nivel-desc">Informe con formato profesional, análisis gráfico impecable y justificación comparativa de costes.</div>
+          <span class="score-tag-inside">10.0</span>
+        </div>
       </div>
     </div>
   </div>
@@ -365,25 +453,40 @@
       <div class="criterio-desc">Diferenciación e integración de versiones de SO (Windows 11 Home para Bachillerato vs Windows 11 Pro para SMR) y licencias.</div>
     </div>
     <div class="rubrica-grid" id="grid-c4">
-      <div class="nivel-btn" onclick="seleccionarNivel('c4', 2.0, this)">
-        <div class="nivel-header"><span>Nivel 1 (1.0-2.9)</span> <span class="nivel-tag lvl-1">2.0</span></div>
-        <div class="nivel-desc">Confunde o no incluye las licencias ni las versiones de sistemas operativos indicadas.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-1"><span class="title">Iniciado</span><span class="range">1.0 - 2.9</span></div>
+        <div class="nivel-btn" data-score="2.0" onclick="seleccionarNivel('c4', 2.0, this)">
+          <div class="nivel-desc">Confunde o no incluye las licencias ni las versiones de sistemas operativos indicadas.</div>
+          <span class="score-tag-inside">2.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c4', 4.0, this)">
-        <div class="nivel-header"><span>Nivel 2 (3.0-4.9)</span> <span class="nivel-tag lvl-2">4.0</span></div>
-        <div class="nivel-desc">Incluye los sistemas operativos indicados pero sin comprender las diferencias entre Win 11 Home y Pro.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-2"><span class="title">En Proceso</span><span class="range">3.0 - 4.9</span></div>
+        <div class="nivel-btn" data-score="4.0" onclick="seleccionarNivel('c4', 4.0, this)">
+          <div class="nivel-desc">Incluye los sistemas operativos indicados pero sin comprender las diferencias entre Win 11 Home y Pro.</div>
+          <span class="score-tag-inside">4.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c4', 6.0, this)">
-        <div class="nivel-header"><span>Nivel 3 (5.0-6.9)</span> <span class="nivel-tag lvl-3">6.0</span></div>
-        <div class="nivel-desc">Selecciona e integra correctamente Windows 11 Pro para SMR y Home para Bachillerato.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-3"><span class="title">Conseguido</span><span class="range">5.0 - 6.9</span></div>
+        <div class="nivel-btn" data-score="6.0" onclick="seleccionarNivel('c4', 6.0, this)">
+          <div class="nivel-desc">Selecciona e integra correctamente Windows 11 Pro para SMR y Home para Bachillerato.</div>
+          <span class="score-tag-inside">6.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c4', 8.0, this)">
-        <div class="nivel-header"><span>Nivel 4 (7.0-8.9)</span> <span class="nivel-tag lvl-4">8.0</span></div>
-        <div class="nivel-desc">Justifica las diferencias entre ambas versiones y su idoneidad para cada perfil de usuario.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-4"><span class="title">Avanzado</span><span class="range">7.0 - 8.9</span></div>
+        <div class="nivel-btn" data-score="8.0" onclick="seleccionarNivel('c4', 8.0, this)">
+          <div class="nivel-desc">Justifica las diferencias entre ambas versiones y su idoneidad para cada perfil de usuario.</div>
+          <span class="score-tag-inside">8.0</span>
+        </div>
       </div>
-      <div class="nivel-btn" onclick="seleccionarNivel('c4', 10.0, this)">
-        <div class="nivel-header"><span>Nivel 5 (9.0-10.0)</span> <span class="nivel-tag lvl-5">10.0</span></div>
-        <div class="nivel-desc">Analiza detalladamente las diferencias técnicas entre versiones, licencias y requisitos de instalación.</div>
+      <div class="nivel-col">
+        <div class="nivel-header-outer hdr-5"><span class="title">Excelente</span><span class="range">9.0 - 10.0</span></div>
+        <div class="nivel-btn" data-score="10.0" onclick="seleccionarNivel('c4', 10.0, this)">
+          <div class="nivel-desc">Analiza detalladamente las diferencias técnicas entre versiones, licencias y requisitos de instalación.</div>
+          <span class="score-tag-inside">10.0</span>
+        </div>
       </div>
     </div>
   </div>
@@ -616,8 +719,10 @@
 
   function seleccionarNivel(criterio, valor, btnElem) {
     evalActual[criterio] = valor;
-    const parent = btnElem.parentElement;
-    Array.from(parent.children).forEach(child => child.classList.remove("active"));
+    
+    // Quitar active de los hermanos en la grid
+    const grid = btnElem.closest('.rubrica-grid');
+    grid.querySelectorAll('.nivel-btn').forEach(b => b.classList.remove('active'));
     btnElem.classList.add("active");
     
     guardarAuto();
@@ -754,7 +859,8 @@
     if (!grid) return;
     const btns = grid.getElementsByClassName("nivel-btn");
     for (let btn of btns) {
-      if (btn.innerText.includes(valor.toFixed(1))) {
+      const scoreAttr = parseFloat(btn.getAttribute('data-score'));
+      if (scoreAttr === valor || btn.innerText.includes(valor.toFixed(1))) {
         btn.classList.add("active");
       }
     }
