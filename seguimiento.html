@@ -45,125 +45,103 @@
     .filter-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
     select { padding: 8px 12px; border-radius: 8px; border: 1px solid #64748b; font-size: 0.95rem; font-weight: 600; background: white; }
 
-    /* CONTENEDOR CON SCROLL DOBLE Y STICKY TOTAL */
     .table-container {
       max-height: 70vh;
       overflow: auto;
-      max-width: 100%;
+      border: 1px solid var(--border-dark);
       border-radius: 8px;
-      border: 2px solid var(--border-dark);
-      position: relative;
     }
-    
+
     table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.82rem; }
-    
+
     th, td {
-      padding: 9px 8px;
-      text-align: center;
+      padding: 8px 10px; text-align: center;
       border-right: 1px solid var(--border-cell);
       border-bottom: 1px solid var(--border-cell);
+      white-space: nowrap;
     }
-    
+
     thead th {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background-color: #cbd5e1;
-      font-weight: 800;
-      color: #0f172a;
-      white-space: nowrap;
-      border-bottom: 2px solid var(--border-dark);
+      position: sticky; top: 0; z-index: 20;
+      background: #0f172a; color: white;
+      font-size: 0.78rem; font-weight: 700;
     }
 
-    tbody tr:nth-child(odd) { background-color: #ffffff; }
-    tbody tr:nth-child(even) { background-color: #f1f5f9; }
-    tbody tr:hover { background-color: #bae6fd !important; }
+    .col-sticky-num { position: sticky; left: 0; z-index: 10; background: #f1f5f9; width: 35px; font-weight: 700; }
+    .col-sticky-name { position: sticky; left: 35px; z-index: 10; background: #ffffff; text-align: left; font-weight: 700; min-width: 220px; border-right: 2px solid var(--border-dark) !important; }
 
-    th.col-fixed-num, td.col-fixed-num {
-      position: sticky;
-      left: 0;
-      width: 38px;
-      min-width: 38px;
-      background-color: inherit;
-      border-right: 1px solid var(--border-cell);
+    thead th.col-sticky-num, thead th.col-sticky-name { z-index: 30; background: #0f172a; }
+
+    tbody tr:hover { background-color: #f0f9ff !important; }
+    tbody tr:hover td.col-sticky-name { background-color: #e0f2fe !important; }
+
+    .student-link {
+      color: #0284c7; font-weight: 700; text-decoration: underline; cursor: pointer;
     }
+    .student-link:hover { color: #0369a1; background: #e0f2fe; border-radius: 4px; padding: 2px 4px; }
 
-    th.col-fixed-name, td.col-fixed-name {
-      position: sticky;
-      left: 38px;
-      text-align: left;
-      font-weight: 700;
-      white-space: nowrap;
-      padding-left: 12px;
-      padding-right: 12px;
-      background-color: inherit;
-      border-right: 3px solid var(--border-dark);
-      box-shadow: 4px 0 6px -2px rgba(0,0,0,0.15);
-    }
+    .cell-score { font-weight: 700; cursor: pointer; transition: background 0.15s; }
+    .cell-score:hover { background-color: #38bdf8 !important; color: white !important; }
 
-    thead th.col-fixed-num, thead th.col-fixed-name {
-      z-index: 40;
-      background-color: #cbd5e1;
-    }
+    /* Estilos de logros por nota */
+    .score-0 { color: #94a3b8; font-weight: 400; }
+    .score-low { background-color: #fee2e2; color: #991b1b; }
+    .score-mid { background-color: #fef3c7; color: #92400e; }
+    .score-high { background-color: #dbeafe; color: #1e40af; }
+    .score-excel { background-color: #dcfce7; color: #166534; }
 
-    tbody td.col-fixed-num, tbody td.col-fixed-name {
-      z-index: 10;
-    }
+    .col-total { position: sticky; right: 0; z-index: 10; background: #f8fafc; font-weight: 800; border-left: 2px solid var(--border-dark) !important; font-size: 0.9rem; }
+    thead th.col-total { z-index: 30; background: #0f172a; }
 
-    /* Celdas interactivas */
-    .mark-cell {
-      cursor: pointer;
-      position: relative;
-      user-select: none;
-      -webkit-tap-highlight-color: rgba(2, 132, 199, 0.2);
-    }
-    .mark-cell:active {
-      background-color: #7dd3fc !important;
-    }
-    .mark-val { font-weight: 800; color: #0284c7; }
-    .mark-empty { color: #94a3b8; font-weight: 400; }
-    .mark-final { font-weight: 900; color: #0369a1; background-color: #bae6fd !important; border-left: 2px solid var(--border-dark); }
-
-    .btn { padding: 9px 18px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; font-size: 0.88rem; transition: background 0.2s; }
-    .btn-primary { background: var(--primary); color: white; }
-    .btn-primary:hover { background: var(--primary-dark); }
-
-    /* MODAL POPUP PARA MÓVIL Y TABLET */
+    /* Modales */
     .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(3px);
-      z-index: 9999;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px);
+      display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px;
     }
     .modal-card {
-      background: white;
-      border-radius: 14px;
-      max-width: 480px;
-      width: 100%;
-      padding: 20px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-      border: 1px solid #cbd5e1;
-      animation: popup 0.2s ease-out;
+      background: white; border-radius: 12px; width: 100%; max-width: 800px;
+      max-height: 88vh; display: flex; flex-direction: column;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
     }
-    @keyframes popup {
-      from { transform: scale(0.95); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+    .modal-header {
+      padding: 16px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+      display: flex; justify-content: space-between; align-items: center; border-radius: 12px 12px 0 0;
     }
-    .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
-    .modal-title { font-size: 1.1rem; font-weight: 800; color: #0f172a; }
-    .modal-subtitle { font-size: 0.85rem; color: #0284c7; font-weight: 700; margin-top: 2px; }
-    .modal-close { background: #f1f5f9; border: none; font-size: 1.2rem; font-weight: 700; color: #64748b; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
-    .modal-body { font-size: 0.9rem; color: #334155; line-height: 1.6; }
-    .desglose-list { list-style: none; margin-top: 10px; padding: 0; }
-    .desglose-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 6px; border: 1px solid #e2e8f0; }
-    .desglose-origen { font-weight: 600; color: #1e293b; }
-    .desglose-nota { font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 6px; }
-    .desglose-media { margin-top: 12px; padding: 10px 12px; background: #0284c7; color: white; border-radius: 8px; display: flex; justify-content: space-between; font-weight: 700; }
+    .modal-header h3 { font-size: 1.15rem; color: #0f172a; }
+    .btn-close-modal { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b; }
+    .modal-body { padding: 18px 20px; overflow-y: auto; flex-grow: 1; }
+    .modal-footer { padding: 14px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; gap: 10px; border-radius: 0 0 12px 12px; }
+
+    .btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; font-size: 0.88rem; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: #e2e8f0; color: #334155; }
+
+    /* Ficha Individual Styling */
+    .ficha-summary-box {
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border: 1px solid #bae6fd;
+      padding: 16px; border-radius: 10px; margin-bottom: 18px;
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; text-align: center;
+    }
+    .ficha-stat-item { background: white; padding: 10px; border-radius: 8px; border: 1px solid #bae6fd; }
+    .ficha-stat-label { font-size: 0.72rem; font-weight: 700; color: #0369a1; text-transform: uppercase; }
+    .ficha-stat-val { font-size: 1.3rem; font-weight: 800; color: #0f172a; margin-top: 2px; }
+
+    .ficha-crit-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; }
+    .ficha-crit-head { display: flex; justify-content: space-between; align-items: center; }
+    .ficha-crit-code { font-weight: 700; color: var(--primary-dark); font-size: 0.88rem; }
+    .ficha-crit-score { font-weight: 800; font-size: 0.98rem; color: #0284c7; margin-right: 8px; }
+    .ficha-crit-level { font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+
+    .hdr-1 { background: #fee2e2; color: #991b1b; }
+    .hdr-2 { background: #ffedd5; color: #9a3412; }
+    .hdr-3 { background: #fef3c7; color: #92400e; }
+    .hdr-4 { background: #dbeafe; color: #1e40af; }
+    .hdr-5 { background: #dcfce7; color: #166534; }
+
+    .evidence-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.82rem; }
+    .evidence-table th { background: #f1f5f9; padding: 6px 8px; font-weight: 700; text-align: left; }
+    .evidence-table td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
   </style>
 </head>
 <body>
@@ -171,8 +149,8 @@
 <div class="container">
   <header>
     <div>
-      <h1>📊 Cuadro de Mando y Matriz Completa de Criterios</h1>
-      <p>Cuaderno General de Evaluación | Colegio La Hispanidad</p>
+      <h1>📊 Cuadro de Mando y Matriz LOMLOE</h1>
+      <p>Colegio La Hispanidad | Seguimiento Centralizado por Criterios</p>
     </div>
     <a href="index.html" class="btn-home">🏠 Volver al Inicio</a>
   </header>
@@ -180,63 +158,66 @@
   <div class="card">
     <div class="filter-bar">
       <div>
-        <h2 style="font-size: 1.15rem; font-weight: 700; color: #0f172a;">📋 Matriz Completa por Criterios de Evaluación</h2>
-        <p style="font-size: 0.82rem; color: #475569;">📱 <strong>Móvil / Tablet:</strong> Toca cualquier nota para abrir la ventana con el desglose detallado.</p>
-      </div>
-      <div>
-        <label for="selectCurso" style="font-size:0.88rem; font-weight:700; color:#475569; margin-right:8px;">Seleccionar Curso:</label>
+        <label for="selectCurso" style="font-size:0.85rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Seleccionar Curso / Grupo:</label>
         <select id="selectCurso" onchange="renderMatriz()">
-          <option value="2A">2º ESO A (Tecnología y Dig.)</option>
+          <option value="2A" selected>2º ESO A (Tecnología y Dig.)</option>
           <option value="2B">2º ESO B (Tecnología y Dig.)</option>
-          <option value="3A" selected>3º ESO A (Tecnología y Dig.)</option>
+          <option value="3A">3º ESO A (Tecnología y Dig.)</option>
           <option value="3B">3º ESO B (Tecnología y Dig.)</option>
           <option value="4A">4º ESO A (Digitalización)</option>
           <option value="4B">4º ESO B (Digitalización)</option>
         </select>
       </div>
+      <div>
+        <button class="btn btn-primary" onclick="cargarDatosCloud().then(renderMatriz)">🔄 Recargar Datos Cloud</button>
+      </div>
     </div>
+
+    <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 12px;">
+      💡 <strong>Pasa el cursor</strong> sobre una nota para ver su procedencia rápida. 
+      👇 <strong>Haz clic</strong> en la nota para ver su desglose completo, o <strong>pulsa sobre el nombre del alumno</strong> para abrir su Ficha Individual de Rendimiento.
+    </p>
 
     <div class="table-container">
-      <table id="tablaMatriz">
-        <thead id="headMatriz"></thead>
-        <tbody id="bodyMatriz"></tbody>
+      <table id="matrizTabla">
+        <thead id="matrizHead"></thead>
+        <tbody id="matrizBody"></tbody>
       </table>
     </div>
-
-    <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-      <button class="btn btn-primary" onclick="exportarMatrizCSV()">📥 Exportar Matriz a CSV (Excel)</button>
-      <span style="font-size: 0.82rem; font-weight:600; color: #334155;" id="infoRegistros">Cargando datos desde la nube...</span>
-    </div>
-  </div>
-
-  <div style="text-align: center; margin-top: 10px;">
-    <a href="index.html" class="btn btn-primary" style="text-decoration:none; display:inline-block;">🏠 Volver al Inicio</a>
   </div>
 </div>
 
-<!-- VENTANA MODAL PARA DESGLOSE EN MÓVIL Y TABLET -->
-<div class="modal-overlay" id="modalDesglose" onclick="cerrarModal(event)">
-  <div class="modal-card" onclick="event.stopPropagation()">
+<!-- Modal Desglose por Criterio -->
+<div id="modalDesglose" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
     <div class="modal-header">
-      <div>
-        <div class="modal-title" id="modalAlumno">Nombre Alumno</div>
-        <div class="modal-subtitle" id="modalCriterio">Criterio TYD.X.X.X</div>
-      </div>
-      <button class="modal-close" onclick="cerrarModalDirecto()">✕</button>
+      <h3 id="modalTitle">Desglose de Criterio</h3>
+      <button class="btn-close-modal" onclick="cerrarModalDesglose()">✕</button>
     </div>
-    <div class="modal-body">
-      <div style="font-weight: 700; font-size:0.85rem; color:#64748b; margin-bottom: 6px;">ORIGEN DE LAS CALIFICACIONES:</div>
-      <div id="modalListaDesglose" class="desglose-list"></div>
-      <div class="desglose-media">
-        <span>Nota Media Obtenida:</span>
-        <span id="modalNotaMedia" style="font-size:1.05rem;">0.0</span>
-      </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="cerrarModalDesglose()">✓ Entendido</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal FICHA INDIVIDUAL ALUMNO -->
+<div id="modalFichaAlumno" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="fichaAlumnoNombre">👤 Ficha de Rendimiento Académico</h3>
+      <button class="btn-close-modal" onclick="cerrarFichaAlumno()">✕</button>
+    </div>
+    <div class="modal-body" id="fichaAlumnoBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+      <button class="btn btn-primary" onclick="cerrarFichaAlumno()">✓ Cerrar Ficha</button>
     </div>
   </div>
 </div>
 
 <script>
-  // Inicialización de Firebase
+  // Inicialización Firebase
   const firebaseConfig = { projectId: "cyberbreakout-hispanidad" };
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
@@ -282,18 +263,11 @@
     ]
   };
 
-  const mapaEquivalenciasProyectos = {
-    "doblador": { "c1": "TYD.2.3.1", "c2": "TYD.2.2.2", "c3": "TYD.2.1.2" },
-    "retos3eso": { "c1": "TYD.3.1.1", "c2": "TYD.3.1.3", "c3": "TYD.3.2.1", "c4": "TYD.3.2.2", "c5": "TYD.3.4.1", "c6": "TYD.3.7.1" },
-    "eniac": { "c1": "DIG.4.1.3", "c2": "DIG.4.2.2", "c3": "DIG.4.2.3", "c4": "DIG.4.2.4", "c5": "DIG.4.4.4" }
-  };
-
   let cacheCloud = {};
 
   async function cargarDatosCloud() {
     cacheCloud = {};
     const colecciones = ["doblador_2eso_notas", "eniac_4eso_notas", "evaluacion_directa"];
-
     for (const col of colecciones) {
       try {
         const snap = await db.collection(col).get();
@@ -312,31 +286,13 @@
     Object.keys(cacheCloud).forEach(key => {
       if (key.includes(grupo) && key.includes(alumno)) {
         const data = cacheCloud[key];
-        let projKey = "";
-        let origenNombre = "Evaluación Directa";
-
-        if (key.includes("doblador")) {
-          projKey = "doblador";
-          origenNombre = "Proyecto Doblador";
-        } else if (key.includes("eniac")) {
-          projKey = "eniac";
-          origenNombre = "Proyecto ENIAC";
-        } else if (data.nombreDisplay) {
-          origenNombre = data.nombreDisplay;
-        } else if (data.prueba) {
-          origenNombre = data.prueba;
-        }
+        let origenNombre = data.nombreDisplay || data.prueba || "Evaluación Cloud";
 
         Object.keys(data).forEach(prop => {
-          let critCode = prop;
-          if (projKey && mapaEquivalenciasProyectos[projKey] && mapaEquivalenciasProyectos[projKey][prop]) {
-            critCode = mapaEquivalenciasProyectos[projKey][prop];
-          }
-
           const val = parseFloat(data[prop]);
           if (esNumero(val)) {
-            if (!notasPorCriterio[critCode]) notasPorCriterio[critCode] = [];
-            notasPorCriterio[critCode].push({ origen: origenNombre, nota: val });
+            if (!notasPorCriterio[prop]) notasPorCriterio[prop] = [];
+            notasPorCriterio[prop].push({ origen: origenNombre, nota: val });
           }
         });
       }
@@ -347,169 +303,210 @@
       if (key && key.includes(grupo) && key.includes(alumno)) {
         try {
           const data = JSON.parse(localStorage.getItem(key));
-          let projKey = "";
           let origenNombre = data.nombreDisplay || data.prueba || "Evaluación Directa";
 
-          if (key.startsWith("doblador")) { projKey = "doblador"; origenNombre = "Proyecto Doblador"; }
-          else if (key.startsWith("eniac")) { projKey = "eniac"; origenNombre = "Proyecto ENIAC"; }
-
           Object.keys(data).forEach(prop => {
-            let critCode = prop;
-            if (projKey && mapaEquivalenciasProyectos[projKey] && mapaEquivalenciasProyectos[projKey][prop]) {
-              critCode = mapaEquivalenciasProyectos[projKey][prop];
-            }
             const val = parseFloat(data[prop]);
             if (esNumero(val)) {
-              if (!notasPorCriterio[critCode]) notasPorCriterio[critCode] = [];
-              const existe = notasPorCriterio[critCode].some(o => o.origen === origenNombre && o.nota === val);
-              if (!existe) {
-                notasPorCriterio[critCode].push({ origen: origenNombre, nota: val });
-              }
+              if (!notasPorCriterio[prop]) notasPorCriterio[prop] = [];
+              notasPorCriterio[prop].push({ origen: origenNombre, nota: val });
             }
           });
         } catch(e){}
       }
     }
 
-    const resumen = {};
-    Object.keys(notasPorCriterio).forEach(code => {
-      const arr = notasPorCriterio[code];
-      if (arr.length > 0) {
-        const suma = arr.reduce((a, b) => a + b.nota, 0);
-        const media = suma / arr.length;
-        resumen[code] = { media: media, items: arr };
-      }
+    return notasPorCriterio;
+  }
+
+  function getNivelLogro(nota) {
+    if (!esNumero(nota)) return { texto: "Sin evaluar", class: "score-0" };
+    if (nota < 3.0) return { texto: "Iniciado", class: "hdr-1" };
+    if (nota < 5.0) return { texto: "En Proceso", class: "hdr-2" };
+    if (nota < 7.0) return { texto: "Conseguido", class: "hdr-3" };
+    if (nota < 9.0) return { texto: "Avanzado", class: "hdr-4" };
+    return { texto: "Excelente", class: "hdr-5" };
+  }
+
+  function renderMatriz() {
+    const grupo = document.getElementById("selectCurso").value;
+    const nivelCurso = grupo.substring(0, 1);
+    const criterios = catálogoCriterios[nivelCurso] || [];
+    const listaAlumnos = alumnosData[grupo] || [];
+
+    const head = document.getElementById("matrizHead");
+    const body = document.getElementById("matrizBody");
+
+    let hHtml = `<tr><th class="col-sticky-num">#</th><th class="col-sticky-name">Alumno / Alumna</th>`;
+    criterios.forEach(c => {
+      hHtml += `<th title="${c.code}: ${c.label}">${c.code}</th>`;
+    });
+    hHtml += `<th class="col-total">Media</th></tr>`;
+    head.innerHTML = hHtml;
+
+    let bHtml = "";
+    listaAlumnos.forEach((alumno, idx) => {
+      const notasObj = obtenerNotasAlumno(grupo, alumno);
+      let sumaTotal = 0;
+      let contCriteriosEvaluados = 0;
+
+      bHtml += `<tr>
+        <td class="col-sticky-num">${idx + 1}</td>
+        <td class="col-sticky-name">
+          <span class="student-link" onclick="abrirFichaAlumno('${grupo}', '${alumno}')">${alumno}</span>
+        </td>`;
+
+      criterios.forEach(c => {
+        const evidencias = notasObj[c.code] || [];
+        if (evidencias.length > 0) {
+          const suma = evidencias.reduce((acc, curr) => acc + curr.nota, 0);
+          const mediaCrit = suma / evidencias.length;
+          sumaTotal += mediaCrit;
+          contCriteriosEvaluados++;
+
+          let cssClass = "score-low";
+          if (mediaCrit >= 9.0) cssClass = "score-excel";
+          else if (mediaCrit >= 7.0) cssClass = "score-high";
+          else if (mediaCrit >= 5.0) cssClass = "score-mid";
+
+          const tooltipTxt = `👤 ${alumno}\\n• ${c.code}: ${mediaCrit.toFixed(1)}\\n` +
+            evidencias.map(e => ` - ${e.origen}: ${e.nota.toFixed(1)}`).join('\\n');
+
+          const evidenciasJSON = encodeURIComponent(JSON.stringify(evidencias));
+
+          bHtml += `<td class="cell-score ${cssClass}" 
+                        title="${tooltipTxt}" 
+                        onclick="abrirModalDesglose('${alumno}', '${c.code}', '${c.label}', '${evidenciasJSON}')">
+                      ${mediaCrit.toFixed(1)}
+                    </td>`;
+        } else {
+          bHtml += `<td class="cell-score score-0" title="${alumno}\\n• ${c.code}: Sin evaluar">-</td>`;
+        }
+      });
+
+      const mediaGlobal = contCriteriosEvaluados > 0 ? (sumaTotal / contCriteriosEvaluados).toFixed(1) : "-.-";
+      bHtml += `<td class="col-total">${mediaGlobal}</td></tr>`;
     });
 
-    return resumen;
+    body.innerHTML = bHtml;
   }
 
-  // FUNCIÓN PARA ABRIR EL MODAL AL TOCAR/HACER CLIC EN CUALQUIER NOTA
-  function abrirDesgloseModal(alumno, criterioCode, criterioLabel, mediaVal, itemsJSON) {
-    const items = JSON.parse(decodeURIComponent(itemsJSON));
-    document.getElementById("modalAlumno").textContent = alumno;
-    document.getElementById("modalCriterio").textContent = `${criterioCode} - ${criterioLabel}`;
-    document.getElementById("modalNotaMedia").textContent = mediaVal.toFixed(1);
-
-    const container = document.getElementById("modalListaDesglose");
-    container.innerHTML = "";
-
-    items.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "desglose-item";
-      div.innerHTML = `
-        <span class="desglose-origen">📝 ${item.origen}</span>
-        <span class="desglose-nota">${item.nota.toFixed(1)}</span>
-      `;
-      container.appendChild(div);
+  function abrirModalDesglose(alumno, code, label, evidenciasJSON) {
+    const evidencias = JSON.parse(decodeURIComponent(evidenciasJSON));
+    document.getElementById("modalTitle").textContent = `🔍 ${code} - ${alumno}`;
+    
+    let html = `<p style="margin-bottom:12px; font-weight:600; color:#475569;">${label}</p>`;
+    html += `<table class="evidence-table"><thead><tr><th>Origen / Tarea</th><th>Calificación</th></tr></thead><tbody>`;
+    
+    evidencias.forEach(e => {
+      html += `<tr><td>${e.origen}</td><td><strong>${e.nota.toFixed(1)}</strong></td></tr>`;
     });
-
-    const overlay = document.getElementById("modalDesglose");
-    overlay.style.display = "flex";
+    
+    html += `</tbody></table>`;
+    document.getElementById("modalBody").innerHTML = html;
+    document.getElementById("modalDesglose").style.display = "flex";
   }
 
-  function cerrarModal(e) {
-    if (e.target.id === "modalDesglose") {
-      document.getElementById("modalDesglose").style.display = "none";
-    }
-  }
-
-  function cerrarModalDirecto() {
+  function cerrarModalDesglose() {
     document.getElementById("modalDesglose").style.display = "none";
   }
 
-  async function renderMatriz() {
+  function abrirFichaAlumno(grupo, alumno) {
+    const nivelCurso = grupo.substring(0, 1);
+    const criterios = catálogoCriterios[nivelCurso] || [];
+    const notasObj = obtenerNotasAlumno(grupo, alumno);
+
+    document.getElementById("fichaAlumnoNombre").textContent = `👤 Ficha de Rendimiento: ${alumno} (${grupo})`;
+
+    let sumaTotal = 0;
+    let contEvaluados = 0;
+    let critCardsHtml = "";
+    let evidenceRowsHtml = "";
+
+    criterios.forEach(c => {
+      const evs = notasObj[c.code] || [];
+      if (evs.length > 0) {
+        const mediaCrit = evs.reduce((a, b) => a + b.nota, 0) / evs.length;
+        sumaTotal += mediaCrit;
+        contEvaluados++;
+
+        const lvl = getNivelLogro(mediaCrit);
+        critCardsHtml += `
+          <div class="ficha-crit-card">
+            <div class="ficha-crit-head">
+              <span class="ficha-crit-code">${c.code} — ${c.label}</span>
+              <div>
+                <span class="ficha-crit-score">${mediaCrit.toFixed(1)}</span>
+                <span class="ficha-crit-level ${lvl.class}">${lvl.texto}</span>
+              </div>
+            </div>
+          </div>`;
+
+        evs.forEach(e => {
+          evidenceRowsHtml += `<tr><td>${c.code}</td><td>${e.origen}</td><td><strong>${e.nota.toFixed(1)}</strong></td></tr>`;
+        });
+      } else {
+        critCardsHtml += `
+          <div class="ficha-crit-card">
+            <div class="ficha-crit-head">
+              <span class="ficha-crit-code">${c.code} — ${c.label}</span>
+              <div>
+                <span class="ficha-crit-score" style="color:#94a3b8;">-.-</span>
+                <span class="ficha-crit-level score-0">Sin evaluar</span>
+              </div>
+            </div>
+          </div>`;
+      }
+    });
+
+    const notaGlobal = contEvaluados > 0 ? (sumaTotal / contEvaluados).toFixed(1) : "-.-";
+
+    const body = document.getElementById("fichaAlumnoBody");
+    body.innerHTML = `
+      <div class="ficha-summary-box">
+        <div class="ficha-stat-item">
+          <div class="ficha-stat-label">Curso / Grupo</div>
+          <div class="ficha-stat-val" style="color:#0369a1;">${grupo}</div>
+        </div>
+        <div class="ficha-stat-item">
+          <div class="ficha-stat-label">Nota Media Global</div>
+          <div class="ficha-stat-val" style="color:#0284c7;">${notaGlobal}</div>
+        </div>
+        <div class="ficha-stat-item">
+          <div class="ficha-stat-label">Criterios Evaluados</div>
+          <div class="ficha-stat-val" style="color:#166534;">${contEvaluados}/${criterios.length}</div>
+        </div>
+      </div>
+
+      <h4 style="font-size:0.95rem; font-weight:700; color:#1e293b; margin-bottom:10px;">📊 Desglose por Criterios de Evaluación</h4>
+      ${critCardsHtml}
+
+      <h4 style="font-size:0.95rem; font-weight:700; color:#1e293b; margin-top:16px; margin-bottom:8px;">📂 Evidencias Registradas</h4>
+      <table class="evidence-table">
+        <thead>
+          <tr>
+            <th>Criterio</th>
+            <th>Origen / Actividad</th>
+            <th>Nota</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${evidenceRowsHtml || '<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Sin evidencias registradas</td></tr>'}
+        </tbody>
+      </table>
+    `;
+
+    document.getElementById("modalFichaAlumno").style.display = "flex";
+  }
+
+  function cerrarFichaAlumno() {
+    document.getElementById("modalFichaAlumno").style.display = "none";
+  }
+
+  document.addEventListener("DOMContentLoaded", async () => {
     await cargarDatosCloud();
-
-    const curso = document.getElementById("selectCurso").value;
-    const nivel = curso.charAt(0);
-    const criteriosList = catálogoCriterios[nivel] || [];
-    const listaAlumnos = alumnosData[curso] || [];
-
-    const head = document.getElementById("headMatriz");
-    const body = document.getElementById("bodyMatriz");
-
-    let headHtml = `<tr><th class="col-fixed-num">#</th><th class="col-fixed-name">Alumno / Alumna</th>`;
-    criteriosList.forEach(c => {
-      headHtml += `<th title="${c.code}: ${c.label}">${c.code}<br><span style="font-weight:normal; font-size:0.7rem; color:#475569;">${c.label}</span></th>`;
-    });
-    headHtml += `<th style="background:#bae6fd; color:#0369a1; min-width:85px;">Nota Media</th></tr>`;
-    head.innerHTML = headHtml;
-
-    let bodyHtml = "";
-    let totalEvaluados = 0;
-
-    listaAlumnos.forEach((alumno, idx) => {
-      const resumenNotas = obtenerNotasAlumno(curso, alumno);
-      
-      bodyHtml += `<tr><td class="col-fixed-num">${idx + 1}</td><td class="col-fixed-name">${alumno}</td>`;
-
-      let sumaTotal = 0;
-      let cont = 0;
-
-      criteriosList.forEach(c => {
-        const item = resumenNotas[c.code];
-        if (item && esNumero(item.media)) {
-          const itemsEncoded = encodeURIComponent(JSON.stringify(item.items));
-          bodyHtml += `<td class="mark-cell" onclick="abrirDesgloseModal('${alumno.replace(/'/g, "\'")}', '${c.code}', '${c.label.replace(/'/g, "\'")}', ${item.media}, '${itemsEncoded}')">
-            <span class="mark-val">${item.media.toFixed(1)}</span>
-          </td>`;
-          sumaTotal += item.media;
-          cont++;
-        } else {
-          bodyHtml += `<td><span class="mark-empty">-</span></td>`;
-        }
-      });
-
-      const finalVal = cont > 0 ? (sumaTotal / cont).toFixed(1) : "-";
-      if (cont > 0) totalEvaluados++;
-
-      bodyHtml += `<td class="mark-final">${finalVal}</td></tr>`;
-    });
-
-    body.innerHTML = bodyHtml;
-    document.getElementById("infoRegistros").textContent = `☁️ Sincronizado en tiempo real. ${totalEvaluados} de ${listaAlumnos.length} alumnos evaluados en ${curso}.`;
-  }
-
-  function exportarMatrizCSV() {
-    const curso = document.getElementById("selectCurso").value;
-    const nivel = curso.charAt(0);
-    const criteriosList = catálogoCriterios[nivel] || [];
-    const listaAlumnos = alumnosData[curso] || [];
-
-    let csv = `Curso;Alumno;` + criteriosList.map(c => `${c.code} (${c.label})`).join(";") + `;Nota Media Global\n`;
-
-    listaAlumnos.forEach(alumno => {
-      const resumenNotas = obtenerNotasAlumno(curso, alumno);
-      let line = `${curso};"${alumno}"`;
-      
-      let sumaTotal = 0;
-      let cont = 0;
-
-      criteriosList.forEach(c => {
-        const item = resumenNotas[c.code];
-        if (item && esNumero(item.media)) {
-          line += `;${item.media.toFixed(1)}`;
-          sumaTotal += item.media;
-          cont++;
-        } else {
-          line += `;`;
-        }
-      });
-
-      const finalVal = cont > 0 ? (sumaTotal / cont).toFixed(1) : "";
-      line += `;${finalVal}\n`;
-      csv += line;
-    });
-
-    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `matriz_completa_criterios_${curso}.csv`;
-    link.click();
-  }
-
-  window.onload = renderMatriz;
+    renderMatriz();
+  });
 </script>
 
 </body>
