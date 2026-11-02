@@ -16,7 +16,7 @@
       --bg: #f4f7f5;
       --card: #ffffff;
       --text: #1e293b;
-      --border: #94a3b8; /* Líneas más oscuras */
+      --border: #94a3b8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
@@ -40,11 +40,10 @@
 
     .card { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
 
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
     label { font-size: 0.85rem; font-weight: 700; color: #334155; display: block; margin-bottom: 6px; }
     select, input[type="text"] { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #94a3b8; font-size: 0.95rem; }
 
-    /* Sección de historial de pruebas guardadas */
     .history-section {
       background: #f0fdf4; border: 1.5px dashed #4ade80; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px;
     }
@@ -99,12 +98,21 @@
       <div>
         <label for="selectCurso">Curso y Grupo:</label>
         <select id="selectCurso" onchange="alCambiarGrupo()">
-          <option value="2A">2º ESO A (Tecnología y Dig.)</option>
+          <option value="2A" selected>2º ESO A (Tecnología y Dig.)</option>
           <option value="2B">2º ESO B (Tecnología y Dig.)</option>
-          <option value="3A" selected>3º ESO A (Tecnología y Dig.)</option>
+          <option value="3A">3º ESO A (Tecnología y Dig.)</option>
           <option value="3B">3º ESO B (Tecnología y Dig.)</option>
           <option value="4A">4º ESO A (Digitalización)</option>
           <option value="4B">4º ESO B (Digitalización)</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="selectTrimestre">Trimestre:</label>
+        <select id="selectTrimestre">
+          <option value="T1">1.er Trimestre</option>
+          <option value="T2">2.º Trimestre</option>
+          <option value="T3">3.er Trimestre</option>
         </select>
       </div>
 
@@ -214,7 +222,18 @@
   };
 
   let criteriosSeleccionados = [];
-  let pruebasMapGrupo = {}; // { "examen1latecnologia": { display: "Examen 1. La Tecnología", criterios: Set } }
+  let pruebasMapGrupo = {};
+
+  function autoSeleccionarTrimestre() {
+    const mes = new Date().getMonth(); // 0..11
+    if (mes >= 8 && mes <= 11) {
+      document.getElementById("selectTrimestre").value = "T1";
+    } else if (mes >= 0 && mes <= 2) {
+      document.getElementById("selectTrimestre").value = "T2";
+    } else {
+      document.getElementById("selectTrimestre").value = "T3";
+    }
+  }
 
   function alCambiarGrupo() {
     cargarCriteriosYAlumnos();
@@ -264,9 +283,10 @@
         if (data.prueba) {
           const keyClean = sanitizarKey(data.prueba);
           const nameDisp = data.nombreDisplay || data.prueba;
+          const tri = data.trimestre || "T1";
 
           if (!pruebasMapGrupo[keyClean]) {
-            pruebasMapGrupo[keyClean] = { display: nameDisp, criterios: new Set() };
+            pruebasMapGrupo[keyClean] = { display: nameDisp, trimestre: tri, criterios: new Set() };
           }
           Object.keys(data).forEach(k => {
             if (k.includes(".")) pruebasMapGrupo[keyClean].criterios.add(k);
@@ -284,9 +304,10 @@
           if (data.prueba) {
             const keyClean = sanitizarKey(data.prueba);
             const nameDisp = data.nombreDisplay || data.prueba;
+            const tri = data.trimestre || "T1";
 
             if (!pruebasMapGrupo[keyClean]) {
-              pruebasMapGrupo[keyClean] = { display: nameDisp, criterios: new Set() };
+              pruebasMapGrupo[keyClean] = { display: nameDisp, trimestre: tri, criterios: new Set() };
             }
             Object.keys(data).forEach(k => {
               if (k.includes(".")) pruebasMapGrupo[keyClean].criterios.add(k);
@@ -306,20 +327,20 @@
         const critCount = item.criterios.size;
         const btn = document.createElement("button");
         btn.className = "badge-btn";
-        btn.innerHTML = `📝 ${item.display} <span style="opacity:0.75; font-size:0.75rem;">(${critCount} crit.)</span>`;
-        btn.onclick = () => seleccionarPruebaHistorial(item.display, item.criterios, btn);
+        btn.innerHTML = `📝 ${item.display} <span style="opacity:0.75; font-size:0.75rem;">[${item.trimestre || 'T1'}] (${critCount} crit.)</span>`;
+        btn.onclick = () => seleccionarPruebaHistorial(item.display, item.trimestre, item.criterios, btn);
         container.appendChild(btn);
       });
     }
   }
 
-  function seleccionarPruebaHistorial(nombreRealDisplay, conjuntoCriterios, btnElem) {
+  function seleccionarPruebaHistorial(nombreRealDisplay, tri, conjuntoCriterios, btnElem) {
     document.querySelectorAll(".badge-btn").forEach(b => b.classList.remove("active"));
     if (btnElem) btnElem.classList.add("active");
 
     document.getElementById("nombrePrueba").value = nombreRealDisplay;
+    if (tri) document.getElementById("selectTrimestre").value = tri;
 
-    // Marcar solo los criterios que pertenecen a esta prueba
     document.querySelectorAll(".chk-crit").forEach(chk => {
       chk.checked = conjuntoCriterios.has(chk.value);
     });
@@ -330,6 +351,7 @@
   function prepararNuevaPrueba() {
     document.querySelectorAll(".badge-btn").forEach(b => b.classList.remove("active"));
     document.getElementById("nombrePrueba").value = `Examen Tema ${Object.keys(pruebasMapGrupo).length + 1}`;
+    autoSeleccionarTrimestre();
     marcarTodos(false);
     document.getElementById("cardTabla").style.display = "none";
   }
@@ -438,6 +460,7 @@
     const alumnos = alumnosData[curso] || [];
     const rawNombrePrueba = document.getElementById("nombrePrueba").value.trim();
     const idPruebaClean = sanitizarKey(rawNombrePrueba);
+    const trimestreSel = document.getElementById("selectTrimestre").value;
 
     if (!idPruebaClean) {
       alert("Introduce un nombre para la prueba antes de guardar.");
@@ -452,7 +475,8 @@
         curso: curso,
         alumno: alno,
         prueba: idPruebaClean,
-        nombreDisplay: rawNombrePrueba, // Conserva el nombre bonito con espacios y puntos
+        nombreDisplay: rawNombrePrueba,
+        trimestre: trimestreSel,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       let tieneNotas = false;
@@ -479,16 +503,18 @@
 
     try {
       await batch.commit();
-      document.getElementById("msgGuardado").textContent = `☁️ Guardadas y sincronizadas en la nube las notas de ${guardadosCount} alumnos.`;
+      document.getElementById("msgGuardado").textContent = `☁️ Guardadas y sincronizadas en la nube las notas de ${guardadosCount} alumnos [${trimestreSel}].`;
     } catch(err) {
       document.getElementById("msgGuardado").textContent = `💾 Guardadas localmente (${guardadosCount} alumnos).`;
     }
 
-    // Actualizar historial
     cargarHistorialPruebas();
   }
 
-  window.onload = alCambiarGrupo;
+  window.onload = () => {
+    autoSeleccionarTrimestre();
+    alCambiarGrupo();
+  };
 </script>
 
 </body>

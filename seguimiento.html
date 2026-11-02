@@ -45,7 +45,29 @@
     .filter-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
     select { padding: 8px 12px; border-radius: 8px; border: 1px solid #64748b; font-size: 0.95rem; font-weight: 600; background: white; }
 
-    /* CONTENEDOR CON SCROLL DOBLE Y STICKY TOTAL */
+    /* BARRA DE PESTAÑAS POR TRIMESTRE */
+    .tabs-bar {
+      display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px; flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 9px 18px;
+      border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 0.88rem;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .tab-btn:hover { background: #e2e8f0; color: #0f172a; }
+    .tab-btn.active {
+      background: #0284c7; color: white; border-color: #0284c7; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
+    }
+
+    /* BANNER CRITERIOS PENDIENTES */
+    .unevaluated-banner {
+      background: #fffbebfb; border: 1.5px solid #fcd34d; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.83rem;
+    }
+    .unevaluated-title { font-weight: 800; color: #b45309; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.88rem; }
+    .unevaluated-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .badge-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
+
+    /* CONTENEDOR TABLE CON SCROLL Y STICKY */
     .table-container {
       max-height: 70vh;
       overflow: auto;
@@ -123,7 +145,6 @@
       padding: 2px 4px;
     }
 
-    /* Celdas interactivas */
     .mark-cell {
       cursor: pointer;
       position: relative;
@@ -248,6 +269,17 @@
       </div>
     </div>
 
+    <!-- PESTAÑAS TRIMESTRALES -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" id="tabGeneral" onclick="cambiarTab('GENERAL')">🌐 Matriz Global (Anual)</button>
+      <button class="tab-btn" id="tabT1" onclick="cambiarTab('T1')">1.er Trimestre</button>
+      <button class="tab-btn" id="tabT2" onclick="cambiarTab('T2')">2.º Trimestre</button>
+      <button class="tab-btn" id="tabT3" onclick="cambiarTab('T3')">3.er Trimestre</button>
+    </div>
+
+    <!-- BANNER DE CRITERIOS SIN EVALUAR EN EL TRIMESTRE SELECCIONADO -->
+    <div id="bannerCriteriosSinEvaluar" class="unevaluated-banner" style="display:none;"></div>
+
     <div class="table-container">
       <table id="tablaMatriz">
         <thead id="headMatriz"></thead>
@@ -266,7 +298,7 @@
   </div>
 </div>
 
-<!-- VENTANA MODAL PARA DESGLOSE EN MÓVIL Y TABLET -->
+<!-- VENTANA MODAL PARA DESGLOSE DE NOTA -->
 <div class="modal-overlay" id="modalDesglose" onclick="cerrarModal(event)">
   <div class="modal-card" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -364,6 +396,19 @@
   };
 
   let cacheCloud = {};
+  let tabActual = "GENERAL"; // "GENERAL", "T1", "T2", "T3"
+
+  function cambiarTab(nuevaTab) {
+    tabActual = nuevaTab;
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    
+    if (nuevaTab === 'GENERAL') document.getElementById("tabGeneral").classList.add("active");
+    if (nuevaTab === 'T1') document.getElementById("tabT1").classList.add("active");
+    if (nuevaTab === 'T2') document.getElementById("tabT2").classList.add("active");
+    if (nuevaTab === 'T3') document.getElementById("tabT3").classList.add("active");
+
+    renderMatriz();
+  }
 
   async function cargarDatosCloud() {
     cacheCloud = {};
@@ -381,16 +426,37 @@
 
   function esNumero(v) { return typeof v === 'number' && !isNaN(v); }
 
-  function obtenerNotasAlumno(grupo, alumno) {
+  function inferirTrimestre(data, key) {
+    if (data.trimestre) return data.trimestre;
+    if (key.includes("doblador") || key.includes("retos3eso")) return "T1";
+    if (key.includes("eniac") || key.includes("presupuestos")) return "T2";
+    
+    if (data.updatedAt) {
+      try {
+        let dateObj = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
+        let m = dateObj.getMonth(); // 0..11
+        if (m >= 8 && m <= 11) return "T1";
+        if (m >= 0 && m <= 2) return "T2";
+        return "T3";
+      } catch(e){}
+    }
+    return "T1"; // Default
+  }
+
+  function obtenerNotasAlumno(grupo, alumno, filtroTrimestre = "GENERAL") {
     const notasPorCriterio = {};
 
-    function agregarNota(critCode, origenNombre, val) {
+    function agregarNota(critCode, origenNombre, val, triDoc) {
       if (!esNumero(val)) return;
+      
+      // Si estamos filtrando por trimestre y no coincide, ignorar
+      if (filtroTrimestre !== "GENERAL" && triDoc !== filtroTrimestre) return;
+
       if (!notasPorCriterio[critCode]) notasPorCriterio[critCode] = [];
       
       const existe = notasPorCriterio[critCode].some(item => item.origen === origenNombre && Math.abs(item.nota - val) < 0.01);
       if (!existe) {
-        notasPorCriterio[critCode].push({ origen: origenNombre, nota: val });
+        notasPorCriterio[critCode].push({ origen: origenNombre, nota: val, trimestre: triDoc });
       }
     }
 
@@ -400,6 +466,7 @@
         const data = cacheCloud[key];
         let projKey = "";
         let origenNombre = "Evaluación Directa";
+        let triDoc = inferirTrimestre(data, key);
 
         if (key.includes("doblador")) {
           projKey = "doblador";
@@ -417,7 +484,7 @@
         }
 
         Object.keys(data).forEach(prop => {
-          if (["curso", "alumno", "prueba", "nombreDisplay", "updatedAt"].includes(prop)) return;
+          if (["curso", "alumno", "prueba", "nombreDisplay", "updatedAt", "trimestre"].includes(prop)) return;
 
           let critCode = prop;
           if (projKey && mapaEquivalenciasProyectos[projKey] && mapaEquivalenciasProyectos[projKey][prop]) {
@@ -425,7 +492,7 @@
           }
 
           const val = parseFloat(data[prop]);
-          agregarNota(critCode, origenNombre, val);
+          agregarNota(critCode, origenNombre, val, triDoc);
         });
       }
     });
@@ -438,13 +505,14 @@
           const data = JSON.parse(localStorage.getItem(key));
           let projKey = "";
           let origenNombre = data.nombreDisplay || data.prueba || "Evaluación Directa";
+          let triDoc = inferirTrimestre(data, key);
 
           if (key.startsWith("doblador")) { projKey = "doblador"; origenNombre = "Proyecto Doblador"; }
           else if (key.startsWith("eniac")) { projKey = "eniac"; origenNombre = "Proyecto ENIAC"; }
           else if (key.startsWith("retos3eso")) { projKey = "retos3eso"; origenNombre = "Retos 3º ESO"; }
 
           Object.keys(data).forEach(prop => {
-            if (["curso", "alumno", "prueba", "nombreDisplay", "updatedAt"].includes(prop)) return;
+            if (["curso", "alumno", "prueba", "nombreDisplay", "updatedAt", "trimestre"].includes(prop)) return;
 
             let critCode = prop;
             if (projKey && mapaEquivalenciasProyectos[projKey] && mapaEquivalenciasProyectos[projKey][prop]) {
@@ -452,7 +520,7 @@
             }
 
             const val = parseFloat(data[prop]);
-            agregarNota(critCode, origenNombre, val);
+            agregarNota(critCode, origenNombre, val, triDoc);
           });
         } catch(e){}
       }
@@ -494,7 +562,7 @@
       const div = document.createElement("div");
       div.className = "desglose-item";
       div.innerHTML = `
-        <span class="desglose-origen">📝 ${item.origen}</span>
+        <span class="desglose-origen">📝 ${item.origen} <small style="opacity:0.75;">[${item.trimestre || 'T1'}]</small></span>
         <span class="desglose-nota">${item.nota.toFixed(1)}</span>
       `;
       container.appendChild(div);
@@ -516,7 +584,7 @@
   function abrirFichaAlumno(grupo, alumno) {
     const nivel = grupo.charAt(0);
     const criteriosList = catálogoCriterios[nivel] || [];
-    const resumenNotas = obtenerNotasAlumno(grupo, alumno);
+    const resumenNotas = obtenerNotasAlumno(grupo, alumno, "GENERAL");
 
     document.getElementById("fichaAlumnoNombre").textContent = `👤 ${alumno}`;
     document.getElementById("fichaAlumnoCurso").textContent = `Curso ${grupo} | Expediente de Rendimiento Académico`;
@@ -545,7 +613,7 @@
           </div>`;
 
         item.items.forEach(ev => {
-          evidenceRowsHtml += `<tr><td><strong>${c.code}</strong></td><td>${ev.origen}</td><td><strong>${ev.nota.toFixed(1)}</strong></td></tr>`;
+          evidenceRowsHtml += `<tr><td><strong>${c.code}</strong></td><td>${ev.origen} [${ev.trimestre || 'T1'}]</td><td><strong>${ev.nota.toFixed(1)}</strong></td></tr>`;
         });
       } else {
         critCardsHtml += `
@@ -616,25 +684,69 @@
 
     const curso = document.getElementById("selectCurso").value;
     const nivel = curso.charAt(0);
-    const criteriosList = catálogoCriterios[nivel] || [];
+    const todosCriterios = catálogoCriterios[nivel] || [];
     const listaAlumnos = alumnosData[curso] || [];
 
     const head = document.getElementById("headMatriz");
     const body = document.getElementById("bodyMatriz");
+    const banner = document.getElementById("bannerCriteriosSinEvaluar");
 
+    // Determinar qué criterios se incluirán en la tabla
+    let criteriosAmostrar = [];
+    let criteriosSinEvaluar = [];
+
+    if (tabActual === "GENERAL") {
+      banner.style.display = "none";
+      criteriosAmostrar = todosCriterios;
+    } else {
+      // Filtrar criterios evaluados en el trimestre activo
+      const evaluadosSet = new Set();
+
+      listaAlumnos.forEach(alumno => {
+        const res = obtenerNotasAlumno(curso, alumno, tabActual);
+        Object.keys(res).forEach(code => evaluadosSet.add(code));
+      });
+
+      todosCriterios.forEach(c => {
+        if (evaluadosSet.has(c.code)) {
+          criteriosAmostrar.push(c);
+        } else {
+          criteriosSinEvaluar.push(c);
+        }
+      });
+
+      // Renderizar Banner de Criterios sin evaluar en este trimestre
+      const nombreTri = tabActual === "T1" ? "1.er Trimestre" : (tabActual === "T2" ? "2.º Trimestre" : "3.er Trimestre");
+      if (criteriosSinEvaluar.length > 0) {
+        banner.style.display = "block";
+        let badgesHtml = criteriosSinEvaluar.map(c => `<span class="badge-pending">${c.code} (${c.label})</span>`).join(" ");
+        banner.innerHTML = `
+          <div class="unevaluated-title">📌 Criterios sin evaluar aún en el ${nombreTri} (${criteriosSinEvaluar.length} de ${todosCriterios.length}):</div>
+          <div class="unevaluated-list">${badgesHtml}</div>
+        `;
+      } else {
+        banner.style.display = "block";
+        banner.innerHTML = `<div style="color:#166534; font-weight:700;">✅ ¡Enhorabuena! Todos los criterios del curso han sido evaluados en el ${nombreTri}.</div>`;
+      }
+    }
+
+    // Generar encabezado de la tabla
     let headHtml = `<tr><th class="col-fixed-num">#</th><th class="col-fixed-name">Alumno / Alumna</th>`;
-    criteriosList.forEach(c => {
+    criteriosAmostrar.forEach(c => {
       headHtml += `<th title="${c.code}: ${c.label}">${c.code}<br><span style="font-weight:normal; font-size:0.7rem; color:#475569;">${c.label}</span></th>`;
     });
-    headHtml += `<th style="background:#bae6fd; color:#0369a1; min-width:85px;">Nota Media</th></tr>`;
+    
+    const tituloMedia = tabActual === "GENERAL" ? "Nota Media Global" : `Media ${tabActual === "T1" ? "1º Tri" : (tabActual === "T2" ? "2º Tri" : "3º Tri")}`;
+    headHtml += `<th style="background:#bae6fd; color:#0369a1; min-width:85px;">${tituloMedia}</th></tr>`;
     head.innerHTML = headHtml;
 
+    // Generar cuerpo de la tabla
     let bodyHtml = "";
     let totalEvaluados = 0;
 
     listaAlumnos.forEach((alumno, idx) => {
-      const resumenNotas = obtenerNotasAlumno(curso, alumno);
-      const safeAlumno = alumno.replace(/'/g, "\\'");
+      const resumenNotas = obtenerNotasAlumno(curso, alumno, tabActual);
+      const safeAlumno = alumno.replace(/'/g, "\'");
 
       bodyHtml += `<tr><td class="col-fixed-num">${idx + 1}</td>
         <td class="col-fixed-name">
@@ -644,17 +756,21 @@
       let sumaTotal = 0;
       let cont = 0;
 
-      criteriosList.forEach(c => {
+      criteriosAmostrar.forEach(c => {
         const item = resumenNotas[c.code];
         if (item && esNumero(item.media)) {
           const itemsEncoded = encodeURIComponent(JSON.stringify(item.items));
           
-          const tooltipHover = `👤 ${alumno}\n• Criterio ${c.code} (${c.label})\n• Nota Media: ${item.media.toFixed(1)}\n` + 
-            item.items.map(it => `  - ${it.origen}: ${it.nota.toFixed(1)}`).join('\n');
+          const tooltipHover = `👤 ${alumno}
+• Criterio ${c.code} (${c.label})
+• Nota Media: ${item.media.toFixed(1)}
+` + 
+            item.items.map(it => `  - ${it.origen}: ${it.nota.toFixed(1)}`).join('
+');
 
           bodyHtml += `<td class="mark-cell" 
                            title="${tooltipHover}"
-                           onclick="abrirDesgloseModal('${safeAlumno}', '${c.code}', '${c.label.replace(/'/g, "\\'")}', ${item.media}, '${itemsEncoded}')">
+                           onclick="abrirDesgloseModal('${safeAlumno}', '${c.code}', '${c.label.replace(/'/g, "\'")}', ${item.media}, '${itemsEncoded}')">
             <span class="mark-val">${item.media.toFixed(1)}</span>
           </td>`;
           sumaTotal += item.media;
@@ -671,25 +787,28 @@
     });
 
     body.innerHTML = bodyHtml;
-    document.getElementById("infoRegistros").textContent = `☁️ Sincronizado en tiempo real. ${totalEvaluados} de ${listaAlumnos.length} alumnos evaluados en ${curso}.`;
+    
+    const etiquetaVista = tabActual === "GENERAL" ? "Vista Anual Completa" : `Vista de ${tabActual === "T1" ? "1.er Trimestre" : (tabActual === "T2" ? "2.º Trimestre" : "3.er Trimestre")}`;
+    document.getElementById("infoRegistros").textContent = `☁️ Sincronizado (${etiquetaVista}). ${totalEvaluados} de ${listaAlumnos.length} alumnos con notas en ${curso}.`;
   }
 
   function exportarMatrizCSV() {
     const curso = document.getElementById("selectCurso").value;
     const nivel = curso.charAt(0);
-    const criteriosList = catálogoCriterios[nivel] || [];
+    const todosCriterios = catálogoCriterios[nivel] || [];
     const listaAlumnos = alumnosData[curso] || [];
 
-    let csv = `Curso;Alumno;` + criteriosList.map(c => `${c.code} (${c.label})`).join(";") + `;Nota Media Global\n`;
+    let csv = `Curso;Alumno;` + todosCriterios.map(c => `${c.code} (${c.label})`).join(";") + `;Nota Media
+`;
 
     listaAlumnos.forEach(alumno => {
-      const resumenNotas = obtenerNotasAlumno(curso, alumno);
+      const resumenNotas = obtenerNotasAlumno(curso, alumno, tabActual);
       let line = `${curso};"${alumno}"`;
       
       let sumaTotal = 0;
       let cont = 0;
 
-      criteriosList.forEach(c => {
+      todosCriterios.forEach(c => {
         const item = resumenNotas[c.code];
         if (item && esNumero(item.media)) {
           line += `;${item.media.toFixed(1)}`;
@@ -701,14 +820,15 @@
       });
 
       const finalVal = cont > 0 ? (sumaTotal / cont).toFixed(1) : "";
-      line += `;${finalVal}\n`;
+      line += `;${finalVal}
+`;
       csv += line;
     });
 
-    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `matriz_criterios_LOMLOE_${curso}.csv`;
+    link.download = `matriz_criterios_LOMLOE_${curso}_${tabActual}.csv`;
     link.click();
   }
 
