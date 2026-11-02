@@ -175,7 +175,6 @@
 </div>
 
 <script>
-  // Inicialización de Firebase
   const firebaseConfig = { projectId: "cyberbreakout-hispanidad" };
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
@@ -225,7 +224,7 @@
   let pruebasMapGrupo = {};
 
   function autoSeleccionarTrimestre() {
-    const mes = new Date().getMonth(); // 0..11
+    const mes = new Date().getMonth();
     if (mes >= 8 && mes <= 11) {
       document.getElementById("selectTrimestre").value = "T1";
     } else if (mes >= 0 && mes <= 2) {
@@ -275,7 +274,6 @@
 
     pruebasMapGrupo = {};
 
-    // 1. Consultar Firestore
     try {
       const snap = await db.collection("evaluacion_directa").where("curso", "==", curso).get();
       snap.forEach(doc => {
@@ -295,7 +293,6 @@
       });
     } catch(e) {}
 
-    // 2. Consultar LocalStorage
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.startsWith(`directo_${curso}_`)) {
@@ -449,7 +446,6 @@
     document.getElementById("cardTabla").style.display = "block";
     document.getElementById("msgGuardado").textContent = "";
 
-    // Calcular medias iniciales
     for (let idx = 0; idx < alumnos.length; idx++) {
       calcularMediaFila(idx);
     }
