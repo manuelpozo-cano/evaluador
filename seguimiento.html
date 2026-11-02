@@ -8,6 +8,7 @@
   <!-- SDK Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
   <style>
     :root {
@@ -166,29 +167,33 @@
     .btn-primary:hover { background: var(--primary-dark); }
     .btn-secondary { background: #e2e8f0; color: #334155; }
 
-    /* MODAL POPUP */
+    /* MODAL LOGIN */
+    .login-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(5px);
+      z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .login-card {
+      background: white; border-radius: 16px; padding: 30px; max-width: 400px; width: 100%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); text-align: center;
+    }
+    .login-card h2 { font-size: 1.3rem; margin-bottom: 8px; color: #0f172a; }
+    .login-card p { font-size: 0.85rem; color: #64748b; margin-bottom: 20px; }
+    .login-card input {
+      width: 100%; padding: 10px 14px; margin-bottom: 12px; border: 1px solid #cbd5e1;
+      border-radius: 8px; font-size: 0.95rem;
+    }
+
+    /* MODAL DESGLOSE Y FICHA */
     .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(3px);
-      z-index: 9999;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(3px); z-index: 9999;
+      align-items: center; justify-content: center; padding: 16px;
     }
     .modal-card {
-      background: white;
-      border-radius: 14px;
-      max-width: 700px;
-      width: 100%;
-      max-height: 88vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-      border: 1px solid #cbd5e1;
-      animation: popup 0.2s ease-out;
+      background: white; border-radius: 14px; max-width: 700px; width: 100%;
+      max-height: 88vh; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      border: 1px solid #cbd5e1; animation: popup 0.2s ease-out;
     }
     @keyframes popup {
       from { transform: scale(0.95); opacity: 0; }
@@ -207,7 +212,6 @@
     .desglose-nota { font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 6px; }
     .desglose-media { margin-top: 12px; padding: 10px 12px; background: #0284c7; color: white; border-radius: 8px; display: flex; justify-content: space-between; font-weight: 700; }
 
-    /* Estilos Ficha Individual */
     .ficha-summary-box {
       background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border: 1px solid #bae6fd;
       padding: 14px; border-radius: 10px; margin-bottom: 16px;
@@ -237,13 +241,29 @@
 </head>
 <body>
 
+<!-- MODAL ACCESO PROFESOR -->
+<div id="modalAuth" class="login-overlay" style="display:none;">
+  <div class="login-card">
+    <h2>🔐 Acceso Profesorado</h2>
+    <p>Introduce tu correo y contraseña para acceder al cuaderno de notas.</p>
+    <input type="email" id="authEmail" placeholder="Correo electrónico">
+    <input type="password" id="authPassword" placeholder="Contraseña">
+    <button class="btn btn-primary" style="width:100%;" onclick="iniciarSesion()">Iniciar Sesión</button>
+    <div id="authError" style="color:#dc2626; font-size:0.8rem; font-weight:700; margin-top:10px;"></div>
+  </div>
+</div>
+
 <div class="container">
   <header>
     <div>
       <h1>📊 Cuadro de Mando y Matriz Completa de Criterios</h1>
       <p>Cuaderno General de Evaluación | Colegio La Hispanidad</p>
     </div>
-    <a href="index.html" class="btn-home">🏠 Volver al Inicio</a>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <span id="userStatus" style="font-size:0.8rem; opacity:0.9;"></span>
+      <button id="btnLogout" class="btn-home" style="display:none; cursor:pointer;" onclick="cerrarSesion()">🔒 Cerrar Sesión</button>
+      <a href="index.html" class="btn-home">🏠 Volver al Inicio</a>
+    </div>
   </header>
 
   <div class="card">
@@ -277,7 +297,7 @@
       <button class="tab-btn" id="tabT3" onclick="cambiarTab('T3')">3.er Trimestre</button>
     </div>
 
-    <!-- BANNER DE CRITERIOS SIN EVALUAR EN EL TRIMESTRE SELECCIONADO -->
+    <!-- BANNER CRITERIOS SIN EVALUAR EN EL TRIMESTRE ACTIVO -->
     <div id="bannerCriteriosSinEvaluar" class="unevaluated-banner" style="display:none;"></div>
 
     <div class="table-container">
@@ -298,7 +318,7 @@
   </div>
 </div>
 
-<!-- VENTANA MODAL PARA DESGLOSE DE NOTA -->
+<!-- MODAL DESGLOSE DE NOTAS -->
 <div class="modal-overlay" id="modalDesglose" onclick="cerrarModal(event)">
   <div class="modal-card" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -322,7 +342,7 @@
   </div>
 </div>
 
-<!-- VENTANA MODAL PARA FICHA INDIVIDUAL DEL ALUMNO -->
+<!-- MODAL FICHA INDIVIDUAL ALUMNO -->
 <div class="modal-overlay" id="modalFichaAlumno" onclick="cerrarFichaModal(event)">
   <div class="modal-card" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -332,9 +352,7 @@
       </div>
       <button class="modal-close" onclick="cerrarFichaDirecto()">✕</button>
     </div>
-    <div class="modal-body" id="fichaAlumnoBody">
-      <!-- Generado dinámicamente -->
-    </div>
+    <div class="modal-body" id="fichaAlumnoBody"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir / PDF</button>
       <button class="btn btn-primary" onclick="cerrarFichaDirecto()">✓ Cerrar Ficha</button>
@@ -343,10 +361,39 @@
 </div>
 
 <script>
-  // Inicialización de Firebase
   const firebaseConfig = { projectId: "cyberbreakout-hispanidad" };
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const auth = firebase.auth();
+
+  // Control de Sesión Firebase Auth
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      document.getElementById("modalAuth").style.display = "none";
+      document.getElementById("btnLogout").style.display = "inline-flex";
+      document.getElementById("userStatus").textContent = `👤 ${user.email}`;
+      renderMatriz();
+    } else {
+      document.getElementById("modalAuth").style.display = "flex";
+      document.getElementById("btnLogout").style.display = "none";
+      document.getElementById("userStatus").textContent = "";
+    }
+  });
+
+  function iniciarSesion() {
+    const email = document.getElementById("authEmail").value.trim();
+    const pass = document.getElementById("authPassword").value;
+    const errDiv = document.getElementById("authError");
+    errDiv.textContent = "";
+
+    auth.signInWithEmailAndPassword(email, pass).catch(err => {
+      errDiv.textContent = "Error al acceder: Comprueba correo y contraseña.";
+    });
+  }
+
+  function cerrarSesion() {
+    auth.signOut();
+  }
 
   const alumnosData = {
     "2A": ["Bada Blanco, Ainara","Bravo Rodríguez, Lucía","Contreras Santiago, Manuel","Contreras Santiago, Paula","Correa Rodríguez, Ainara","Costa Redondo, Saray","Cruz Feria, Esteban","Cuaresma Rodríguez, Indhira","Cuaresma Rodríguez, Nayma","De la Luz Patricio, Elena","Garcia Caparrós, Indira","Garrido Fernández, Yamileth","Gómez Brito, Adriana","Gómez López, Daniella","Gutiérrez Valencia, Thomas","López Gómez, Hugo","López Salguero, Héctor Jesús","Mora Chico, Hugo","Mykhailyshyn, Iryna","Presa Bueno, Luca","Rengel Padilla, Alejandra","Reyes Pérez, Francisco José","Rodríguez Domínguez, Antonio","Silva López, Ainhoa","Torrescusa Borrero, Miguel"],
@@ -396,7 +443,7 @@
   };
 
   let cacheCloud = {};
-  let tabActual = "GENERAL"; // "GENERAL", "T1", "T2", "T3"
+  let tabActual = "GENERAL";
 
   function cambiarTab(nuevaTab) {
     tabActual = nuevaTab;
@@ -434,13 +481,13 @@
     if (data.updatedAt) {
       try {
         let dateObj = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
-        let m = dateObj.getMonth(); // 0..11
+        let m = dateObj.getMonth();
         if (m >= 8 && m <= 11) return "T1";
         if (m >= 0 && m <= 2) return "T2";
         return "T3";
       } catch(e){}
     }
-    return "T1"; // Default
+    return "T1";
   }
 
   function obtenerNotasAlumno(grupo, alumno, filtroTrimestre = "GENERAL") {
@@ -448,8 +495,6 @@
 
     function agregarNota(critCode, origenNombre, val, triDoc) {
       if (!esNumero(val)) return;
-      
-      // Si estamos filtrando por trimestre y no coincide, ignorar
       if (filtroTrimestre !== "GENERAL" && triDoc !== filtroTrimestre) return;
 
       if (!notasPorCriterio[critCode]) notasPorCriterio[critCode] = [];
@@ -460,7 +505,6 @@
       }
     }
 
-    // 1. Lectura de datos Cloud
     Object.keys(cacheCloud).forEach(key => {
       if (key.includes(grupo) && key.includes(alumno)) {
         const data = cacheCloud[key];
@@ -469,14 +513,11 @@
         let triDoc = inferirTrimestre(data, key);
 
         if (key.includes("doblador")) {
-          projKey = "doblador";
-          origenNombre = "Proyecto Doblador";
+          projKey = "doblador"; origenNombre = "Proyecto Doblador";
         } else if (key.includes("eniac")) {
-          projKey = "eniac";
-          origenNombre = "Proyecto ENIAC";
+          projKey = "eniac"; origenNombre = "Proyecto ENIAC";
         } else if (key.includes("retos3eso")) {
-          projKey = "retos3eso";
-          origenNombre = "Retos 3º ESO";
+          projKey = "retos3eso"; origenNombre = "Retos 3º ESO";
         } else if (data.nombreDisplay) {
           origenNombre = data.nombreDisplay;
         } else if (data.prueba) {
@@ -497,7 +538,6 @@
       }
     });
 
-    // 2. Lectura de datos LocalStorage
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.includes(grupo) && key.includes(alumno)) {
@@ -526,7 +566,6 @@
       }
     }
 
-    // Procesar medias
     const resumen = {};
     Object.keys(notasPorCriterio).forEach(code => {
       const arr = notasPorCriterio[code];
@@ -691,7 +730,6 @@
     const body = document.getElementById("bodyMatriz");
     const banner = document.getElementById("bannerCriteriosSinEvaluar");
 
-    // Determinar qué criterios se incluirán en la tabla
     let criteriosAmostrar = [];
     let criteriosSinEvaluar = [];
 
@@ -699,7 +737,6 @@
       banner.style.display = "none";
       criteriosAmostrar = todosCriterios;
     } else {
-      // Filtrar criterios evaluados en el trimestre activo
       const evaluadosSet = new Set();
 
       listaAlumnos.forEach(alumno => {
@@ -715,7 +752,6 @@
         }
       });
 
-      // Renderizar Banner de Criterios sin evaluar en este trimestre
       const nombreTri = tabActual === "T1" ? "1.er Trimestre" : (tabActual === "T2" ? "2.º Trimestre" : "3.er Trimestre");
       if (criteriosSinEvaluar.length > 0) {
         banner.style.display = "block";
@@ -730,7 +766,6 @@
       }
     }
 
-    // Generar encabezado de la tabla
     let headHtml = `<tr><th class="col-fixed-num">#</th><th class="col-fixed-name">Alumno / Alumna</th>`;
     criteriosAmostrar.forEach(c => {
       headHtml += `<th title="${c.code}: ${c.label}">${c.code}<br><span style="font-weight:normal; font-size:0.7rem; color:#475569;">${c.label}</span></th>`;
@@ -740,13 +775,12 @@
     headHtml += `<th style="background:#bae6fd; color:#0369a1; min-width:85px;">${tituloMedia}</th></tr>`;
     head.innerHTML = headHtml;
 
-    // Generar cuerpo de la tabla
     let bodyHtml = "";
     let totalEvaluados = 0;
 
     listaAlumnos.forEach((alumno, idx) => {
       const resumenNotas = obtenerNotasAlumno(curso, alumno, tabActual);
-      const safeAlumno = alumno.replace(/'/g, "\'");
+      const safeAlumno = alumno.replace(/'/g, "\\'");
 
       bodyHtml += `<tr><td class="col-fixed-num">${idx + 1}</td>
         <td class="col-fixed-name">
@@ -760,17 +794,11 @@
         const item = resumenNotas[c.code];
         if (item && esNumero(item.media)) {
           const itemsEncoded = encodeURIComponent(JSON.stringify(item.items));
-          
-          const tooltipHover = `👤 ${alumno}
-• Criterio ${c.code} (${c.label})
-• Nota Media: ${item.media.toFixed(1)}
-` + 
-            item.items.map(it => `  - ${it.origen}: ${it.nota.toFixed(1)}`).join('
-');
+          const hoverText = `👤 ${alumno} - Criterio ${c.code} (${c.label}) - Media: ${item.media.toFixed(1)}`;
 
           bodyHtml += `<td class="mark-cell" 
-                           title="${tooltipHover}"
-                           onclick="abrirDesgloseModal('${safeAlumno}', '${c.code}', '${c.label.replace(/'/g, "\'")}', ${item.media}, '${itemsEncoded}')">
+                           title="${hoverText}"
+                           onclick="abrirDesgloseModal('${safeAlumno}', '${c.code}', '${c.label.replace(/'/g, "\\'")}', ${item.media}, '${itemsEncoded}')">
             <span class="mark-val">${item.media.toFixed(1)}</span>
           </td>`;
           sumaTotal += item.media;
@@ -798,8 +826,7 @@
     const todosCriterios = catálogoCriterios[nivel] || [];
     const listaAlumnos = alumnosData[curso] || [];
 
-    let csv = `Curso;Alumno;` + todosCriterios.map(c => `${c.code} (${c.label})`).join(";") + `;Nota Media
-`;
+    let csv = `Curso;Alumno;` + todosCriterios.map(c => `${c.code} (${c.label})`).join(";") + `;Nota Media\n`;
 
     listaAlumnos.forEach(alumno => {
       const resumenNotas = obtenerNotasAlumno(curso, alumno, tabActual);
@@ -820,19 +847,16 @@
       });
 
       const finalVal = cont > 0 ? (sumaTotal / cont).toFixed(1) : "";
-      line += `;${finalVal}
-`;
+      line += `;${finalVal}\n`;
       csv += line;
     });
 
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = `matriz_criterios_LOMLOE_${curso}_${tabActual}.csv`;
     link.click();
   }
-
-  document.addEventListener("DOMContentLoaded", renderMatriz);
 </script>
 
 </body>
