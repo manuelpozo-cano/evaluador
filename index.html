@@ -3,109 +3,521 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cuaderno de Evaluación LOMLOE - Colegio La Hispanidad</title>
-  <script>
-    // Contraseña asignada: milmil22
-    const CLAVE_CORRECTA = "milmil22";
+  <title>Portal Tecnología y Digitalización - Manuel Pozo Cano</title>
 
-    if (sessionStorage.getItem("acceso_profesor") !== "true") {
-      let clave = prompt("🔑 Introduce la contraseña del Cuaderno del Profesor:");
-      if (clave === CLAVE_CORRECTA) {
-        sessionStorage.setItem("acceso_profesor", "true");
-      } else {
-        alert("❌ Contraseña incorrecta.");
-        document.write("<div style='text-align:center; padding:50px; font-family:sans-serif;'><h2>⛔ Acceso Restringido</h2><p>Recarga la página para volver a intentar el acceso.</p></div>");
-        window.stop();
-      }
-    }
-  </script>
   <style>
-    :root {
-      --primary: #0284c7;
-      --primary-dark: #0369a1;
-      --bg: #f8fafc;
-      --card-bg: #ffffff;
-      --text: #1e293b;
+    :root { 
+      --primary: #15803d; 
+      --primary-dark: #166534; 
+      --bg: #f4f7f5; 
+      --card: #ffffff; 
+      --text: #1c2a23; 
+      --border: #d1fae5; 
+      --border-card: #e2e8f0;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
     .container { max-width: 1100px; margin: 0 auto; }
+
     header {
-      background: linear-gradient(135deg, #0f172a, #0369a1);
-      color: white; padding: 30px; border-radius: 16px; margin-bottom: 25px;
-      text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      background: linear-gradient(135deg, #052e16, #14532d, #15803d); 
+      color: white;
+      padding: 32px 24px; 
+      border-radius: 16px; 
+      margin-bottom: 28px; 
+      text-align: center;
+      box-shadow: 0 10px 15px -3px rgba(5, 46, 22, 0.25), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      border-bottom: 4px solid #22c55e;
     }
-    header h1 { font-size: 2rem; margin-bottom: 8px; }
-    header p { opacity: 0.9; font-size: 1rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    header h1 { 
+      font-size: 2.1rem; 
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px; 
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    header .sub-header { 
+      font-size: 1.05rem; 
+      font-weight: 500;
+      opacity: 0.95; 
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    header .badge {
+      background: rgba(255, 255, 255, 0.18);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .section-title { 
+      font-size: 1.25rem; font-weight: 700; color: #14532d; margin: 28px 0 14px; 
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+
     .card {
-      background: var(--card-bg); border-radius: 14px; padding: 24px; border: 1px solid #cbd5e1;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
-      display: flex; flex-direction: column; justify-content: space-between;
+      background: var(--card); 
+      border: 1px solid var(--border-card); 
+      border-radius: 14px;
+      padding: 22px; 
+      text-decoration: none; 
+      color: inherit; 
+      transition: all 0.25s ease-in-out;
+      display: flex; 
+      flex-direction: column; 
+      justify-content: space-between;
+      border-left: 6px solid var(--primary);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
-    .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-    .card-title { font-size: 1.3rem; font-weight: 700; color: #0f172a; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
-    .card-desc { color: #475569; font-size: 0.95rem; margin-bottom: 20px; flex-grow: 1; }
-    .btn {
-      display: inline-block; text-align: center; padding: 12px 20px; border-radius: 10px;
-      background: var(--primary); color: white; text-decoration: none; font-weight: 700;
-      font-size: 0.95rem; transition: background 0.2s;
+    .card:hover { 
+      transform: translateY(-4px); 
+      box-shadow: 0 12px 20px -5px rgba(21, 128, 61, 0.15); 
+      border-color: var(--primary); 
     }
-    .btn:hover { background: var(--primary-dark); }
-    .logout-btn {
-      display: inline-block; margin-top: 25px; padding: 10px 18px; border: 1px solid #cbd5e1;
-      border-radius: 8px; background: white; color: #64748b; text-decoration: none; font-size: 0.85rem; font-weight: 600;
-      cursor: pointer; transition: background 0.2s;
+
+    .card.cuadro-mando { border-left-color: #0284c7; }
+    .card.cuadro-mando .card-tag { color: #0284c7; }
+
+    .card.directo { border-left-color: #16a34a; }
+    .card.directo .card-tag { color: #16a34a; }
+
+    .card-tag { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--primary); margin-bottom: 6px; letter-spacing: 0.5px; }
+    .card-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; color: #064e3b; }
+    .card-desc { font-size: 0.88rem; color: #4b5563; margin-bottom: 18px; flex-grow: 1; line-height: 1.45; }
+    
+    .btn-link {
+      background: #f0fdf4; 
+      text-align: center; 
+      padding: 10px; 
+      border-radius: 8px;
+      font-size: 0.88rem; 
+      font-weight: 700; 
+      color: var(--primary-dark); 
+      transition: all 0.2s;
+      border: 1px solid #d1fae5;
     }
-    .logout-btn:hover { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+    .card:hover .btn-link { background: var(--primary); color: white; border-color: var(--primary); }
+    .card.cuadro-mando:hover .btn-link { background: #0284c7; color: white; border-color: #0284c7; }
+    .card.directo:hover .btn-link { background: #16a34a; color: white; border-color: #16a34a; }
+
+    .status-text { font-size: 0.82rem; color: #6b7280; font-weight: 500; }
+
+    /* FOOTER CAMUFLADO Y ELEGANTE */
+    footer {
+      margin-top: 50px;
+      padding: 20px 10px;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      font-size: 0.82rem;
+      color: #6b7280;
+    }
+    .footer-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #eef2ff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      color: #3730a3;
+      margin-top: 8px;
+      border: 1px solid #e0e7ff;
+    }
+    .btn-config-toggle {
+      background: none;
+      border: none;
+      color: var(--primary-dark);
+      cursor: pointer;
+      font-size: 0.78rem;
+      text-decoration: underline;
+      margin-left: 6px;
+      font-weight: 600;
+    }
+    .repo-config-panel {
+      display: none;
+      margin: 12px auto 0;
+      max-width: 380px;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .repo-config-panel input {
+      padding: 5px 8px; border-radius: 6px; border: 1px solid #94a3b8; font-size: 0.8rem; width: 200px;
+    }
+    .repo-config-panel button {
+      background: var(--primary); color: white; border: none; padding: 5px 10px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.8rem;
+    }
+    .logout-link {
+      display: inline-block;
+      margin-top: 10px;
+      color: #ef4444;
+      font-size: 0.78rem;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* MODAL DE CONTRASEÑA MASCARADA */
+    .modal-pwd-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(5, 46, 22, 0.88);
+      backdrop-filter: blur(6px);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-pwd-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 28px 24px;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      border: 2px solid #22c55e;
+    }
+    .modal-pwd-card h2 {
+      font-size: 1.25rem;
+      color: #052e16;
+      margin-bottom: 6px;
+    }
+    .modal-pwd-card p {
+      font-size: 0.86rem;
+      color: #4b5563;
+      margin-bottom: 16px;
+    }
+    .pwd-input-group {
+      margin-bottom: 10px;
+    }
+    .pwd-input-group input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1.5px solid #94a3b8;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .pwd-input-group input:focus {
+      border-color: #15803d;
+      box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.2);
+    }
+    .show-pwd-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: #4b5563;
+      cursor: pointer;
+      user-select: none;
+      margin-bottom: 16px;
+    }
+    .show-pwd-label input {
+      cursor: pointer;
+      width: 15px;
+      height: 15px;
+    }
+    .btn-pwd-submit {
+      width: 100%;
+      background: #15803d;
+      color: white;
+      border: none;
+      padding: 11px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-pwd-submit:hover {
+      background: #166534;
+    }
+    .pwd-error {
+      color: #dc2626;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-top: 10px;
+      min-height: 20px;
+    }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <header>
-    <h1>🏫 Cuaderno de Evaluación LOMLOE</h1>
-    <p>Gestión del Profesorado | Tecnología y Digitalización | Colegio La Hispanidad</p>
-  </header>
-
-  <div class="grid">
-    <div class="card">
-      <div>
-        <div class="card-title">📝 Evaluador Directo</div>
-        <div class="card-desc">Calificación rápida de exámenes, actividades y proyectos por Criterios de Evaluación con sincronización en la nube.</div>
-      </div>
-      <a href="evaluador_directo.html" class="btn">Acceder al Evaluador ➔</a>
+<!-- VENTANA MODAL PARA INTRODUCIR CONTRASEÑA -->
+<div class="modal-pwd-overlay" id="modalPassword" style="display:none;">
+  <div class="modal-pwd-card">
+    <h2>🔑 Acceso al Cuaderno</h2>
+    <p>Introduce la contraseña para acceder al portal:</p>
+    
+    <div class="pwd-input-group">
+      <input type="password" id="inputClave" placeholder="Contraseña..." onkeydown="siEsEnterAcceder(event)">
+    </div>
+    
+    <div>
+      <label class="show-pwd-label">
+        <input type="checkbox" onchange="alternarVisibilidadClave(this)">
+        👁️ Mostrar contraseña
+      </label>
     </div>
 
-    <div class="card">
-      <div>
-        <div class="card-title">📊 Cuadro de Mando & Matriz</div>
-        <div class="card-desc">Matriz completa de criterios por curso, filtros trimestrales, fichas de rendimiento individual e informes en CSV.</div>
-      </div>
-      <a href="seguimiento.html" class="btn">Ver Matriz General ➔</a>
-    </div>
-
-    <div class="card">
-      <div>
-        <div class="card-title">⚙️ El Doblador (2º ESO)</div>
-        <div class="card-desc">Instrumento práctico de taller y evaluación de competencias en proyectos técnicos de 2º ESO.</div>
-      </div>
-      <a href="doblador.html" class="btn">Abrir El Doblador ➔</a>
-    </div>
-
-    <div class="card">
-      <div>
-        <div class="card-title">💻 Proyecto ENIAC (4º ESO)</div>
-        <div class="card-desc">Evaluación de prácticas de arquitectura de ordenadores, sistemas operativos y redes locales para 4º ESO.</div>
-      </div>
-      <a href="eniac.html" class="btn">Abrir Proyecto ENIAC ➔</a>
-    </div>
-  </div>
-
-  <div style="text-align: center;">
-    <button class="logout-btn" onclick="sessionStorage.removeItem('acceso_profesor'); location.reload();">🔒 Cerrar Sesión / Salir</button>
+    <button class="btn-pwd-submit" onclick="verificarClaveProfesor()">Entrar al Portal ➔</button>
+    <div class="pwd-error" id="msgErrorClave"></div>
   </div>
 </div>
+
+<div class="container">
+  <header>
+    <h1>🌿 Tecnología y Digitalización</h1>
+    <div class="sub-header">
+      <span><strong>Manuel Pozo Cano</strong></span>
+      <span class="badge">🏫 Colegio La Hispanidad</span>
+    </div>
+  </header>
+
+  <!-- HERRAMIENTAS GENERALES FIJAS -->
+  <div class="section-title">
+    <span>📊 Cuadro de Mando y Registro Directo</span>
+  </div>
+  <div class="grid">
+    <a href="seguimiento.html" class="card cuadro-mando">
+      <div>
+        <div class="card-tag">Matriz General</div>
+        <div class="card-title">Cuaderno de Seguimiento</div>
+        <div class="card-desc">Consulta por alumnado, grupo y matriz completa de todos los criterios oficiales con medias acumuladas.</div>
+      </div>
+      <div class="btn-link">Ver Panel de Seguimiento ➔</div>
+    </a>
+
+    <a href="evaluador_directo.html" class="card directo">
+      <div>
+        <div class="card-tag">Evaluador Directo</div>
+        <div class="card-title">Exámenes y Actividades</div>
+        <div class="card-desc">Registro rápido de notas numéricas directas por criterio para pruebas escritas, cuaderno o taller.</div>
+      </div>
+      <div class="btn-link">Abrir Evaluador Directo ➔</div>
+    </a>
+  </div>
+
+  <!-- EVALUADORES Y UNIDADES DETECTADAS AUTOMÁTICAMENTE -->
+  <div class="section-title">
+    <span>📁 Evaluadores y Unidades Didácticas</span>
+    <span class="status-text" id="countStatus">Cargando elementos...</span>
+  </div>
+  <div class="grid" id="evaluadoresGrid">
+    <!-- Se poblará dinámicamente -->
+  </div>
+
+  <footer>
+    <p>© Manuel Pozo Cano | Departamento de Tecnología | Colegio La Hispanidad</p>
+    <div class="footer-status">
+      <span id="detectorStatus">🔎 Sincronizado con GitHub</span>
+      <button class="btn-config-toggle" onclick="toggleConfigPanel()">⚙️ Configurar</button>
+    </div>
+    <div class="repo-config-panel" id="repoConfigPanel">
+      <input type="text" id="repoInput" placeholder="usuario/repositorio" title="Escribe tu usuario/repositorio de GitHub">
+      <button onclick="manualRepoUpdate()">Actualizar</button>
+    </div>
+    <div>
+      <span class="logout-link" onclick="sessionStorage.removeItem('acceso_profesor'); location.reload();">🔒 Cerrar sesión</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+  const CLAVE_CORRECTA = "milmil22";
+
+  function comprobarAccesoPrevio() {
+    if (sessionStorage.getItem("acceso_profesor") !== "true") {
+      document.getElementById("modalPassword").style.display = "flex";
+      setTimeout(() => document.getElementById("inputClave").focus(), 100);
+    } else {
+      document.getElementById("modalPassword").style.display = "none";
+    }
+  }
+
+  function verificarClaveProfesor() {
+    const val = document.getElementById("inputClave").value;
+    const msgErr = document.getElementById("msgErrorClave");
+    if (val === CLAVE_CORRECTA) {
+      sessionStorage.setItem("acceso_profesor", "true");
+      document.getElementById("modalPassword").style.display = "none";
+      msgErr.textContent = "";
+    } else {
+      msgErr.textContent = "❌ Contraseña incorrecta. Inténtalo de nuevo.";
+      document.getElementById("inputClave").value = "";
+      document.getElementById("inputClave").focus();
+    }
+  }
+
+  function alternarVisibilidadClave(chk) {
+    const input = document.getElementById("inputClave");
+    input.type = chk.checked ? "text" : "password";
+  }
+
+  function siEsEnterAcceder(e) {
+    if (e.key === "Enter") {
+      verificarClaveProfesor();
+    }
+  }
+
+  const fallbackEvaluadores = [
+    {
+      file: "EVALUADOR DOBLADOR 2 ESO.html",
+      title: "Doblador de Ropa Mecanizado",
+      tag: "2º ESO - Tecnología",
+      desc: "Evaluación de taller, trazado, mecanismos y seguridad."
+    },
+    {
+      file: "EVALUADOR DESARROLLO SOST. 3 ESO.html",
+      title: "Retos de Digitalización y Sociedad",
+      tag: "3º ESO - Tecnología",
+      desc: "Evaluación de sostenibilidad, ODS y trabajo por equipos."
+    },
+    {
+      file: "EVALUADOR ENIAC 4 ESO.html",
+      title: "De ENIAC a la Nube",
+      tag: "4º ESO - Digitalización",
+      desc: "Evaluación de hardware, ecosistema digital y licencias abiertas."
+    }
+  ];
+
+  function extraerMetaDeNombre(filename) {
+    const nameUpper = filename.toUpperCase();
+    let tag = "Evaluación";
+    let title = filename.replace(/\.html$/i, '');
+
+    if (filename.toLowerCase() === "evaluador_directo.html") {
+      return { tag: "Evaluación Directa", title: "Evaluador Directo" };
+    }
+
+    if (nameUpper.includes("2 ESO") || nameUpper.includes("2º ESO")) tag = "2º ESO - Tecnología";
+    else if (nameUpper.includes("3 ESO") || nameUpper.includes("3º ESO")) tag = "3º ESO - Tecnología";
+    else if (nameUpper.includes("4 ESO") || nameUpper.includes("4º ESO")) tag = "4º ESO - Digitalización";
+    else if (nameUpper.includes("1 ESO") || nameUpper.includes("1º ESO")) tag = "1º ESO - Tecnología";
+
+    title = title.replace(/^EVALUADOR\s+/i, '')
+                 .replace(/\s+\d+º?\s*ESO$/i, '')
+                 .replace(/_/g, ' ');
+
+    return { tag, title: title || filename };
+  }
+
+  function renderGrid(evaluadoresList) {
+    const grid = document.getElementById("evaluadoresGrid");
+    grid.innerHTML = "";
+
+    if (!evaluadoresList || evaluadoresList.length === 0) {
+      grid.innerHTML = "<p style='color:#64748b; font-size:0.9rem;'>No se encontraron evaluadores adicionales en el repositorio.</p>";
+      return;
+    }
+
+    evaluadoresList.forEach(item => {
+      const card = document.createElement("a");
+      card.href = item.file;
+      card.className = "card";
+      card.innerHTML = `
+        <div>
+          <div class="card-tag">${item.tag}</div>
+          <div class="card-title">${item.title}</div>
+          <div class="card-desc">${item.desc || 'Unidad de evaluación interactiva.'}</div>
+        </div>
+        <div class="btn-link">Abrir Evaluador ➔</div>
+      `;
+      grid.appendChild(card);
+    });
+
+    document.getElementById("countStatus").textContent = `${evaluadoresList.length} unidad(es) detectada(s)`;
+  }
+
+  async function cargarDesdeGitHub(repoPath) {
+    const statusLabel = document.getElementById("detectorStatus");
+    statusLabel.textContent = `Consultando GitHub...`;
+
+    try {
+      const res = await fetch(`https://api.github.com/repos/${repoPath}/contents`);
+      if (!res.ok) throw new Error("Repositorio no encontrado o límite de API alcanzado.");
+
+      const files = await res.json();
+      const htmlFiles = files.filter(f => 
+        f.type === "file" && 
+        f.name.toLowerCase().endsWith(".html") && 
+        !["index.html", "seguimiento.html", "evaluador_directo.html", "404.html"].includes(f.name.toLowerCase())
+      );
+
+      if (htmlFiles.length > 0) {
+        const detected = htmlFiles.map(f => {
+          const meta = extraerMetaDeNombre(f.name);
+          return {
+            file: f.name,
+            title: meta.title,
+            tag: meta.tag,
+            desc: "Detectado automáticamente en tu repositorio GitHub."
+          };
+        });
+
+        renderGrid(detected);
+        statusLabel.textContent = `✅ Sincronizado con ${repoPath}`;
+        localStorage.setItem("github_repo_cache", repoPath);
+        return true;
+      }
+    } catch (err) {
+      console.warn("Fallo en la detección vía API:", err);
+      statusLabel.textContent = `ℹ️ Lista local (${err.message})`;
+    }
+    return false;
+  }
+
+  function toggleConfigPanel() {
+    const panel = document.getElementById("repoConfigPanel");
+    panel.style.display = panel.style.display === "block" ? "none" : "block";
+  }
+
+  function manualRepoUpdate() {
+    const val = document.getElementById("repoInput").value.trim();
+    if (val) {
+      cargarDesdeGitHub(val);
+      document.getElementById("repoConfigPanel").style.display = "none";
+    }
+  }
+
+  async function initDetector() {
+    comprobarAccesoPrevio();
+
+    let repoDetected = null;
+    const host = window.location.hostname;
+    const pathParts = window.location.pathname.split('/').filter(p => p.length > 0);
+
+    if (host.endsWith(".github.io")) {
+      const user = host.split('.')[0];
+      const repo = pathParts.length > 0 ? pathParts[0] : "";
+      if (user && repo) repoDetected = `${user}/${repo}`;
+    }
+
+    const savedRepo = localStorage.getItem("github_repo_cache");
+    if (savedRepo) repoDetected = savedRepo;
+
+    if (repoDetected) {
+      document.getElementById("repoInput").value = repoDetected;
+      const ok = await cargarDesdeGitHub(repoDetected);
+      if (ok) return;
+    }
+
+    document.getElementById("detectorStatus").textContent = "Modo Local activo";
+    renderGrid(fallbackEvaluadores);
+  }
+
+  window.onload = initDetector;
+</script>
 
 </body>
 </html>
