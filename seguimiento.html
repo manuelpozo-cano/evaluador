@@ -3,809 +3,890 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cuadro de Mando y Matriz Completa LOMLOE - La Hispanidad</title>
-
-  <!-- SDK Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
+  <title>Cuaderno de Seguimiento LOMLOE - Tecnología y Digitalización</title>
   <style>
     :root {
       --primary: #0284c7;
       --primary-dark: #0369a1;
       --bg: #f8fafc;
       --card-bg: #ffffff;
-      --text: #1e293b;
-      --border-dark: #64748b;
-      --border-cell: #94a3b8;
+      --text: #0f172a;
+      --border: #cbd5e1;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --warning: #d97706;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
-    .container { max-width: 1600px; margin: 0 auto; }
+    body { background-color: var(--bg); color: var(--text); padding: 15px; line-height: 1.5; }
+    .container { max-width: 1500px; margin: 0 auto; }
 
     header {
-      background: linear-gradient(135deg, #0f172a, #0369a1);
-      color: white; padding: 24px; border-radius: 12px; margin-bottom: 20px;
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
     }
-    header h1 { font-size: 1.5rem; }
-    header p { opacity: 0.85; font-size: 0.9rem; margin-top: 4px; }
-
-    .btn-home {
-      background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3);
-      color: white; padding: 10px 18px; border-radius: 8px; text-decoration: none;
-      font-weight: 700; font-size: 0.9rem; transition: background 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    .header-titles h1 { font-size: 1.4rem; color: var(--primary-dark); font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .header-titles p { font-size: 0.85rem; color: #64748b; font-weight: 600; margin-top: 2px; }
+    .btn-back {
+      background: #f1f5f9; color: #334155; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px;
+      text-decoration: none; font-weight: 700; font-size: 0.88rem; transition: all 0.2s;
     }
-    .btn-home:hover { background: rgba(255, 255, 255, 0.3); }
+    .btn-back:hover { background: #e2e8f0; color: var(--text); }
 
-    .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
-
-    .filter-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-    select { padding: 8px 12px; border-radius: 8px; border: 1px solid #64748b; font-size: 0.95rem; font-weight: 600; background: white; }
-
-    .tabs-bar {
-      display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px; flex-wrap: wrap;
+    .card {
+      background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px;
+      border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.04);
     }
-    .tab-btn {
-      background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 9px 18px;
-      border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 0.88rem;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .tab-btn:hover { background: #e2e8f0; color: #0f172a; }
-    .tab-btn.active {
-      background: #0284c7; color: white; border-color: #0284c7; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
+    .card-title {
+      font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;
+      border-left: 4px solid var(--primary); padding-left: 10px; flex-wrap: wrap; gap: 10px;
     }
 
-    .unevaluated-banner {
-      background: #fffbebfb; border: 1.5px solid #fcd34d; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.83rem;
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.85rem; font-weight: 700; color: #475569; }
+    .form-control {
+      padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.92rem;
+      outline: none; transition: border-color 0.2s; background: white;
     }
-    .unevaluated-title { font-weight: 800; color: #b45309; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.88rem; }
-    .unevaluated-list { display: flex; flex-wrap: wrap; gap: 6px; }
-    .badge-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
+    .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
 
     .table-container {
-      max-height: 70vh;
-      overflow: auto;
-      max-width: 100%;
-      border-radius: 8px;
-      border: 2px solid var(--border-dark);
+      overflow-x: auto;
+      max-height: 72vh;
+      border-radius: 10px;
+      border: 1px solid var(--border);
       position: relative;
+      background: white;
     }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.86rem; text-align: left; }
     
-    table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.82rem; }
-    
-    th, td {
-      padding: 9px 8px;
-      text-align: center;
-      border-right: 1px solid var(--border-cell);
-      border-bottom: 1px solid var(--border-cell);
+    th {
+      background: #f1f5f9; color: #1e293b; font-weight: 800; padding: 10px 8px; border-bottom: 2px solid var(--border);
+      position: sticky; top: 0; z-index: 10; white-space: nowrap; text-align: center;
     }
-    
-    thead th {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background-color: #cbd5e1;
-      font-weight: 800;
-      color: #0f172a;
-      white-space: nowrap;
-      border-bottom: 2px solid var(--border-dark);
-    }
+    th.col-sticky-1 { position: sticky; left: 0; z-index: 20; background: #f1f5f9; text-align: left; width: 35px; min-width: 35px; }
+    th.col-sticky-2 { position: sticky; left: 35px; z-index: 20; background: #f1f5f9; text-align: left; min-width: 190px; border-right: 2px solid var(--border); }
 
-    tbody tr:nth-child(odd) { background-color: #ffffff; }
-    tbody tr:nth-child(even) { background-color: #f1f5f9; }
-    tbody tr:hover { background-color: #bae6fd !important; }
+    td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; text-align: center; }
+    td.col-sticky-1 { position: sticky; left: 0; background: white; z-index: 5; text-align: left; font-weight: 700; color: #64748b; }
+    td.col-sticky-2 { position: sticky; left: 35px; background: white; z-index: 5; text-align: left; font-weight: 700; color: #1e293b; border-right: 2px solid var(--border); white-space: nowrap; }
 
-    th.col-fixed-num, td.col-fixed-num {
-      position: sticky;
-      left: 0;
-      width: 38px;
-      min-width: 38px;
-      background-color: inherit;
-      border-right: 1px solid var(--border-cell);
-    }
+    tr:nth-child(even) td { background-color: #fafafa; }
+    tr:nth-child(even) td.col-sticky-1, tr:nth-child(even) td.col-sticky-2 { background-color: #fafafa; }
+    tr:hover td { background-color: #f1f5f9; }
+    tr:hover td.col-sticky-1, tr:hover td.col-sticky-2 { background-color: #f1f5f9; }
 
-    th.col-fixed-name, td.col-fixed-name {
-      position: sticky;
-      left: 38px;
-      text-align: left;
-      font-weight: 700;
-      white-space: nowrap;
-      padding-left: 12px;
-      padding-right: 12px;
-      background-color: inherit;
-      border-right: 3px solid var(--border-dark);
-      box-shadow: 4px 0 6px -2px rgba(0,0,0,0.15);
+    .input-nota-matriz {
+      width: 58px; padding: 5px 4px; font-size: 0.88rem; font-weight: 700; text-align: center;
+      border: 1px solid #cbd5e1; border-radius: 6px; outline: none; transition: all 0.2s;
     }
+    .input-nota-matriz:focus { border-color: var(--primary); background: #f0f9ff; box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2); }
 
-    thead th.col-fixed-num, thead th.col-fixed-name {
-      z-index: 40;
-      background-color: #cbd5e1;
+    .badge-nota {
+      display: inline-block; padding: 4px 8px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; min-width: 50px; text-align: center;
     }
+    .badge-pass { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .badge-fail { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .badge-empty { background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; }
 
-    tbody td.col-fixed-num, tbody td.col-fixed-name {
-      z-index: 10;
+    .actions-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+    .btn {
+      padding: 9px 16px; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer;
+      border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
     }
-
-    .student-link {
-      color: #0284c7;
-      font-weight: 700;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-    .student-link:hover {
-      color: #0369a1;
-      background-color: #e0f2fe;
-      border-radius: 4px;
-      padding: 2px 4px;
-    }
-
-    .mark-cell {
-      cursor: pointer;
-      position: relative;
-      user-select: none;
-      -webkit-tap-highlight-color: rgba(2, 132, 199, 0.2);
-    }
-    .mark-cell:hover {
-      background-color: #e0f2fe !important;
-    }
-    .mark-cell:active {
-      background-color: #7dd3fc !important;
-    }
-    .mark-val { font-weight: 800; color: #0284c7; }
-    .mark-empty { color: #94a3b8; font-weight: 400; }
-    .mark-final { font-weight: 900; color: #0369a1; background-color: #bae6fd !important; border-left: 2px solid var(--border-dark); }
-
-    .btn { padding: 9px 18px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; font-size: 0.88rem; transition: background 0.2s; }
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: var(--primary-dark); }
-    .btn-secondary { background: #e2e8f0; color: #334155; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover { background: #15803d; }
+    .btn-secondary { background: #64748b; color: white; }
+    .btn-secondary:hover { background: #475569; }
 
+    /* ADAPTACIÓN EXCLUSIVA PARA MÓVILES EN VERTICAL */
+    @media screen and (max-width: 768px) {
+      body { padding: 8px; }
+      header { padding: 12px; margin-bottom: 12px; }
+      .card { padding: 12px; margin-bottom: 12px; }
+      th.col-sticky-1, td.col-sticky-1 { display: none; } /* Ocultar número # en móvil para ahorrar espacio */
+      th.col-sticky-2 {
+        left: 0 !important;
+        min-width: 110px !important;
+        max-width: 125px !important;
+        font-size: 0.75rem !important;
+        padding: 6px 4px !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+      }
+      td.col-sticky-2 {
+        left: 0 !important;
+        min-width: 110px !important;
+        max-width: 125px !important;
+        font-size: 0.76rem !important;
+        padding: 6px 4px !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        line-height: 1.2 !important;
+      }
+      .input-nota-matriz { width: 48px; padding: 4px 2px; font-size: 0.82rem; }
+    }
+
+    /* MODAL LISTA ALUMNOS */
     .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(3px);
-      z-index: 9999;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+      display: none; justify-content: center; align-items: center; z-index: 1000;
     }
     .modal-card {
-      background: white;
-      border-radius: 14px;
-      max-width: 700px;
-      width: 100%;
-      max-height: 88vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-      border: 1px solid #cbd5e1;
-      animation: popup 0.2s ease-out;
+      background: white; border-radius: 12px; padding: 22px; width: 90%; max-width: 650px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid var(--border);
     }
-    @keyframes popup {
-      from { transform: scale(0.95); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .modal-header h3 { font-size: 1.15rem; color: #1e293b; font-weight: 800; }
+    .textarea-alumnos {
+      width: 100%; height: 260px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+      font-family: monospace; font-size: 0.88rem; margin-bottom: 14px; outline: none; line-height: 1.4;
     }
-    .modal-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; border-radius: 14px 14px 0 0; }
-    .modal-title { font-size: 1.1rem; font-weight: 800; color: #0f172a; }
-    .modal-subtitle { font-size: 0.85rem; color: #0284c7; font-weight: 700; margin-top: 2px; }
-    .modal-close { background: #f1f5f9; border: none; font-size: 1.2rem; font-weight: 700; color: #64748b; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
-    .modal-body { font-size: 0.9rem; color: #334155; line-height: 1.6; padding: 20px; overflow-y: auto; flex-grow: 1; }
-    .modal-footer { padding: 14px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; gap: 10px; border-radius: 0 0 14px 14px; }
-
-    .desglose-list { list-style: none; margin-top: 10px; padding: 0; }
-    .desglose-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 6px; border: 1px solid #e2e8f0; }
-    .desglose-origen { font-weight: 600; color: #1e293b; }
-    .desglose-nota { font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 6px; }
-    .desglose-media { margin-top: 12px; padding: 10px 12px; background: #0284c7; color: white; border-radius: 8px; display: flex; justify-content: space-between; font-weight: 700; }
-
-    .ficha-summary-box {
-      background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border: 1px solid #bae6fd;
-      padding: 14px; border-radius: 10px; margin-bottom: 16px;
-      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center;
-    }
-    .ficha-stat-item { background: white; padding: 8px; border-radius: 8px; border: 1px solid #bae6fd; }
-    .ficha-stat-label { font-size: 0.72rem; font-weight: 700; color: #0369a1; text-transform: uppercase; }
-    .ficha-stat-val { font-size: 1.25rem; font-weight: 800; color: #0f172a; margin-top: 2px; }
-
-    .ficha-crit-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; }
-    .ficha-crit-head { display: flex; justify-content: space-between; align-items: center; }
-    .ficha-crit-code { font-weight: 700; color: var(--primary-dark); font-size: 0.88rem; }
-    .ficha-crit-score { font-weight: 800; font-size: 0.98rem; color: #0284c7; margin-right: 8px; }
-    .ficha-crit-level { font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
-
-    .hdr-1 { background: #fee2e2; color: #991b1b; }
-    .hdr-2 { background: #ffedd5; color: #9a3412; }
-    .hdr-3 { background: #fef3c7; color: #92400e; }
-    .hdr-4 { background: #dbeafe; color: #1e40af; }
-    .hdr-5 { background: #dcfce7; color: #166534; }
-    .hdr-empty { background: #f1f5f9; color: #94a3b8; }
-
-    .evidence-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.82rem; }
-    .evidence-table th { background: #f1f5f9; padding: 6px 8px; font-weight: 700; text-align: left; }
-    .evidence-table td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <header>
-    <div>
-      <h1>📊 Cuadro de Mando y Matriz Completa de Criterios</h1>
-      <p>Cuaderno General de Evaluación | Colegio La Hispanidad</p>
+    <div class="header-titles">
+      <h1>📊 Cuaderno de Seguimiento LOMLOE</h1>
+      <p>Tecnología y Digitalización | Manuel Pozo Cano - Colegio La Hispanidad (Curso 2026/2027)</p>
     </div>
-    <a href="index.html" class="btn-home">🏠 Volver al Inicio</a>
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <span id="syncStatusBadge" style="font-size:0.82rem; color:#16a34a; font-weight:700; background:#dcfce7; padding:4px 10px; border-radius:12px; border:1px solid #86efac;">⚡ Sincronizado</span>
+      <a href="index.html" class="btn-back">⬅ Volver al Panel Principal</a>
+    </div>
   </header>
 
   <div class="card">
-    <div class="filter-bar">
-      <div>
-        <h2 style="font-size: 1.15rem; font-weight: 700; color: #0f172a;">📋 Matriz Completa por Criterios de Evaluación</h2>
-        <p style="font-size: 0.82rem; color: #475569;">
-          💡 <strong>Pasa el cursor:</strong> Vista rápida del origen de cada nota. 
-          👇 <strong>Haz clic en una nota:</strong> Ver desglose detallado. 
-          👤 <strong>Haz clic en un alumno:</strong> Abrir Ficha Individual de Rendimiento.
-        </p>
+    <div class="card-title">
+      <span>⚙️ Selección de Grupo y Trimestre</span>
+      <button class="btn btn-secondary" onclick="abrirModalAlumnos()" style="font-size:0.82rem; padding:6px 12px;">👥 Editar Lista de Alumnos</button>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="selectCurso">Curso y Asignatura:</label>
+        <select id="selectCurso" class="form-control" onchange="renderizarMatrizSeguimiento()">
+          <option value="2ESO_A" selected>2º ESO A - Tecnología y Digitalización</option>
+          <option value="2ESO_B">2º ESO B - Tecnología y Digitalización</option>
+          <option value="3ESO_A">3º ESO A - Tecnología y Digitalización</option>
+          <option value="3ESO_B">3º ESO B - Tecnología y Digitalización</option>
+          <option value="4ESO_A">4º ESO A - Digitalización</option>
+          <option value="4ESO_B">4º ESO B - Digitalización</option>
+        </select>
       </div>
-      <div>
-        <label for="selectCurso" style="font-size:0.88rem; font-weight:700; color:#475569; margin-right:8px;">Seleccionar Curso:</label>
-        <select id="selectCurso" onchange="renderMatriz()">
-          <option value="2A" selected>2º ESO A (Tecnología y Dig.)</option>
-          <option value="2B">2º ESO B (Tecnología y Dig.)</option>
-          <option value="3A">3º ESO A (Tecnología y Dig.)</option>
-          <option value="3B">3º ESO B (Tecnología y Dig.)</option>
-          <option value="4A">4º ESO A (Digitalización)</option>
-          <option value="4B">4º ESO B (Digitalización)</option>
+      <div class="form-group">
+        <label for="selectEval">Evaluación / Trimestre:</label>
+        <select id="selectEval" class="form-control" onchange="renderizarMatrizSeguimiento()">
+          <option value="1T" selected>1ª Evaluación</option>
+          <option value="2T">2ª Evaluación</option>
+          <option value="3T">3ª Evaluación</option>
         </select>
       </div>
     </div>
+  </div>
 
-    <!-- PESTAÑAS TRIMESTRALES -->
-    <div class="tabs-bar">
-      <button class="tab-btn active" id="tabGeneral" onclick="cambiarTab('GENERAL')">🌐 Matriz Global (Anual)</button>
-      <button class="tab-btn" id="tabT1" onclick="cambiarTab('T1')">1.er Trimestre</button>
-      <button class="tab-btn" id="tabT2" onclick="cambiarTab('T2')">2.º Trimestre</button>
-      <button class="tab-btn" id="tabT3" onclick="cambiarTab('T3')">3.er Trimestre</button>
+  <div class="card">
+    <div class="card-title">
+      <span>📋 Matriz Trimestral de Calificaciones por Criterio</span>
+      <small style="font-weight:600; color:#64748b; font-size:0.82rem;">Las notas introducidas aquí o desde el Evaluador Directo se guardan automáticamente.</small>
     </div>
-
-    <!-- BANNER CRITERIOS SIN EVALUAR EN EL TRIMESTRE ACTIVO -->
-    <div id="bannerCriteriosSinEvaluar" class="unevaluated-banner" style="display:none;"></div>
 
     <div class="table-container">
       <table id="tablaMatriz">
-        <thead id="headMatriz"></thead>
+        <thead>
+          <tr id="headersMatriz"></tr>
+        </thead>
         <tbody id="bodyMatriz"></tbody>
       </table>
     </div>
 
-    <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-      <button class="btn btn-primary" onclick="exportarMatrizCSV()">📥 Exportar Matriz a CSV (Excel)</button>
-      <span style="font-size: 0.82rem; font-weight:600; color: #334155;" id="infoRegistros">Cargando datos desde la nube...</span>
-    </div>
-  </div>
-
-  <div style="text-align: center; margin-top: 10px;">
-    <a href="index.html" class="btn btn-primary" style="text-decoration:none; display:inline-block;">🏠 Volver al Inicio</a>
-  </div>
-</div>
-
-<!-- MODAL DESGLOSE DE NOTAS -->
-<div class="modal-overlay" id="modalDesglose" onclick="cerrarModal(event)">
-  <div class="modal-card" onclick="event.stopPropagation()">
-    <div class="modal-header">
+    <div class="actions-bar">
       <div>
-        <div class="modal-title" id="modalAlumno">Nombre Alumno</div>
-        <div class="modal-subtitle" id="modalCriterio">Criterio TYD.X.X.X</div>
+        <button class="btn btn-secondary" onclick="exportarCSVMatriz()">📥 Exportar Cuaderno (CSV)</button>
+        <button class="btn btn-primary" onclick="guardarCambiosManuales()">💾 Guardar Cambios</button>
       </div>
-      <button class="modal-close" onclick="cerrarModalDirecto()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div style="font-weight: 700; font-size:0.85rem; color:#64748b; margin-bottom: 6px;">ORIGEN DE LAS CALIFICACIONES:</div>
-      <div id="modalListaDesglose" class="desglose-list"></div>
-      <div class="desglose-media">
-        <span>Nota Media Obtenida:</span>
-        <span id="modalNotaMedia" style="font-size:1.05rem;">0.0</span>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="cerrarModalDirecto()">Cerrar</button>
+      <button class="btn btn-success" onclick="cargarYRefrescarDatos()">🔄 Recargar / Refrescar Datos</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL FICHA INDIVIDUAL ALUMNO -->
-<div class="modal-overlay" id="modalFichaAlumno" onclick="cerrarFichaModal(event)">
-  <div class="modal-card" onclick="event.stopPropagation()">
+<!-- MODAL EDICIÓN LISTA DE ALUMNOS -->
+<div class="modal-overlay" id="modalAlumnos">
+  <div class="modal-card">
     <div class="modal-header">
-      <div>
-        <div class="modal-title" id="fichaAlumnoNombre">👤 Ficha de Rendimiento Académico</div>
-        <div class="modal-subtitle" id="fichaAlumnoCurso">Seguimiento Individual LOMLOE</div>
-      </div>
-      <button class="modal-close" onclick="cerrarFichaDirecto()">✕</button>
+      <h3 id="modalTituloGrupo">👥 Modificar Lista de Alumnos</h3>
+      <button onclick="cerrarModalAlumnos()" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✖</button>
     </div>
-    <div class="modal-body" id="fichaAlumnoBody"></div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir / PDF</button>
-      <button class="btn btn-primary" onclick="cerrarFichaDirecto()">✓ Cerrar Ficha</button>
+    <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">
+      Puedes modificar la lista del grupo si hay incorporaciones o bajas:
+    </p>
+    <textarea id="txtListaAlumnos" class="textarea-alumnos"></textarea>
+    <div style="display:flex; justify-content:flex-end; gap:10px;">
+      <button class="btn btn-secondary" onclick="cerrarModalAlumnos()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarListaAlumnosCustom()">💾 Guardar Lista de Clase</button>
     </div>
   </div>
 </div>
 
 <script>
-  const firebaseConfig = { projectId: "cyberbreakout-hispanidad" };
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
-  const alumnosData = {
-    "2A": ["Bada Blanco, Ainara","Bravo Rodríguez, Lucía","Contreras Santiago, Manuel","Contreras Santiago, Paula","Correa Rodríguez, Ainara","Costa Redondo, Saray","Cruz Feria, Esteban","Cuaresma Rodríguez, Indhira","Cuaresma Rodríguez, Nayma","De la Luz Patricio, Elena","Garcia Caparrós, Indira","Garrido Fernández, Yamileth","Gómez Brito, Adriana","Gómez López, Daniella","Gutiérrez Valencia, Thomas","López Gómez, Hugo","López Salguero, Héctor Jesús","Mora Chico, Hugo","Mykhailyshyn, Iryna","Presa Bueno, Luca","Rengel Padilla, Alejandra","Reyes Pérez, Francisco José","Rodríguez Domínguez, Antonio","Silva López, Ainhoa","Torrescusa Borrero, Miguel"],
-    "2B": ["Bautista Lepe, Izan","Bueno Merino, Indira","Diallo, Zoumana","Díaz Pinto, Giulia","El Hajoui Moustekfy, Ryan","El Hajoui Moustekfy, Yasmina","Funes Aranda, Jean Alessandro","Gil Pire, Camila Sophia","Gutiérrez Álvarez, Adriano","Hernández Tarriño, Estrella","Herrán Góngora, Laura Sofía","Hierro Masa, Ximena","Jiménez Vázquez, Indira","Lemos Del Toro, Alejandro","Masero Rodríguez, Ana de los Remedios","Moya Mera, Aitor","Muñoz López, Yerai","Núñez Álvarez, Jose","Pérez Márquez, Juan Marcelo","Pozo Orta, Julia","Rodríguez Enríquez, Daniela","Rodríguez Ospina, Juan David","Sánchez Alonso, Libertad","Sánchez Pérez, Erick","Sola Infantes, Lucía","Tristán Wert, Aarón"],
-    "3A": ["Becerro Larios, Aitana","Benítez Márquez, Azahara","Brito Rasero, Valeria","Cordón Pérez, Bryam","Fernández Rebollo, Alejandro","Flores Rueda, Lucía","Gálvez Sfatolea, Rocío","Gómez Damota, Aitor","Gómez Soto, Francisco Javier","González Rodríguez, Adriana","Heredia Medel, Rocío","Hernández Barrera, Alejandro José","Ibánez Montagut, Ainhoa","Martín Griñolo, Paula","Mateo Ramos, Rubén","Mora Reyes, Manuel","Naranjo Romero, David","Nawaz Kousar, Muhammad Afnan","Palomares Magro, Jesús","Palomares Puga, Alejandro","Pérez Hermoso, Jesús","Prieto Évora, Judith","Rodríguez Rodríguez, Alicia","Silvera Iftimie, José Miguel","Toledano Millares, Sergio","Torres Benítez, Diego","Viatela Arteaga, Juan Manuel"],
-    "3B": ["Beas Castilla, Sara","Canelo Suárez, Manuel Darío","Contreras Cuaresma, Daniela","Díaz Fariña, Iker","García Varela, Marco","Gómez Borrero, Alejandro","Gómez Del Pino, Enrique","Gómez Fernández, Adrián","Gutiérrez Colete, Miguel","Ichou Er Raji, Chaima","Jiménez Rodriguez, Sheila","López González, María","Luque Lorenzo, Adrián","Márquez Rivero, Oriol","Martin Cerrejón, Antonio","Mora Garrido, Rita","Moreno Lepe, Andrés","Muñoz Díaz, Coraima","Nieto González, Daniel","Orta Gómez, Samuel","Pérez Paredes, Natalia","Rodríguez De Lucas, Alejandro","Romero Barbero, José Antonio","Suero Robles, Daniel","Suero Robles, Iván","Vázquez Boza, María"],
-    "4A": ["Arazo Pérez, Nahyra","Bacedoni Camero, Minerva","Cáceres Cruz, Andrea","Castellano Díaz, Paula","De la Rosa Paredes, Claudia","González Rodríguez, Miguel Ángel","López Borrero, José Francisco","Luardo Pérez, David","Marín García, Yaiza","Márquez Domínguez, Natalia","Martin Gómez, Alicia","Oliva Pernil, Eva","Ortiz Azaustre, Claudia","Palomares Magro, Juan Manuel","Paredes Díaz, Ainhoa","Paredes Gil, Sergio","Pavón Barrera, Andrea","Pérez Calvo, Angelo","Torrado Ternero, Estela"],
-    "4B": ["Araujo Carrasco, José Manuel","Borrero De Paula, José Antonio","Boulal, Jilali","Escudero Limón, Daniela","Kykish Toporovska, Diana","Lobato Ramos, Hugo","Martin Venegas, Ester","Naranjo Romero, Aitana","Pérez Rodríguez, Pablo","Rivero Hernández, Diego Alejandro","Rivero Hernández, Enrique Alejandro","Rodríguez Brejano, Alexys","Salazar Fernández, Yamilet","Sánchez Lozada, Sergio Enrique","Sánchez Pérez, Induara","Sánchez Ternero, Alejandro","Soto García, Ángela","Terrón Quintero, José Antonio","Torres Hernández, Javier","Wert Hermoso, Laura"]
+  const CRITERIOS_POR_NIVEL = {
+    "2ESO": [
+  {
+    "id": "TYD.2.1.1",
+    "label": "TYD.2.1.1 - Definir problemas sencillos o necesidades básicas planteadas, buscando y contrastando información crítica y segura."
+  },
+  {
+    "id": "TYD.2.1.2",
+    "label": "TYD.2.1.2 - Comprender y examinar productos tecnológicos de uso habitual mediante método científico y simulación."
+  },
+  {
+    "id": "TYD.2.1.3",
+    "label": "TYD.2.1.3 - Adoptar medidas preventivas para protección de dispositivos, datos y salud personal de manera ética."
+  },
+  {
+    "id": "TYD.2.2.1",
+    "label": "TYD.2.2.1 - Idear y diseñar soluciones eficaces, innovadoras y sostenibles con actitud emprendedora y creativa."
+  },
+  {
+    "id": "TYD.2.2.2",
+    "label": "TYD.2.2.2 - Seleccionar, planificar y organizar materiales, herramientas y tareas para la solución propuesta."
+  },
+  {
+    "id": "TYD.2.3.1",
+    "label": "TYD.2.3.1 - Fabricar objetos/modelos manipulando materiales con herramientas y normas de seguridad."
+  },
+  {
+    "id": "TYD.2.4.1",
+    "label": "TYD.2.4.1 - Representar y comunicar el proceso de creación elaborando documentación técnica y gráfica."
+  },
+  {
+    "id": "TYD.2.5.1",
+    "label": "TYD.2.5.1 - Describir, interpretar y diseñar soluciones informáticas mediante algoritmos y diagramas de flujo."
+  },
+  {
+    "id": "TYD.2.5.2",
+    "label": "TYD.2.5.2 - Programar aplicaciones sencillas para distintos dispositivos incorporando IA básica."
+  },
+  {
+    "id": "TYD.2.5.3",
+    "label": "TYD.2.5.3 - Automatizar procesos y sistemas simples mediante robots y control programable."
+  },
+  {
+    "id": "TYD.2.6.1",
+    "label": "TYD.2.6.1 - Uso eficiente y seguro de dispositivos cotidianos y medidas de ciberseguridad."
+  },
+  {
+    "id": "TYD.2.6.2",
+    "label": "TYD.2.6.2 - Crear y difundir contenidos digitales respetando derechos de autor y etiqueta digital."
+  },
+  {
+    "id": "TYD.2.6.3",
+    "label": "TYD.2.6.3 - Organizar la información de manera estructurada con almacenamiento seguro."
+  },
+  {
+    "id": "TYD.2.7.1",
+    "label": "TYD.2.7.1 - Reconocer la influencia de la tecnología en la sociedad y sostenibilidad ambiental en Andalucía."
+  },
+  {
+    "id": "TYD.2.7.2",
+    "label": "TYD.2.7.2 - Identificar aportaciones de tecnologías emergentes al bienestar e igualdad social."
+  }
+],
+    "3ESO": [
+  {
+    "id": "TYD.3.1.1",
+    "label": "TYD.3.1.1 - Definir problemas o necesidades planteadas buscando e interpretando información segura."
+  },
+  {
+    "id": "TYD.3.1.2",
+    "label": "TYD.3.1.2 - Comprender y examinar productos y sistemas tecnológicos con herramientas de simulación."
+  },
+  {
+    "id": "TYD.3.1.3",
+    "label": "TYD.3.1.3 - Adoptar medidas preventivas para protección de dispositivos, datos y salud personal."
+  },
+  {
+    "id": "TYD.3.2.1",
+    "label": "TYD.3.2.1 - Idear y diseñar soluciones eficaces, innovadoras y sostenibles a problemas definidos."
+  },
+  {
+    "id": "TYD.3.2.2",
+    "label": "TYD.3.2.2 - Seleccionar, planificar y organizar materiales, herramientas y tareas de forma colaborativa."
+  },
+  {
+    "id": "TYD.3.3.1",
+    "label": "TYD.3.3.1 - Fabricar objetos/modelos aplicando fundamentos de estructuras, mecanismos y electricidad."
+  },
+  {
+    "id": "TYD.3.4.1",
+    "label": "TYD.3.4.1 - Representar y comunicar el proceso de creación elaborando documentación técnica y gráfica."
+  },
+  {
+    "id": "TYD.3.5.1",
+    "label": "TYD.3.5.1 - Describir, interpretar y diseñar algoritmos y diagramas de flujo para resolución de problemas."
+  },
+  {
+    "id": "TYD.3.5.2",
+    "label": "TYD.3.5.2 - Programar aplicaciones para distintos dispositivos aplicando herramientas de IA."
+  },
+  {
+    "id": "TYD.3.5.3",
+    "label": "TYD.3.5.3 - Automatizar procesos y sistemas de control programables con conexión a internet."
+  },
+  {
+    "id": "TYD.3.6.1",
+    "label": "TYD.3.6.1 - Hacer un uso eficiente y seguro de los dispositivos digitales analizando sus componentes."
+  },
+  {
+    "id": "TYD.3.6.2",
+    "label": "TYD.3.6.2 - Crear, elaborar y difundir contenidos en distintas plataformas respetando derechos de autor."
+  },
+  {
+    "id": "TYD.3.6.3",
+    "label": "TYD.3.6.3 - Organizar la información de manera estructurada aplicando técnicas de almacenamiento seguro."
+  },
+  {
+    "id": "TYD.3.7.1",
+    "label": "TYD.3.7.1 - Reconocer la influencia de la tecnología en la sociedad y sostenibilidad ambiental."
+  },
+  {
+    "id": "TYD.3.7.2",
+    "label": "TYD.3.7.2 - Identificar aportaciones de tecnologías emergentes al bienestar e impacto ambiental en Andalucía."
+  }
+],
+    "4ESO": [
+  {
+    "id": "DIG.4.1.1",
+    "label": "DIG.4.1.1 - Conectar dispositivos y gestionar redes locales alámbricas e inalámbricas proactivamente."
+  },
+  {
+    "id": "DIG.4.1.2",
+    "label": "DIG.4.1.2 - Instalar y mantener sistemas operativos configurando sus características de forma sostenible."
+  },
+  {
+    "id": "DIG.4.1.3",
+    "label": "DIG.4.1.3 - Identificar y resolver problemas técnicos sencillos fomentando el consumo sostenible."
+  },
+  {
+    "id": "DIG.4.2.1",
+    "label": "DIG.4.2.1 - Gestionar el aprendizaje digital configurando el Entorno Personal de Aprendizaje (PLE)."
+  },
+  {
+    "id": "DIG.4.2.2",
+    "label": "DIG.4.2.2 - Buscar, seleccionar y archivar información con sentido crítico y seguridad en la red."
+  },
+  {
+    "id": "DIG.4.2.3",
+    "label": "DIG.4.2.3 - Crear, programar e integrar contenidos digitales respetando licencias y derechos de autor."
+  },
+  {
+    "id": "DIG.4.2.4",
+    "label": "DIG.4.2.4 - Interactuar en espacios virtuales y plataformas colaborativas con actitud respetuosa."
+  },
+  {
+    "id": "DIG.4.3.1",
+    "label": "DIG.4.3.1 - Proteger los datos personales y la huella digital configurando la privacidad."
+  },
+  {
+    "id": "DIG.4.3.2",
+    "label": "DIG.4.3.2 - Configurar contraseñas, sistemas operativos y antivirus periódicamente."
+  },
+  {
+    "id": "DIG.4.3.3",
+    "label": "DIG.4.3.3 - Reaccionar ante amenazas en la red desarrollando prácticas saludables y seguras."
+  },
+  {
+    "id": "DIG.4.4.1",
+    "label": "DIG.4.4.1 - Hacer un uso ético de datos y herramientas digitales aplicando la netiqueta."
+  },
+  {
+    "id": "DIG.4.4.2",
+    "label": "DIG.4.4.2 - Reconocer aportaciones digitales en e-administración y e-commerce considerando brecha digital."
+  },
+  {
+    "id": "DIG.4.4.3",
+    "label": "DIG.4.4.3 - Analizar críticamente mensajes recibidos considerando objetividad, sesgos y caducidad."
+  },
+  {
+    "id": "DIG.4.4.4",
+    "label": "DIG.4.4.4 - Valorar el uso y desarrollo ecosocialmente responsable de tecnologías digitales."
+  }
+]
   };
 
-  const catálogoCriterios = {
-    "2": [
-      { code: "TYD.2.1.1", label: "Búsqueda y Fiabilidad" }, { code: "TYD.2.1.2", label: "Análisis de Productos" },
-      { code: "TYD.2.1.3", label: "Protección y Salud Digital" }, { code: "TYD.2.2.1", label: "Diseño Sostenible e Innovación" },
-      { code: "TYD.2.2.2", label: "Planificación y Trabajo Cooperativo" }, { code: "TYD.2.3.1", label: "Fabricación y Seguridad" },
-      { code: "TYD.2.4.1", label: "Comunicación y Documentación Técnica" }, { code: "TYD.2.5.1", label: "Algoritmos y Diagramas de Flujo" },
-      { code: "TYD.2.5.2", label: "Programación de Aplicaciones e IA" }, { code: "TYD.2.5.3", label: "Automatización, Robots y Control" },
-      { code: "TYD.2.6.1", label: "Uso Eficiente y Seguro de Dispositivos" }, { code: "TYD.2.6.2", label: "Creación y Difusión de Contenidos" },
-      { code: "TYD.2.6.3", label: "Almacenamiento Seguro de Información" }, { code: "TYD.2.7.1", label: "Influencia Tecnológica y Sostenibilidad" },
-      { code: "TYD.2.7.2", label: "Tecnologías Emergentes y Bienestar" }
-    ],
-    "3": [
-      { code: "TYD.3.1.1", label: "Búsqueda y Fiabilidad" }, { code: "TYD.3.1.2", label: "Análisis de Productos y Simulación" },
-      { code: "TYD.3.1.3", label: "Protección y Salud Digital" }, { code: "TYD.3.2.1", label: "Soluciones Sostenibles / ODS" },
-      { code: "TYD.3.2.2", label: "Planificación y Trabajo Cooperativo" }, { code: "TYD.3.3.1", label: "Fabricación y Seguridad" },
-      { code: "TYD.3.4.1", label: "Exposición y Lenguaje Técnico" }, { code: "TYD.3.5.1", label: "Algoritmos y Diagramas de Flujo" },
-      { code: "TYD.3.5.2", label: "Programación de Aplicaciones e IA" }, { code: "TYD.3.5.3", label: "Automatización y Robótica" },
-      { code: "TYD.3.6.1", label: "Uso Eficiente de Dispositivos" }, { code: "TYD.3.6.2", label: "Creación de Contenidos y Licencias" },
-      { code: "TYD.3.6.3", label: "Almacenamiento Seguro" }, { code: "TYD.3.7.1", label: "Impacto Histórico y Sostenibilidad" },
-      { code: "TYD.3.7.2", label: "Tecnologías Emergentes e Igualdad" }
-    ],
-    "4": [
-      { code: "DIG.4.1.1", label: "Redes Locales y Comunicación" }, { code: "DIG.4.1.2", label: "Instalación de Sistemas Operativos" },
-      { code: "DIG.4.1.3", label: "Hardware y Resolución de Problemas" }, { code: "DIG.4.2.1", label: "Gestión del Entorno Personal" },
-      { code: "DIG.4.2.2", label: "Búsqueda y Curación de Información" }, { code: "DIG.4.2.3", label: "Creación y Licencias CC" },
-      { code: "DIG.4.2.4", label: "Plataformas Colaborativas Virtuales" }, { code: "DIG.4.3.1", label: "Privacidad y Huella Digital" },
-      { code: "DIG.4.3.2", label: "Seguridad, Contraseñas y Antivirus" }, { code: "DIG.4.3.3", label: "Prevención de Amenazas en Red" },
-      { code: "DIG.4.4.1", label: "Uso Ético y Etiqueta Digital" }, { code: "DIG.4.4.2", label: "Comercio Electrónico y Brecha Digital" },
-      { code: "DIG.4.4.3", label: "Análisis Crítico de Mensajes Digitales" }, { code: "DIG.4.4.4", label: "Sostenibilidad y Huella Ecosocial" }
-    ]
+  const ALUMNOS_OFICIALES = {
+    "2ESO_A": [
+  "Bada Blanco, Ainara",
+  "Bravo Rodríguez, Lucía",
+  "Contreras Santiago, Manuel",
+  "Contreras Santiago, Paula",
+  "Correa Rodríguez, Ainara",
+  "Costa Redondo, Saray",
+  "Cruz Feria, Esteban",
+  "Cuaresma Rodríguez, Indhira",
+  "Cuaresma Rodríguez, Nayma",
+  "De la Luz Patricio, Elena",
+  "Garcia Caparrós, Indira",
+  "Garrido Fernández, Yamileth",
+  "Gómez Brito, Adriana",
+  "Gómez López, Daniella",
+  "Gutiérrez Valencia, Thomas",
+  "López Gómez, Hugo",
+  "López Salguero, Héctor Jesús",
+  "Mora Chico, Hugo",
+  "Mykhailyshyn, Iryna",
+  "Presa Bueno, Luca",
+  "Rengel Padilla, Alejandra",
+  "Reyes Pérez, Francisco José",
+  "Rodríguez Domínguez, Antonio",
+  "Silva López, Ainhoa",
+  "Torrescusa Borrero, Miguel"
+],
+    "2ESO_B": [
+  "Bautista Lepe, Izan",
+  "Bueno Merino, Indira",
+  "Diallo, Zoumana",
+  "Díaz Pinto, Giulia",
+  "El Hajoui Moustekfy, Ryan",
+  "El Hajoui Moustekfy, Yasmina",
+  "Funes Aranda, Jean Alessandro",
+  "Gil Pire, Camila Sophia",
+  "Gutiérrez Álvarez, Adriano",
+  "Hernández Tarriño, Estrella",
+  "Herrán Góngora, Laura Sofía",
+  "Hierro Masa, Ximena",
+  "Jiménez Vázquez, Indira",
+  "Lemos Del Toro, Alejandro",
+  "Masero Rodríguez, Ana de los Remedios",
+  "Moya Mera, Aitor",
+  "Muñoz López, Yerai",
+  "Núñez Álvarez, Jose",
+  "Pérez Márquez, Juan Marcelo",
+  "Pozo Orta, Julia",
+  "Rodríguez Enríquez, Daniela",
+  "Rodríguez Ospina, Juan David",
+  "Sánchez Alonso, Libertad",
+  "Sánchez Pérez, Erick",
+  "Sola Infantes, Lucía",
+  "Tristán Wert, Aarón"
+],
+    "3ESO_A": [
+  "Becerro Larios, Aitana",
+  "Benítez Márquez, Azahara",
+  "Brito Rasero, Valeria",
+  "Cordón Pérez, Bryam",
+  "Fernández Rebollo, Alejandro",
+  "Flores Rueda, Lucía",
+  "Gálvez Sfatolea, Rocío",
+  "Gómez Damota, Aitor",
+  "Gómez Soto, Francisco Javier",
+  "González Rodríguez, Adriana",
+  "Heredia Medel, Rocío",
+  "Hernández Barrera, Alejandro José",
+  "Ibánez Montagut, Ainhoa",
+  "Martín Griñolo, Paula",
+  "Mateo Ramos, Rubén",
+  "Mora Reyes, Manuel",
+  "Naranjo Romero, David",
+  "Nawaz Kousar, Muhammad Afnan",
+  "Palomares Magro, Jesús",
+  "Palomares Puga, Alejandro",
+  "Pérez Hermoso, Jesús",
+  "Prieto Évora, Judith",
+  "Rodríguez Rodríguez, Alicia",
+  "Silvera Iftimie, José Miguel",
+  "Toledano Millares, Sergio",
+  "Torres Benítez, Diego",
+  "Viatela Arteaga, Juan Manuel"
+],
+    "3ESO_B": [
+  "Beas Castilla, Sara",
+  "Canelo Suárez, Manuel Darío",
+  "Contreras Cuaresma, Daniela",
+  "Díaz Fariña, Iker",
+  "García Varela, Marco",
+  "Gómez Borrero, Alejandro",
+  "Gómez Del Pino, Enrique",
+  "Gómez Fernández, Adrián",
+  "Gutiérrez Colete, Miguel",
+  "Ichou Er Raji, Chaima",
+  "Jiménez Rodriguez, Sheila",
+  "López González, María",
+  "Luque Lorenzo, Adrián",
+  "Márquez Rivero, Oriol",
+  "Martin Cerrejón, Antonio",
+  "Mora Garrido, Rita",
+  "Moreno Lepe, Andrés",
+  "Muñoz Díaz, Coraima",
+  "Nieto González, Daniel",
+  "Orta Gómez, Samuel",
+  "Pérez Paredes, Natalia",
+  "Rodríguez De Lucas, Alejandro",
+  "Romero Barbero, José Antonio",
+  "Suero Robles, Daniel",
+  "Suero Robles, Iván",
+  "Vázquez Boza, María"
+],
+    "4ESO_A": [
+  "Arazo Pérez, Nahyra",
+  "Bacedoni Camero, Minerva",
+  "Cáceres Cruz, Andrea",
+  "Castellano Díaz, Paula",
+  "De la Rosa Paredes, Claudia",
+  "González Rodríguez, Miguel Ángel",
+  "López Borrero, José Francisco",
+  "Luardo Pérez, David",
+  "Marín García, Yaiza",
+  "Márquez Domínguez, Natalia",
+  "Martin Gómez, Alicia",
+  "Oliva Pernil, Eva",
+  "Ortiz Azaustre, Claudia",
+  "Palomares Magro, Juan Manuel",
+  "Paredes Díaz, Ainhoa",
+  "Paredes Gil, Sergio",
+  "Pavón Barrera, Andrea",
+  "Pérez Calvo, Angelo",
+  "Torrado Ternero, Estela"
+],
+    "4ESO_B": [
+  "Araujo Carrasco, José Manuel",
+  "Borrero De Paula, José Antonio",
+  "Boulal, Jilali",
+  "Escudero Limón, Daniela",
+  "Kykish Toporovska, Diana",
+  "Lobato Ramos, Hugo",
+  "Martin Venegas, Ester",
+  "Naranjo Romero, Aitana",
+  "Pérez Rodríguez, Pablo",
+  "Rivero Hernández, Diego Alejandro",
+  "Rivero Hernández, Enrique Alejandro",
+  "Rodríguez Brejano, Alexys",
+  "Salazar Fernández, Yamilet",
+  "Sánchez Lozada, Sergio Enrique",
+  "Sánchez Pérez, Induara",
+  "Sánchez Ternero, Alejandro",
+  "Soto García, Ángela",
+  "Terrón Quintero, José Antonio",
+  "Torres Hernández, Javier",
+  "Wert Hermoso, Laura"
+]
   };
 
-  const mapaEquivalenciasProyectos = {
-    "doblador": { "c1": "TYD.2.3.1", "c2": "TYD.2.2.2", "c3": "TYD.2.1.2" },
-    "retos3eso": { "c1": "TYD.3.1.1", "c2": "TYD.3.1.3", "c3": "TYD.3.2.1", "c4": "TYD.3.2.2", "c5": "TYD.3.4.1", "c6": "TYD.3.7.1" },
-    "eniac": { "c1": "DIG.4.1.3", "c2": "DIG.4.2.2", "c3": "DIG.4.2.3", "c4": "DIG.4.2.4", "c5": "DIG.4.4.4" }
-  };
+  let alumnosBD = {};
+  let matrizGeneralBD = {};
 
-  let cacheCloud = {};
-  let tabActual = "GENERAL";
-
-  function cambiarTab(nuevaTab) {
-    tabActual = nuevaTab;
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    
-    if (nuevaTab === 'GENERAL') document.getElementById("tabGeneral").classList.add("active");
-    if (nuevaTab === 'T1') document.getElementById("tabT1").classList.add("active");
-    if (nuevaTab === 'T2') document.getElementById("tabT2").classList.add("active");
-    if (nuevaTab === 'T3') document.getElementById("tabT3").classList.add("active");
-
-    renderMatriz();
+  function cargarAlumnosBD() {
+    const guardado = localStorage.getItem("evaluador_directo_alumnos_v2");
+    if (guardado) {
+      try { alumnosBD = JSON.parse(guardado); } catch(e) { alumnosBD = JSON.parse(JSON.stringify(ALUMNOS_OFICIALES)); }
+    } else {
+      alumnosBD = JSON.parse(JSON.stringify(ALUMNOS_OFICIALES));
+      localStorage.setItem("evaluador_directo_alumnos_v2", JSON.stringify(alumnosBD));
+    }
   }
 
-  async function cargarDatosCloud() {
-    cacheCloud = {};
-    const colecciones = ["doblador_2eso_notas", "eniac_4eso_notas", "evaluacion_directa"];
+  function guardarAlumnosBD() {
+    localStorage.setItem("evaluador_directo_alumnos_v2", JSON.stringify(alumnosBD));
+  }
 
-    for (const col of colecciones) {
+  function abrirModalAlumnos() {
+    const curso = document.getElementById("selectCurso").value;
+    document.getElementById("modalTituloGrupo").textContent = `👥 Modificar Lista de Alumnos (${curso.replace('_', ' ')})`;
+    const lista = alumnosBD[curso] || [];
+    document.getElementById("txtListaAlumnos").value = lista.join("\n");
+    document.getElementById("modalAlumnos").style.display = "flex";
+  }
+
+  function cerrarModalAlumnos() {
+    document.getElementById("modalAlumnos").style.display = "none";
+  }
+
+  function guardarListaAlumnosCustom() {
+    const curso = document.getElementById("selectCurso").value;
+    const txt = document.getElementById("txtListaAlumnos").value;
+    const lineas = txt.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+
+    alumnosBD[curso] = lineas;
+    guardarAlumnosBD();
+    cerrarModalAlumnos();
+    renderizarMatrizSeguimiento();
+    alert("✅ Lista de alumnos actualizada correctamente para " + curso.replace('_', ' ') + ".");
+  }
+
+  function cargarYRefrescarDatos() {
+    matrizGeneralBD = {};
+
+    const KEYS_BUSQUEDA = [
+      "evaluador_matriz_seguimiento",
+      "seguimiento_notas",
+      "cuaderno_seguimiento_v1",
+      "matriz_seguimiento_v1",
+      "evaluador_seguimiento_v1",
+      "matriz_notas_lomloe",
+      "cuaderno_seguimiento",
+      "matriz_seguimiento",
+      "notas_matriz",
+      "cuaderno_datos"
+    ];
+
+    KEYS_BUSQUEDA.forEach(key => {
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
       try {
-        const snap = await db.collection(col).get();
-        snap.forEach(doc => {
-          cacheCloud[`${col}_${doc.id}`] = doc.data();
-        });
-      } catch(e) {}
-    }
-  }
+        const parsed = JSON.parse(raw);
+        if (typeof parsed === "object" && parsed) {
+          Object.keys(parsed).forEach(cKey => {
+            let cNorm = cKey.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+            if (cNorm.includes("2ESO") && cNorm.includes("A")) cNorm = "2ESO_A";
+            else if (cNorm.includes("2ESO") && cNorm.includes("B")) cNorm = "2ESO_B";
+            else if (cNorm.includes("3ESO") && cNorm.includes("A")) cNorm = "3ESO_A";
+            else if (cNorm.includes("3ESO") && cNorm.includes("B")) cNorm = "3ESO_B";
+            else if (cNorm.includes("4ESO") && cNorm.includes("A")) cNorm = "4ESO_A";
+            else if (cNorm.includes("4ESO") && cNorm.includes("B")) cNorm = "4ESO_B";
+            else cNorm = cKey;
 
-  function esNumero(v) { return typeof v === 'number' && !isNaN(v); }
+            if (!matrizGeneralBD[cNorm]) matrizGeneralBD[cNorm] = {};
 
-  function inferirTrimestre(data, key) {
-    if (data.trimestre) return data.trimestre;
-    if (key.includes("doblador") || key.includes("retos3eso")) return "T1";
-    if (key.includes("eniac") || key.includes("presupuestos")) return "T2";
-    
-    if (data.updatedAt) {
-      try {
-        let dateObj = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
-        let m = dateObj.getMonth();
-        if (m >= 8 && m <= 11) return "T1";
-        if (m >= 0 && m <= 2) return "T2";
-        return "T3";
-      } catch(e){}
-    }
-    return "T1";
-  }
+            const cObj = parsed[cKey];
+            if (typeof cObj === "object" && cObj) {
+              Object.keys(cObj).forEach(eKey => {
+                let eNorm = eKey.toUpperCase();
+                if (eNorm.includes("1")) eNorm = "1T";
+                else if (eNorm.includes("2")) eNorm = "2T";
+                else if (eNorm.includes("3")) eNorm = "3T";
 
-  function obtenerNotasAlumno(grupo, alumno, filtroTrimestre = "GENERAL") {
-    const notasPorCriterio = {};
+                if (!matrizGeneralBD[cNorm][eNorm]) matrizGeneralBD[cNorm][eNorm] = {};
 
-    function agregarNota(critCode, origenNombre, val, triDoc) {
-      if (!esNumero(val)) return;
-      if (filtroTrimestre !== "GENERAL" && triDoc !== filtroTrimestre) return;
+                const eObj = cObj[eKey];
+                if (typeof eObj === "object" && eObj) {
+                  Object.keys(eObj).forEach(alumno => {
+                    if (alumno.startsWith("_")) return;
+                    if (!matrizGeneralBD[cNorm][eNorm][alumno]) matrizGeneralBD[cNorm][eNorm][alumno] = {};
 
-      if (!notasPorCriterio[critCode]) notasPorCriterio[critCode] = [];
-      
-      const existe = notasPorCriterio[critCode].some(item => item.origen === origenNombre && Math.abs(item.nota - val) < 0.01);
-      if (!existe) {
-        notasPorCriterio[critCode].push({ origen: origenNombre, nota: val, trimestre: triDoc });
-      }
-    }
-
-    Object.keys(cacheCloud).forEach(key => {
-      if (key.includes(grupo) && key.includes(alumno)) {
-        const data = cacheCloud[key];
-        let projKey = "";
-        let origenNombre = "Evaluación Directa";
-        let triDoc = inferirTrimestre(data, key);
-
-        if (key.includes("doblador")) {
-          projKey = "doblador"; origenNombre = "Proyecto Doblador";
-        } else if (key.includes("eniac")) {
-          projKey = "eniac"; origenNombre = "Proyecto ENIAC";
-        } else if (key.includes("retos3eso")) {
-          projKey = "retos3eso"; origenNombre = "Retos 3º ESO";
-        } else if (data.nombreDisplay) {
-          origenNombre = data.nombreDisplay;
-        } else if (data.prueba) {
-          origenNombre = data.prueba;
-        }
-
-        Object.keys(data).forEach(prop => {
-          if (["curso", "alumno", "prueba", "nombreDisplay", "updatedAt", "trimestre"].includes(prop)) return;
-
-          let critCode = prop;
-          if (projKey && mapaEquivalenciasProyectos[projKey] && mapaEquivalenciasProyectos[projKey][prop]) {
-            critCode = mapaEquivalenciasProyectos[projKey][prop];
-          }
-
-          const val = parseFloat(data[prop]);
-          agregarNota(critCode, origenNombre, val, triDoc);
-        });
-      }
-    });
-
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.includes(grupo) && key.includes(alumno)) {
-        try {
-          const data = JSON.parse(localStorage.getItem(key));
-          let projKey = "";
-          let origenNombre = data.nombreDisplay || data.prueba || "Evaluación Directa";
-          let triDoc = inferirTrimestre(data, key);
-
-          if (key.startsWith("doblador")) { projKey = "doblador"; origenNombre = "Proyecto Doblador"; }
-          else if (key.startsWith("eniac")) { projKey = "eniac"; origenNombre = "Proyecto ENIAC"; }
-          else if (key.startsWith("retos3eso")) { projKey = "retos3eso"; origenNombre = "Retos 3º ESO"; }
-
-          Object.keys(data).forEach(prop => {
-            if (["curso", "alumno", "prueba", "nombreDisplay", "updatedAt", "trimestre"].includes(prop)) return;
-
-            let critCode = prop;
-            if (projKey && mapaEquivalenciasProyectos[projKey] && mapaEquivalenciasProyectos[projKey][prop]) {
-              critCode = mapaEquivalenciasProyectos[projKey][prop];
+                    if (typeof eObj[alumno] === "object" && eObj[alumno]) {
+                      Object.keys(eObj[alumno]).forEach(critId => {
+                        if (critId.startsWith("_")) return;
+                        const val = parseFloat(eObj[alumno][critId]);
+                        if (!isNaN(val)) {
+                          matrizGeneralBD[cNorm][eNorm][alumno][critId] = val;
+                        }
+                      });
+                    }
+                  });
+                }
+              });
             }
-
-            const val = parseFloat(data[prop]);
-            agregarNota(critCode, origenNombre, val, triDoc);
           });
-        } catch(e){}
-      }
+        }
+      } catch(e) {}
+    });
+
+    const badge = document.getElementById("syncStatusBadge");
+    if (badge) {
+      badge.textContent = "⚡ Actualizado (" + new Date().toLocaleTimeString() + ")";
     }
 
-    const resumen = {};
-    Object.keys(notasPorCriterio).forEach(code => {
-      const arr = notasPorCriterio[code];
-      if (arr.length > 0) {
-        const suma = arr.reduce((a, b) => a + b.nota, 0);
-        const media = suma / arr.length;
-        resumen[code] = { media: media, items: arr };
-      }
-    });
-
-    return resumen;
+    renderizarMatrizSeguimiento();
   }
 
-  function getNivelLogro(nota) {
-    if (!esNumero(nota)) return { texto: "Sin evaluar", class: "hdr-empty" };
-    if (nota < 3.0) return { texto: "Iniciado", class: "hdr-1" };
-    if (nota < 5.0) return { texto: "En Proceso", class: "hdr-2" };
-    if (nota < 7.0) return { texto: "Conseguido", class: "hdr-3" };
-    if (nota < 9.0) return { texto: "Avanzado", class: "hdr-4" };
-    return { texto: "Excelente", class: "hdr-5" };
+  function obtenerNivelCurso(curso) {
+    if (curso.startsWith("2ESO")) return "2ESO";
+    if (curso.startsWith("3ESO")) return "3ESO";
+    if (curso.startsWith("4ESO")) return "4ESO";
+    return "2ESO";
   }
 
-  function abrirDesgloseModal(alumno, criterioCode, criterioLabel, mediaVal, itemsJSON) {
-    const items = JSON.parse(decodeURIComponent(itemsJSON));
-    document.getElementById("modalAlumno").textContent = alumno;
-    document.getElementById("modalCriterio").textContent = `${criterioCode} - ${criterioLabel}`;
-    document.getElementById("modalNotaMedia").textContent = mediaVal.toFixed(1);
+  function renderizarMatrizSeguimiento() {
+    const curso = document.getElementById("selectCurso").value;
+    const eval = document.getElementById("selectEval").value;
+    const nivel = obtenerNivelCurso(curso);
 
-    const container = document.getElementById("modalListaDesglose");
-    container.innerHTML = "";
+    const criteriosList = CRITERIOS_POR_NIVEL[nivel] || CRITERIOS_POR_NIVEL["2ESO"];
+    const listaAlumnos = alumnosBD[curso] || [];
 
-    items.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "desglose-item";
-      div.innerHTML = `
-        <span class="desglose-origen">📝 ${item.origen} <small style="opacity:0.75;">[${item.trimestre || 'T1'}]</small></span>
-        <span class="desglose-nota">${item.nota.toFixed(1)}</span>
-      `;
-      container.appendChild(div);
-    });
-
-    document.getElementById("modalDesglose").style.display = "flex";
-  }
-
-  function cerrarModal(e) {
-    if (e.target.id === "modalDesglose") {
-      document.getElementById("modalDesglose").style.display = "none";
-    }
-  }
-
-  function cerrarModalDirecto() {
-    document.getElementById("modalDesglose").style.display = "none";
-  }
-
-  function abrirFichaAlumno(grupo, alumno) {
-    const nivel = grupo.charAt(0);
-    const criteriosList = catálogoCriterios[nivel] || [];
-    const resumenNotas = obtenerNotasAlumno(grupo, alumno, "GENERAL");
-
-    document.getElementById("fichaAlumnoNombre").textContent = `👤 ${alumno}`;
-    document.getElementById("fichaAlumnoCurso").textContent = `Curso ${grupo} | Expediente de Rendimiento Académico`;
-
-    let sumaTotal = 0;
-    let contEvaluados = 0;
-    let critCardsHtml = "";
-    let evidenceRowsHtml = "";
-
-    criteriosList.forEach(c => {
-      const item = resumenNotas[c.code];
-      if (item && esNumero(item.media)) {
-        sumaTotal += item.media;
-        contEvaluados++;
-
-        const lvl = getNivelLogro(item.media);
-        critCardsHtml += `
-          <div class="ficha-crit-card">
-            <div class="ficha-crit-head">
-              <span class="ficha-crit-code">${c.code} — ${c.label}</span>
-              <div>
-                <span class="ficha-crit-score">${item.media.toFixed(1)}</span>
-                <span class="ficha-crit-level ${lvl.class}">${lvl.texto}</span>
-              </div>
-            </div>
-          </div>`;
-
-        item.items.forEach(ev => {
-          evidenceRowsHtml += `<tr><td><strong>${c.code}</strong></td><td>${ev.origen} [${ev.trimestre || 'T1'}]</td><td><strong>${ev.nota.toFixed(1)}</strong></td></tr>`;
-        });
-      } else {
-        critCardsHtml += `
-          <div class="ficha-crit-card">
-            <div class="ficha-crit-head">
-              <span class="ficha-crit-code">${c.code} — ${c.label}</span>
-              <div>
-                <span class="ficha-crit-score" style="color:#94a3b8;">-.-</span>
-                <span class="ficha-crit-level hdr-empty">Sin evaluar</span>
-              </div>
-            </div>
-          </div>`;
-      }
-    });
-
-    const notaGlobal = contEvaluados > 0 ? (sumaTotal / contEvaluados).toFixed(1) : "-.-";
-
-    const body = document.getElementById("fichaAlumnoBody");
-    body.innerHTML = `
-      <div class="ficha-summary-box">
-        <div class="ficha-stat-item">
-          <div class="ficha-stat-label">Curso / Grupo</div>
-          <div class="ficha-stat-val" style="color:#0369a1;">${grupo}</div>
-        </div>
-        <div class="ficha-stat-item">
-          <div class="ficha-stat-label">Nota Media Global</div>
-          <div class="ficha-stat-val" style="color:#0284c7;">${notaGlobal}</div>
-        </div>
-        <div class="ficha-stat-item">
-          <div class="ficha-stat-label">Criterios Evaluados</div>
-          <div class="ficha-stat-val" style="color:#166534;">${contEvaluados}/${criteriosList.length}</div>
-        </div>
-      </div>
-
-      <h4 style="font-size:0.92rem; font-weight:700; color:#1e293b; margin-bottom:10px;">📊 Desglose por Criterios LOMLOE</h4>
-      ${critCardsHtml}
-
-      <h4 style="font-size:0.92rem; font-weight:700; color:#1e293b; margin-top:16px; margin-bottom:8px;">📂 Registro de Evidencias y Tareas</h4>
-      <table class="evidence-table">
-        <thead>
-          <tr>
-            <th>Criterio</th>
-            <th>Origen / Práctica</th>
-            <th>Nota</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${evidenceRowsHtml || '<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Sin evidencias registradas</td></tr>'}
-        </tbody>
-      </table>
+    const headersTr = document.getElementById("headersMatriz");
+    let htmlHeaders = `
+      <th class="col-sticky-1">#</th>
+      <th class="col-sticky-2">Nombre del Alumno/a</th>
     `;
 
-    document.getElementById("modalFichaAlumno").style.display = "flex";
-  }
-
-  function cerrarFichaModal(e) {
-    if (e.target.id === "modalFichaAlumno") {
-      document.getElementById("modalFichaAlumno").style.display = "none";
-    }
-  }
-
-  function cerrarFichaDirecto() {
-    document.getElementById("modalFichaAlumno").style.display = "none";
-  }
-
-  async function renderMatriz() {
-    await cargarDatosCloud();
-
-    const curso = document.getElementById("selectCurso").value;
-    const nivel = curso.charAt(0);
-    const todosCriterios = catálogoCriterios[nivel] || [];
-    const listaAlumnos = alumnosData[curso] || [];
-
-    const head = document.getElementById("headMatriz");
-    const body = document.getElementById("bodyMatriz");
-    const banner = document.getElementById("bannerCriteriosSinEvaluar");
-
-    let criteriosAmostrar = [];
-    let criteriosSinEvaluar = [];
-
-    if (tabActual === "GENERAL") {
-      banner.style.display = "none";
-      criteriosAmostrar = todosCriterios;
-    } else {
-      const evaluadosSet = new Set();
-
-      listaAlumnos.forEach(alumno => {
-        const res = obtenerNotasAlumno(curso, alumno, tabActual);
-        Object.keys(res).forEach(code => evaluadosSet.add(code));
-      });
-
-      todosCriterios.forEach(c => {
-        if (evaluadosSet.has(c.code)) {
-          criteriosAmostrar.push(c);
-        } else {
-          criteriosSinEvaluar.push(c);
-        }
-      });
-
-      const nombreTri = tabActual === "T1" ? "1.er Trimestre" : (tabActual === "T2" ? "2.º Trimestre" : "3.er Trimestre");
-      if (criteriosSinEvaluar.length > 0) {
-        banner.style.display = "block";
-        let badgesHtml = criteriosSinEvaluar.map(c => `<span class="badge-pending">${c.code} (${c.label})</span>`).join(" ");
-        banner.innerHTML = `
-          <div class="unevaluated-title">📌 Criterios sin evaluar aún en el ${nombreTri} (${criteriosSinEvaluar.length} de ${todosCriterios.length}):</div>
-          <div class="unevaluated-list">${badgesHtml}</div>
-        `;
-      } else {
-        banner.style.display = "block";
-        banner.innerHTML = `<div style="color:#166534; font-weight:700;">✅ ¡Enhorabuena! Todos los criterios del curso han sido evaluados en el ${nombreTri}.</div>`;
-      }
-    }
-
-    let headHtml = `<tr><th class="col-fixed-num">#</th><th class="col-fixed-name">Alumno / Alumna</th>`;
-    criteriosAmostrar.forEach(c => {
-      headHtml += `<th title="${c.code}: ${c.label}">${c.code}<br><span style="font-weight:normal; font-size:0.7rem; color:#475569;">${c.label}</span></th>`;
+    criteriosList.forEach(crit => {
+      htmlHeaders += `<th title="${crit.label.replace(/"/g, '&quot;')}" style="min-width:65px;">${crit.id}</th>`;
     });
-    
-    const tituloMedia = tabActual === "GENERAL" ? "Nota Media Global" : `Media ${tabActual === "T1" ? "1º Tri" : (tabActual === "T2" ? "2º Tri" : "3º Tri")}`;
-    headHtml += `<th style="background:#bae6fd; color:#0369a1; min-width:85px;">${tituloMedia}</th></tr>`;
-    head.innerHTML = headHtml;
 
-    let bodyHtml = "";
-    let totalEvaluados = 0;
+    htmlHeaders += `
+      <th style="min-width:90px; background:#e0f2fe; color:#0369a1;">📊 Media</th>
+      <th style="min-width:95px; background:#fef3c7; color:#92400e;">⭐ Estado</th>
+    `;
+    headersTr.innerHTML = htmlHeaders;
+
+    const tbody = document.getElementById("bodyMatriz");
+    tbody.innerHTML = "";
+
+    if (listaAlumnos.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="30" style="padding:20px; text-align:center; color:#64748b;">No hay alumnos cargados en este grupo.</td></tr>`;
+      return;
+    }
+
+    const datosEvalGrupo = (matrizGeneralBD[curso] && matrizGeneralBD[curso][eval]) ? matrizGeneralBD[curso][eval] : {};
 
     listaAlumnos.forEach((alumno, idx) => {
-      const resumenNotas = obtenerNotasAlumno(curso, alumno, tabActual);
-      const safeAlumno = alumno.replace(/'/g, "\'");
+      const tr = document.createElement("tr");
+      const notasAlumno = datosEvalGrupo[alumno] || {};
 
-      bodyHtml += `<tr><td class="col-fixed-num">${idx + 1}</td>
-        <td class="col-fixed-name">
-          <span class="student-link" onclick="abrirFichaAlumno('${curso}', '${safeAlumno}')">${alumno}</span>
-        </td>`;
+      let htmlFila = `
+        <td class="col-sticky-1">${idx + 1}</td>
+        <td class="col-sticky-2">${alumno}</td>
+      `;
 
-      let sumaTotal = 0;
-      let cont = 0;
+      let sumaNotas = 0;
+      let countNotas = 0;
 
-      criteriosAmostrar.forEach(c => {
-        const item = resumenNotas[c.code];
-        if (item && esNumero(item.media)) {
-          const itemsEncoded = encodeURIComponent(JSON.stringify(item.items));
-          const hoverText = `👤 ${alumno} | ${c.code} (${c.label}) | Nota Media: ${item.media.toFixed(1)}`;
-
-          bodyHtml += `<td class="mark-cell" 
-                           title="${hoverText}"
-                           onclick="abrirDesgloseModal('${safeAlumno}', '${c.code}', '${c.label.replace(/'/g, "\'")}', ${item.media}, '${itemsEncoded}')">
-            <span class="mark-val">${item.media.toFixed(1)}</span>
-          </td>`;
-          sumaTotal += item.media;
-          cont++;
-        } else {
-          bodyHtml += `<td><span class="mark-empty">-</span></td>`;
+      criteriosList.forEach(crit => {
+        const val = (notasAlumno[crit.id] !== undefined && notasAlumno[crit.id] !== null) ? notasAlumno[crit.id] : "";
+        if (val !== "" && !isNaN(parseFloat(val))) {
+          sumaNotas += parseFloat(val);
+          countNotas++;
         }
+
+        htmlFila += `
+          <td>
+            <input type="number" step="0.1" min="0" max="10" class="input-nota-matriz" 
+              value="${val}" 
+              onchange="actualizarNotaMatrizManual('${alumno.replace(/'/g, "\'")}', '${crit.id}', this.value)">
+          </td>
+        `;
       });
 
-      const finalVal = cont > 0 ? (sumaTotal / cont).toFixed(1) : "-";
-      if (cont > 0) totalEvaluados++;
+      let mediaTexto = "-";
+      let badgeHtml = `<span class="badge-nota badge-empty">-</span>`;
 
-      bodyHtml += `<td class="mark-final">${finalVal}</td></tr>`;
+      if (countNotas > 0) {
+        const media = sumaNotas / countNotas;
+        mediaTexto = media.toFixed(2);
+        const esAprobado = media >= 5.0;
+        badgeHtml = `<span class="badge-nota ${esAprobado ? 'badge-pass' : 'badge-fail'}">${esAprobado ? 'APROBADO' : 'SUSPENSO'}</span>`;
+      }
+
+      htmlFila += `
+        <td style="font-weight:800; color:#0369a1; background:#f0f9ff;">${mediaTexto}</td>
+        <td style="background:#fffbeb;">${badgeHtml}</td>
+      `;
+
+      tr.innerHTML = htmlFila;
+      tbody.appendChild(tr);
     });
-
-    body.innerHTML = bodyHtml;
-    
-    const etiquetaVista = tabActual === "GENERAL" ? "Vista Anual Completa" : `Vista de ${tabActual === "T1" ? "1.er Trimestre" : (tabActual === "T2" ? "2.º Trimestre" : "3.er Trimestre")}`;
-    document.getElementById("infoRegistros").textContent = `☁️ Sincronizado (${etiquetaVista}). ${totalEvaluados} de ${listaAlumnos.length} alumnos con notas en ${curso}.`;
   }
 
-  function exportarMatrizCSV() {
+  function actualizarNotaMatrizManual(alumno, critId, valor) {
     const curso = document.getElementById("selectCurso").value;
-    const nivel = curso.charAt(0);
-    const todosCriterios = catálogoCriterios[nivel] || [];
-    const listaAlumnos = alumnosData[curso] || [];
+    const eval = document.getElementById("selectEval").value;
 
-    let csv = `Curso;Alumno;` + todosCriterios.map(c => `${c.code} (${c.label})`).join(";") + `;Nota Media
-`;
+    if (!matrizGeneralBD[curso]) matrizGeneralBD[curso] = {};
+    if (!matrizGeneralBD[curso][eval]) matrizGeneralBD[curso][eval] = {};
+    if (!matrizGeneralBD[curso][eval][alumno]) matrizGeneralBD[curso][eval][alumno] = {};
+
+    if (valor === "" || isNaN(valor)) {
+      delete matrizGeneralBD[curso][eval][alumno][critId];
+    } else {
+      matrizGeneralBD[curso][eval][alumno][critId] = Math.round(parseFloat(valor) * 100) / 100;
+    }
+
+    guardarCambiosManuales(true);
+    renderizarMatrizSeguimiento();
+  }
+
+  function guardarCambiosManuales(silencioso = false) {
+    const KEYS_MATRIZ = [
+      "evaluador_matriz_seguimiento",
+      "seguimiento_notas",
+      "cuaderno_seguimiento_v1",
+      "matriz_seguimiento_v1",
+      "evaluador_seguimiento_v1",
+      "matriz_notas_lomloe",
+      "cuaderno_seguimiento",
+      "matriz_seguimiento",
+      "notas_matriz",
+      "cuaderno_datos"
+    ];
+
+    const jsonStr = JSON.stringify(matrizGeneralBD);
+    KEYS_MATRIZ.forEach(key => {
+      try { localStorage.setItem(key, jsonStr); } catch(e) {}
+    });
+
+    window.dispatchEvent(new Event('storage'));
+
+    const badge = document.getElementById("syncStatusBadge");
+    if (badge) badge.textContent = "⚡ Cambios guardados (" + new Date().toLocaleTimeString() + ")";
+
+    if (!silencioso) {
+      alert("💾 Cambios guardados en la matriz general del cuaderno.");
+    }
+  }
+
+  function exportarCSVMatriz() {
+    const curso = document.getElementById("selectCurso").value;
+    const eval = document.getElementById("selectEval").value;
+    const nivel = obtenerNivelCurso(curso);
+    const criteriosList = CRITERIOS_POR_NIVEL[nivel] || CRITERIOS_POR_NIVEL["2ESO"];
+    const listaAlumnos = alumnosBD[curso] || [];
+
+    let csv = "Alumno;";
+    criteriosList.forEach(c => csv += c.id + ";");
+    csv += "Media_Criterios;Estado\n";
+
+    const datosEvalGrupo = (matrizGeneralBD[curso] && matrizGeneralBD[curso][eval]) ? matrizGeneralBD[curso][eval] : {};
 
     listaAlumnos.forEach(alumno => {
-      const resumenNotas = obtenerNotasAlumno(curso, alumno, tabActual);
-      let line = `${curso};"${alumno}"`;
-      
-      let sumaTotal = 0;
-      let cont = 0;
+      csv += '"' + alumno + '";';
+      const notasAlumno = datosEvalGrupo[alumno] || {};
+      let suma = 0, count = 0;
 
-      todosCriterios.forEach(c => {
-        const item = resumenNotas[c.code];
-        if (item && esNumero(item.media)) {
-          line += `;${item.media.toFixed(1)}`;
-          sumaTotal += item.media;
-          cont++;
-        } else {
-          line += `;`;
+      criteriosList.forEach(c => {
+        const val = (notasAlumno[c.id] !== undefined) ? notasAlumno[c.id] : "";
+        csv += val + ";";
+        if (val !== "" && !isNaN(parseFloat(val))) {
+          suma += parseFloat(val);
+          count++;
         }
       });
 
-      const finalVal = cont > 0 ? (sumaTotal / cont).toFixed(1) : "";
-      line += `;${finalVal}
-`;
-      csv += line;
+      const media = count > 0 ? (suma / count).toFixed(2) : "";
+      const estado = count > 0 ? (parseFloat(media) >= 5 ? "APROBADO" : "SUSPENSO") : "";
+      csv += media + ";" + estado + "\n";
     });
 
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `matriz_criterios_LOMLOE_${curso}_${tabActual}.csv`;
+    link.download = "Cuaderno_Seguimiento_" + curso + "_" + eval + ".csv";
     link.click();
   }
 
-  document.addEventListener("DOMContentLoaded", renderMatriz);
+  window.addEventListener("storage", () => {
+    cargarYRefrescarDatos();
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    cargarAlumnosBD();
+    cargarYRefrescarDatos();
+  });
 </script>
 
 </body>

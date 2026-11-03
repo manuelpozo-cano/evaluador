@@ -1003,7 +1003,7 @@
     cargarPruebaSeleccionada();
   }
 
-  function eliminarPruebaActual() {
+    function eliminarPruebaActual() {
     const curso = document.getElementById("selectCurso").value;
     const eval = document.getElementById("selectEval").value;
     const lista = (estadoGeneral[curso] && estadoGeneral[curso][eval]) ? estadoGeneral[curso][eval] : [];
@@ -1013,9 +1013,10 @@
       return;
     }
 
-    if (confirm("¿Deseas eliminar la prueba actual?")) {
+    if (confirm("¿Deseas eliminar la prueba actual? Se eliminará de la matriz general de forma inmediata.")) {
       estadoGeneral[curso][eval] = lista.filter(p => p.id !== pruebaActualId);
       guardarEstadoStorage();
+      sincronizarConMatriz(true); // Purge deleted test immediately from matriz!
       actualizarSelectorPruebas();
     }
   }
@@ -1052,75 +1053,117 @@
     link.click();
   }
 
-  function sincronizarConMatriz(silencioso = false) {
+    function sincronizarConMatriz(silencioso = false) {
     guardarPruebaActual(true);
 
-    const curso = document.getElementById("selectCurso").value;
-    const eval = document.getElementById("selectEval").value;
+    const cursoActual = document.getElementById("selectCurso").value;
+    const evalActual = document.getElementById("selectEval").value;
 
-    const KEYS_MATRIZ = [
+    const ALL_MATRIZ_KEYS = [
       "evaluador_matriz_seguimiento",
       "seguimiento_notas",
       "cuaderno_seguimiento_v1",
       "matriz_seguimiento_v1",
       "evaluador_seguimiento_v1",
       "matriz_notas_lomloe",
-      "cuaderno_seguimiento"
+      "cuaderno_seguimiento",
+      "matriz_seguimiento",
+      "notas_matriz",
+      "cuaderno_datos"
     ];
 
-    let matrizGeneral = {};
-    const existingStr = localStorage.getItem("evaluador_matriz_seguimiento") || 
-                       localStorage.getItem("seguimiento_notas") || 
-                       localStorage.getItem("matriz_seguimiento_v1");
-    if (existingStr) {
-      try {
-        matrizGeneral = JSON.parse(existingStr);
-      } catch(e) {
-        matrizGeneral = {};
-      }
-    }
+    // Rebuild matrix completely FROM SCRATCH using ONLY active tests in estadoGeneral.
+    // This permanently purges deleted tests and guarantees exact sync.
+    const matrizGlobalExhaustiva = {};
+    let countTotalNotas = 0;
 
-    if (!matrizGeneral[curso]) matrizGeneral[curso] = {};
-    if (!matrizGeneral[curso][eval]) matrizGeneral[curso][eval] = {};
+    if (estadoGeneral && typeof estadoGeneral === "object") {
+      Object.keys(estadoGeneral).forEach(cursoKey => {
+        const cursoObj = estadoGeneral[cursoKey];
+        if (!cursoObj || typeof cursoObj !== "object") return;
 
-    const pruebasLista = (estadoGeneral[curso] && estadoGeneral[curso][eval]) ? estadoGeneral[curso][eval] : [];
+        const cAliasList = [
+          cursoKey,
+          cursoKey.replace("_", " "),
+          cursoKey.replace("ESO_", "º ESO "),
+          cursoKey.replace("ESO_", "ºESO_"),
+          cursoKey.replace("ESO_", "º ESO_"),
+          cursoKey.toLowerCase(),
+          cursoKey.replace("_", " ").toLowerCase(),
+          cursoKey.replace("ESO_", "º ESO ").toLowerCase()
+        ];
 
-    const acumNotas = {};
+        Object.keys(cursoObj).forEach(evalKey => {
+          const pruebasLista = cursoObj[evalKey];
+          if (!Array.isArray(pruebasLista)) return;
 
-    pruebasLista.forEach(prueba => {
-      if (!prueba.notas) return;
-      Object.keys(prueba.notas).forEach(alumno => {
-        if (!acumNotas[alumno]) acumNotas[alumno] = {};
-        const notasAlumnoPrueba = prueba.notas[alumno];
-        Object.keys(notasAlumnoPrueba).forEach(critId => {
-          const val = parseFloat(notasAlumnoPrueba[critId]);
-          if (!isNaN(val)) {
-            if (!acumNotas[alumno][critId]) acumNotas[alumno][critId] = [];
-            acumNotas[alumno][critId].push(val);
-          }
+          const eAliasList = [
+            evalKey,
+            evalKey.replace("T", ""),
+            evalKey.replace("T", "E"),
+            evalKey.replace("T", "ª Evaluación"),
+            evalKey.replace("T", "º Trimestre"),
+            evalKey.toLowerCase()
+          ];
+
+          const acumNotas = {};
+
+          pruebasLista.forEach(prueba => {
+            if (!prueba || !prueba.notas) return;
+            Object.keys(prueba.notas).forEach(alumno => {
+              if (!acumNotas[alumno]) acumNotas[alumno] = {};
+              const notasAlumnoPrueba = prueba.notas[alumno];
+              Object.keys(notasAlumnoPrueba).forEach(critId => {
+                const val = parseFloat(notasAlumnoPrueba[critId]);
+                if (!isNaN(val)) {
+                  if (!acumNotas[alumno][critId]) acumNotas[alumno][critId] = [];
+                  acumNotas[alumno][critId].push(val);
+                }
+              });
+            });
+          });
+
+          const finalNotasAlumno = {};
+          Object.keys(acumNotas).forEach(alumno => {
+            finalNotasAlumno[alumno] = {};
+            Object.keys(acumNotas[alumno]).forEach(critId => {
+              const arr = acumNotas[alumno][critId];
+              if (arr.length > 0) {
+                const media = arr.reduce((a, b) => a + b, 0) / arr.length;
+                const rounded = Math.round(media * 100) / 100;
+                finalNotasAlumno[alumno][critId] = rounded;
+                countTotalNotas++;
+              }
+            });
+          });
+
+          cAliasList.forEach(cAlias => {
+            if (!matrizGlobalExhaustiva[cAlias]) matrizGlobalExhaustiva[cAlias] = {};
+
+            Object.keys(finalNotasAlumno).forEach(alumno => {
+              if (!matrizGlobalExhaustiva[cAlias][alumno]) matrizGlobalExhaustiva[cAlias][alumno] = {};
+              Object.assign(matrizGlobalExhaustiva[cAlias][alumno], finalNotasAlumno[alumno]);
+            });
+
+            eAliasList.forEach(eAlias => {
+              if (!matrizGlobalExhaustiva[cAlias][eAlias]) matrizGlobalExhaustiva[cAlias][eAlias] = {};
+
+              Object.keys(finalNotasAlumno).forEach(alumno => {
+                if (!matrizGlobalExhaustiva[cAlias][eAlias][alumno]) matrizGlobalExhaustiva[cAlias][eAlias][alumno] = {};
+                Object.assign(matrizGlobalExhaustiva[cAlias][eAlias][alumno], finalNotasAlumno[alumno]);
+              });
+            });
+          });
         });
       });
-    });
+    }
 
-    let countTotalNotas = 0;
-    Object.keys(acumNotas).forEach(alumno => {
-      if (!matrizGeneral[curso][eval][alumno]) matrizGeneral[curso][eval][alumno] = {};
-      Object.keys(acumNotas[alumno]).forEach(critId => {
-        const arr = acumNotas[alumno][critId];
-        if (arr.length > 0) {
-          const media = arr.reduce((a, b) => a + b, 0) / arr.length;
-          matrizGeneral[curso][eval][alumno][critId] = Math.round(media * 100) / 100;
-          countTotalNotas++;
-        }
-      });
-    });
-
-    const jsonStr = JSON.stringify(matrizGeneral);
-    KEYS_MATRIZ.forEach(key => {
+    const jsonStr = JSON.stringify(matrizGlobalExhaustiva);
+    ALL_MATRIZ_KEYS.forEach(key => {
       try {
         localStorage.setItem(key, jsonStr);
       } catch(e) {
-        console.error("Error writing key:", key, e);
+        console.error("Error writing key " + key, e);
       }
     });
 
@@ -1132,10 +1175,10 @@
     }
 
     if (!silencioso) {
-      alert("✅ Sincronización Real Completada!\n\n" +
-            "• Grupo: " + curso.replace('_', ' ') + " (" + eval + ")\n" +
-            "• Criterios transferidos: " + countTotalNotas + " calificaciones a la matriz general.\n" +
-            "• Las notas ya están disponibles en el Cuaderno de Seguimiento (seguimiento.html).");
+      alert("✅ Sincronización limpia completada!\n\n" +
+            "• Grupo: " + cursoActual.replace('_', ' ') + " (" + evalActual + ")\n" +
+            "• Criterios activos transferidos: " + countTotalNotas + "\n" +
+            "• Se han purgado permanentemente las pruebas eliminadas y transferido las notas actuales.");
     }
   }
 
