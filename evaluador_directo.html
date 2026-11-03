@@ -675,7 +675,8 @@
     return CRITERIOS_POR_NIVEL[nivel] || CRITERIOS_POR_NIVEL["2ESO"];
   }
 
-  function cargarEstadoStorage() {
+    function cargarEstadoStorage() {
+    estadoGeneral = {};
     const guardado = localStorage.getItem("evaluador_directo_pruebas_v8");
     if (guardado) {
       try {
