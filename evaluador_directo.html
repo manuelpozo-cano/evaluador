@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Evaluador Directo - Tecnología y Digitalización</title>
+  <title>Evaluador Directo LOMLOE - Pruebas y Exámenes</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
   <style>
     :root {
       --primary: #0284c7;
@@ -18,14 +23,14 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
+    body { background-color: var(--bg); color: var(--text); padding: 15px; line-height: 1.5; }
     .container { max-width: 1400px; margin: 0 auto; }
 
     header {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 20px 24px;
+      padding: 16px 20px;
       margin-bottom: 20px;
       display: flex;
       justify-content: space-between;
@@ -34,8 +39,8 @@
       gap: 15px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.04);
     }
-    .header-titles h1 { font-size: 1.5rem; color: var(--primary-dark); font-weight: 800; display: flex; align-items: center; gap: 10px; }
-    .header-titles p { font-size: 0.88rem; color: #64748b; font-weight: 600; margin-top: 2px; }
+    .header-titles h1 { font-size: 1.4rem; color: var(--primary-dark); font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .header-titles p { font-size: 0.85rem; color: #64748b; font-weight: 600; margin-top: 2px; }
     .btn-back {
       background: #f1f5f9; color: #334155; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px;
       text-decoration: none; font-weight: 700; font-size: 0.88rem; transition: all 0.2s;
@@ -43,15 +48,15 @@
     .btn-back:hover { background: #e2e8f0; color: var(--text); }
 
     .card {
-      background: var(--card-bg); border-radius: 12px; padding: 22px; margin-bottom: 20px;
+      background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px;
       border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.04);
     }
     .card-title {
-      font-size: 1.15rem; font-weight: 800; color: #1e293b; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;
-      border-left: 4px solid var(--primary); padding-left: 10px;
+      font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;
+      border-left: 4px solid var(--primary); padding-left: 10px; flex-wrap: wrap; gap: 10px;
     }
 
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
     .form-group { display: flex; flex-direction: column; gap: 6px; }
     .form-group label { font-size: 0.85rem; font-weight: 700; color: #475569; }
     .form-control {
@@ -60,69 +65,47 @@
     }
     .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
 
-    .pruebas-bar {
-      display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; background: #f1f5f9;
-      padding: 14px 18px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px;
+    .pruebas-list { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 15px; border-bottom: 1px solid var(--border); }
+    .prueba-tab {
+      padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; background: #f1f5f9; color: #475569;
+      cursor: pointer; border: 1px solid var(--border); white-space: nowrap; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
     }
+    .prueba-tab.active { background: var(--primary); color: white; border-color: var(--primary-dark); }
+    .prueba-tab:hover:not(.active) { background: #e2e8f0; }
 
-    .criterios-selector {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 10px; margin-top: 10px;
-      max-height: 340px; overflow-y: auto; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc;
+    .criterios-checkboxes { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .crit-chip {
+      padding: 5px 10px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; background: #f1f5f9; color: #334155;
+      cursor: pointer; border: 1px solid var(--border); user-select: none; transition: all 0.2s;
     }
-    .criterio-card {
-      background: white; border: 1px solid #e2e8f0; padding: 10px 12px; border-radius: 8px;
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    }
-    .criterio-card label { font-size: 0.82rem; font-weight: 700; color: #334155; cursor: pointer; flex: 1; line-height: 1.3; }
-    .criterio-weight-wrapper { display: flex; align-items: center; gap: 6px; }
-    .criterio-weight-wrapper span { font-size: 0.75rem; font-weight: 700; color: #64748b; white-space: nowrap; }
-    .input-peso { width: 55px; padding: 5px 6px; font-size: 0.85rem; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border); }
+    .crit-chip.selected { background: #e0f2fe; color: #0369a1; border-color: #38bdf8; }
 
-    .notice-box {
-      background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; margin-top: 15px;
-      font-size: 0.86rem; color: #1e40af; display: flex; align-items: flex-start; gap: 10px; line-height: 1.4;
+    .table-container { overflow-x: auto; max-height: 65vh; border-radius: 10px; border: 1px solid var(--border); position: relative; background: white; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.86rem; text-align: left; }
+    th {
+      background: #f1f5f9; color: #1e293b; font-weight: 800; padding: 10px 8px; border-bottom: 2px solid var(--border);
+      position: sticky; top: 0; z-index: 10; white-space: nowrap; text-align: center;
     }
+    th.col-sticky-1 { position: sticky; left: 0; z-index: 20; background: #f1f5f9; text-align: left; width: 35px; min-width: 35px; }
+    th.col-sticky-2 { position: sticky; left: 35px; z-index: 20; background: #f1f5f9; text-align: left; min-width: 190px; border-right: 2px solid var(--border); }
 
-    /* MODAL DE GESTIÓN DE ALUMNOS */
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
-      display: none; justify-content: center; align-items: center; z-index: 1000;
-    }
-    .modal-card {
-      background: white; border-radius: 12px; padding: 24px; width: 90%; max-width: 650px;
-      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid var(--border);
-    }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .modal-header h3 { font-size: 1.2rem; color: #1e293b; font-weight: 800; }
-    .textarea-alumnos {
-      width: 100%; height: 260px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
-      font-family: monospace; font-size: 0.9rem; margin-bottom: 16px; outline: none; line-height: 1.4;
-    }
+    td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; text-align: center; }
+    td.col-sticky-1 { position: sticky; left: 0; background: white; z-index: 5; text-align: left; font-weight: 700; color: #64748b; }
+    td.col-sticky-2 { position: sticky; left: 35px; background: white; z-index: 5; text-align: left; font-weight: 700; color: #1e293b; border-right: 2px solid var(--border); white-space: nowrap; }
 
-    .table-container { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); margin-top: 15px; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left; }
-    th { background: #f1f5f9; color: #1e293b; font-weight: 800; padding: 10px 12px; border-bottom: 2px solid var(--border); white-space: nowrap; }
-    td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
-    tr:nth-child(even) { background-color: #fafafa; }
-    tr:hover { background-color: #f1f5f9; }
+    tr:nth-child(even) td { background-color: #fafafa; }
+    tr:nth-child(even) td.col-sticky-1, tr:nth-child(even) td.col-sticky-2 { background-color: #fafafa; }
+    tr:hover td { background-color: #f1f5f9; }
+    tr:hover td.col-sticky-1, tr:hover td.col-sticky-2 { background-color: #f1f5f9; }
 
     .input-nota {
-      width: 70px; padding: 6px 8px; font-size: 0.9rem; font-weight: 700; text-align: center;
-      border: 1px solid var(--border); border-radius: 6px; outline: none; transition: all 0.2s;
+      width: 58px; padding: 5px 4px; font-size: 0.88rem; font-weight: 700; text-align: center;
+      border: 1px solid #cbd5e1; border-radius: 6px; outline: none; transition: all 0.2s;
     }
-    .input-nota:focus { border-color: var(--primary); background: #f0f9ff; }
+    .input-nota:focus { border-color: var(--primary); background: #f0f9ff; box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2); }
 
-    .badge-examen {
-      display: inline-block; padding: 6px 12px; border-radius: 20px; font-weight: 800; font-size: 0.92rem;
-      text-align: center; min-width: 65px;
-    }
-    .badge-pass { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
-    .badge-fail { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
-
-    .actions-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
     .btn {
-      padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer;
+      padding: 9px 16px; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer;
       border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
     }
     .btn-primary { background: var(--primary); color: white; }
@@ -132,9 +115,9 @@
     .btn-secondary { background: #64748b; color: white; }
     .btn-secondary:hover { background: #475569; }
     .btn-danger { background: var(--danger); color: white; }
-    .btn-danger:hover { background: #991b1b; }
+    .btn-danger:hover { background: #b91c1c; }
 
-    footer { text-align: center; margin-top: 30px; padding: 15px; font-size: 0.82rem; color: #64748b; border-top: 1px solid var(--border); }
+    .actions-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
   </style>
 </head>
 <body>
@@ -142,93 +125,69 @@
 <div class="container">
   <header>
     <div class="header-titles">
-      <h1>📝 Evaluador Directo</h1>
-      <p>Tecnología y Digitalización | Manuel Pozo Cano - Colegio La Hispanidad (Curso 2026/2027)</p>
+      <h1>📝 Evaluador Directo de Pruebas y Exámenes LOMLOE</h1>
+      <p>Tecnología y Digitalización | Manuel Pozo Cano - Colegio La Hispanidad</p>
     </div>
-    <div style="display:flex; align-items:center; gap:8px;">
-        <span id="autoSyncStatus" style="font-size:0.82rem; color:#16a34a; font-weight:700; background:#dcfce7; padding:4px 10px; border-radius:12px; border:1px solid #86efac;">⚡ Auto-sincronización activa</span>
-        <a href="index.html" class="btn-back">⬅ Volver al Panel Principal</a>
-      </div>
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <span id="autoSyncStatus" style="font-size:0.82rem; color:#16a34a; font-weight:700; background:#dcfce7; padding:4px 10px; border-radius:12px; border:1px solid #86efac;">⚡ Auto-sincronizado</span>
+      <a href="seguimiento.html" class="btn-back">📊 Ir al Cuaderno de Seguimiento</a>
+    </div>
   </header>
 
-  <!-- CONFIGURACIÓN DE LA PRUEBA / EXAMEN -->
   <div class="card">
     <div class="card-title">
-      <span>⚙️ 1. Configuración de la Prueba y Selección de Curso</span>
+      <span>📌 Datos del Examen o Prueba Evaluativa</span>
+      <button class="btn btn-success" onclick="crearNuevaPrueba()" style="font-size:0.82rem; padding:6px 12px;">➕ Crear Nueva Prueba</button>
     </div>
-    
+
     <div class="form-grid">
       <div class="form-group">
-        <label for="selectCurso">Curso y Asignatura:</label>
-        <select id="selectCurso" class="form-control" onchange="cambiarCurso()">
-          <option value="2ESO_A" selected>2º ESO A - Tecnología y Digitalización</option>
-          <option value="2ESO_B">2º ESO B - Tecnología y Digitalización</option>
-          <option value="3ESO_A">3º ESO A - Tecnología y Digitalización</option>
-          <option value="3ESO_B">3º ESO B - Tecnología y Digitalización</option>
-          <option value="4ESO_A">4º ESO A - Digitalización</option>
-          <option value="4ESO_B">4º ESO B - Digitalización</option>
+        <label for="selectCurso">Curso / Grupo:</label>
+        <select id="selectCurso" class="form-control" onchange="cambiarCursoPrueba()">
+          <option value="2ESO_A" selected>2º ESO A</option>
+          <option value="2ESO_B">2º ESO B</option>
+          <option value="3ESO_A">3º ESO A</option>
+          <option value="3ESO_B">3º ESO B</option>
+          <option value="4ESO_A">4º ESO A</option>
+          <option value="4ESO_B">4º ESO B</option>
         </select>
       </div>
+
       <div class="form-group">
-        <label for="selectEval">Evaluación / Trimestre:</label>
-        <select id="selectEval" class="form-control" onchange="cambiarEvaluacion()">
+        <label for="selectEval">Trimestre:</label>
+        <select id="selectEval" class="form-control" onchange="cambiarEvalPrueba()">
           <option value="1T" selected>1ª Evaluación</option>
           <option value="2T">2ª Evaluación</option>
           <option value="3T">3ª Evaluación</option>
         </select>
       </div>
-    </div>
 
-    <!-- BARRA DE GESTIÓN DE PRUEBAS / EXÁMENES GUARDADOS -->
-    <div class="pruebas-bar">
-      <div class="form-group" style="flex:1; min-width:220px;">
-        <label for="selectPrueba">Prueba o Actividad Guardada:</label>
-        <select id="selectPrueba" class="form-control" onchange="cargarPruebaSeleccionada()">
-        </select>
-      </div>
-      <div class="form-group" style="flex:1; min-width:220px;">
-        <label for="nombreExamen">Nombre de la Prueba:</label>
-        <input type="text" id="nombreExamen" class="form-control" value="Examen 1" placeholder="Ej. Examen 1">
-      </div>
-      <div style="display:flex; gap:8px;">
-        <button class="btn btn-primary" onclick="guardarPruebaActual()">💾 Guardar Prueba</button>
-        <button class="btn btn-secondary" onclick="crearNuevaPrueba()">➕ Nueva Prueba</button>
-        <button class="btn btn-danger" onclick="eliminarPruebaActual()">🗑️ Eliminar</button>
+      <div class="form-group">
+        <label for="inputNombrePrueba">Nombre de la Prueba / Examen:</label>
+        <input type="text" id="inputNombrePrueba" class="form-control" placeholder="Ej: Examen Unidad 1 - Hardware" onchange="guardarNombrePruebaActual()">
       </div>
     </div>
 
-    <label style="font-size:0.88rem; font-weight:800; color:#1e293b; margin-bottom:8px; display:block;">
-      🎯 Criterios Oficiales de Evaluación (Selecciona e indica el Nº de preguntas por Criterio):
-    </label>
-    <div class="criterios-selector" id="contenedorCriterios"></div>
+    <div style="margin-top:10px;">
+      <label style="font-size:0.85rem; font-weight:700; color:#475569;">📑 Pruebas creadas en este Trimestre:</label>
+      <div id="listaPruebasTabs" class="pruebas-list" style="margin-top:6px;"></div>
+    </div>
 
-    <div class="notice-box">
-      <span>💡</span>
-      <div>
-        <strong>Cálculo de Nota del Examen:</strong><br>
-        La <strong>Nota Global del Examen</strong> se calcula por media ponderada del examen: <code>Sumatorio(Nota Criterio × Nº Preguntas) / Total Preguntas</code>.<br>
-        En el <strong>Cuaderno de Seguimiento (<code>seguimiento.html</code>)</strong>, cada criterio guarda su nota individual para la matriz general.
-      </div>
+    <div style="margin-top:10px;">
+      <label style="font-size:0.85rem; font-weight:700; color:#475569;">🎯 Criterios evaluados en esta prueba (Haz clic para activar/desactivar):</label>
+      <div id="chipsCriterios" class="criterios-checkboxes"></div>
     </div>
   </div>
 
-  <!-- REGISTRO DE NOTAS DEL ALUMNADO -->
   <div class="card">
     <div class="card-title">
-      <span>📊 2. Registro Directo de Calificaciones de la Clase</span>
-      <button class="btn btn-secondary" onclick="abrirModalAlumnos()" style="font-size:0.82rem; padding:6px 12px;">👥 Editar / Pegar Lista de Alumnos</button>
+      <span>✏️ Calificaciones por Alumno y Criterio</span>
     </div>
-    <p style="font-size:0.85rem; color:#64748b; margin-bottom:12px;">
-      Introduce la nota de cada criterio (0 a 10). La nota del examen se calcula automáticamente.
-    </p>
 
     <div class="table-container">
-      <table id="tablaEvaluacion">
+      <table>
         <thead>
-          <tr id="headersTabla">
-            <th>#</th>
-            <th>Nombre del Alumno/a</th>
-          </tr>
+          <tr id="headersTabla"></tr>
         </thead>
         <tbody id="bodyTabla"></tbody>
       </table>
@@ -236,431 +195,62 @@
 
     <div class="actions-bar">
       <div>
-        <button class="btn btn-secondary" onclick="exportarCSV()">📥 Descargar Datos (CSV / Excel)</button>
-        <button class="btn btn-primary" onclick="guardarPruebaActual()">💾 Guardar Todo</button>
+        <button class="btn btn-primary" onclick="guardarPruebaActual(false)">💾 Guardar Prueba Actual</button>
+        <button class="btn btn-success" onclick="sincronizarConMatriz(false)">🔄 Sincronizar con Cuaderno</button>
       </div>
-      <button class="btn btn-success" onclick="sincronizarConMatriz()">🔄 Sincronizar con Cuaderno de Seguimiento</button>
-    </div>
-  </div>
-
-  <footer>
-    © Manuel Pozo Cano | Departamento de Tecnología | Colegio La Hispanidad
-  </footer>
-</div>
-
-<!-- MODAL PARA PEGAR LISTADO DE ALUMNOS -->
-<div class="modal-overlay" id="modalAlumnos">
-  <div class="modal-card">
-    <div class="modal-header">
-      <h3 id="modalTituloGrupo">👥 Pegar Lista de Alumnos</h3>
-      <button onclick="cerrarModalAlumnos()" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✖</button>
-    </div>
-    <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">
-      Lista oficial de alumnos cargada desde Séneca. Puedes modificarla si hay altas o bajas:
-    </p>
-    <textarea id="txtListaAlumnos" class="textarea-alumnos"></textarea>
-    <div style="display:flex; justify-content:flex-end; gap:10px;">
-      <button class="btn btn-secondary" onclick="cerrarModalAlumnos()">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarListaAlumnosCustom()">💾 Guardar Lista de Clase</button>
+      <button class="btn btn-danger" onclick="eliminarPruebaActual()">🗑️ Eliminar esta Prueba</button>
     </div>
   </div>
 </div>
 
 <script>
-  // BANCO OFICIAL DE CRITERIOS POR ASIGNATURA Y NIVEL (Colegio La Hispanidad)
+  const firebaseConfig = { projectId: "cyberbreakout-hispanidad" };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
   const CRITERIOS_POR_NIVEL = {
     "2ESO": [
-  {
-    "id": "TYD.2.1.1",
-    "label": "TYD.2.1.1 - Definir problemas sencillos o necesidades básicas planteadas, buscando y contrastando información crítica y segura."
-  },
-  {
-    "id": "TYD.2.1.2",
-    "label": "TYD.2.1.2 - Comprender y examinar productos tecnológicos de uso habitual mediante método científico y simulación."
-  },
-  {
-    "id": "TYD.2.1.3",
-    "label": "TYD.2.1.3 - Adoptar medidas preventivas para protección de dispositivos, datos y salud personal de manera ética."
-  },
-  {
-    "id": "TYD.2.2.1",
-    "label": "TYD.2.2.1 - Idear y diseñar soluciones eficaces, innovadoras y sostenibles con actitud emprendedora y creativa."
-  },
-  {
-    "id": "TYD.2.2.2",
-    "label": "TYD.2.2.2 - Seleccionar, planificar y organizar materiales, herramientas y tareas para la solución propuesta."
-  },
-  {
-    "id": "TYD.2.3.1",
-    "label": "TYD.2.3.1 - Fabricar objetos/modelos manipulando materiales con herramientas y normas de seguridad."
-  },
-  {
-    "id": "TYD.2.4.1",
-    "label": "TYD.2.4.1 - Representar y comunicar el proceso de creación elaborando documentación técnica y gráfica."
-  },
-  {
-    "id": "TYD.2.5.1",
-    "label": "TYD.2.5.1 - Describir, interpretar y diseñar soluciones informáticas mediante algoritmos y diagramas de flujo."
-  },
-  {
-    "id": "TYD.2.5.2",
-    "label": "TYD.2.5.2 - Programar aplicaciones sencillas para distintos dispositivos incorporando IA básica."
-  },
-  {
-    "id": "TYD.2.5.3",
-    "label": "TYD.2.5.3 - Automatizar procesos y sistemas simples mediante robots y control programable."
-  },
-  {
-    "id": "TYD.2.6.1",
-    "label": "TYD.2.6.1 - Uso eficiente y seguro de dispositivos cotidianos y medidas de ciberseguridad."
-  },
-  {
-    "id": "TYD.2.6.2",
-    "label": "TYD.2.6.2 - Crear y difundir contenidos digitales respetando derechos de autor y etiqueta digital."
-  },
-  {
-    "id": "TYD.2.6.3",
-    "label": "TYD.2.6.3 - Organizar la información de manera estructurada con almacenamiento seguro."
-  },
-  {
-    "id": "TYD.2.7.1",
-    "label": "TYD.2.7.1 - Reconocer la influencia de la tecnología en la sociedad y sostenibilidad ambiental en Andalucía."
-  },
-  {
-    "id": "TYD.2.7.2",
-    "label": "TYD.2.7.2 - Identificar aportaciones de tecnologías emergentes al bienestar e igualdad social."
-  }
-],
+      { id: "TYD.2.1.1", label: "TYD.2.1.1" }, { id: "TYD.2.1.2", label: "TYD.2.1.2" },
+      { id: "TYD.2.1.3", label: "TYD.2.1.3" }, { id: "TYD.2.2.1", label: "TYD.2.2.1" },
+      { id: "TYD.2.2.2", label: "TYD.2.2.2" }, { id: "TYD.2.3.1", label: "TYD.2.3.1" },
+      { id: "TYD.2.4.1", label: "TYD.2.4.1" }, { id: "TYD.2.5.1", label: "TYD.2.5.1" },
+      { id: "TYD.2.5.2", label: "TYD.2.5.2" }, { id: "TYD.2.5.3", label: "TYD.2.5.3" },
+      { id: "TYD.2.6.1", label: "TYD.2.6.1" }, { id: "TYD.2.6.2", label: "TYD.2.6.2" },
+      { id: "TYD.2.6.3", label: "TYD.2.6.3" }, { id: "TYD.2.7.1", label: "TYD.2.7.1" },
+      { id: "TYD.2.7.2", label: "TYD.2.7.2" }
+    ],
     "3ESO": [
-  {
-    "id": "TYD.3.1.1",
-    "label": "TYD.3.1.1 - Definir problemas o necesidades planteadas buscando e interpretando información segura."
-  },
-  {
-    "id": "TYD.3.1.2",
-    "label": "TYD.3.1.2 - Comprender y examinar productos y sistemas tecnológicos con herramientas de simulación."
-  },
-  {
-    "id": "TYD.3.1.3",
-    "label": "TYD.3.1.3 - Adoptar medidas preventivas para protección de dispositivos, datos y salud personal."
-  },
-  {
-    "id": "TYD.3.2.1",
-    "label": "TYD.3.2.1 - Idear y diseñar soluciones eficaces, innovadoras y sostenibles a problemas definidos."
-  },
-  {
-    "id": "TYD.3.2.2",
-    "label": "TYD.3.2.2 - Seleccionar, planificar y organizar materiales, herramientas y tareas de forma colaborativa."
-  },
-  {
-    "id": "TYD.3.3.1",
-    "label": "TYD.3.3.1 - Fabricar objetos/modelos aplicando fundamentos de estructuras, mecanismos y electricidad."
-  },
-  {
-    "id": "TYD.3.4.1",
-    "label": "TYD.3.4.1 - Representar y comunicar el proceso de creación elaborando documentación técnica y gráfica."
-  },
-  {
-    "id": "TYD.3.5.1",
-    "label": "TYD.3.5.1 - Describir, interpretar y diseñar algoritmos y diagramas de flujo para resolución de problemas."
-  },
-  {
-    "id": "TYD.3.5.2",
-    "label": "TYD.3.5.2 - Programar aplicaciones para distintos dispositivos aplicando herramientas de IA."
-  },
-  {
-    "id": "TYD.3.5.3",
-    "label": "TYD.3.5.3 - Automatizar procesos y sistemas de control programables con conexión a internet."
-  },
-  {
-    "id": "TYD.3.6.1",
-    "label": "TYD.3.6.1 - Hacer un uso eficiente y seguro de los dispositivos digitales analizando sus componentes."
-  },
-  {
-    "id": "TYD.3.6.2",
-    "label": "TYD.3.6.2 - Crear, elaborar y difundir contenidos en distintas plataformas respetando derechos de autor."
-  },
-  {
-    "id": "TYD.3.6.3",
-    "label": "TYD.3.6.3 - Organizar la información de manera estructurada aplicando técnicas de almacenamiento seguro."
-  },
-  {
-    "id": "TYD.3.7.1",
-    "label": "TYD.3.7.1 - Reconocer la influencia de la tecnología en la sociedad y sostenibilidad ambiental."
-  },
-  {
-    "id": "TYD.3.7.2",
-    "label": "TYD.3.7.2 - Identificar aportaciones de tecnologías emergentes al bienestar e impacto ambiental en Andalucía."
-  }
-],
+      { id: "TYD.3.1.1", label: "TYD.3.1.1" }, { id: "TYD.3.1.2", label: "TYD.3.1.2" },
+      { id: "TYD.3.1.3", label: "TYD.3.1.3" }, { id: "TYD.3.2.1", label: "TYD.3.2.1" },
+      { id: "TYD.3.2.2", label: "TYD.3.2.2" }, { id: "TYD.3.3.1", label: "TYD.3.3.1" },
+      { id: "TYD.3.4.1", label: "TYD.3.4.1" }, { id: "TYD.3.5.1", label: "TYD.3.5.1" },
+      { id: "TYD.3.5.2", label: "TYD.3.5.2" }, { id: "TYD.3.5.3", label: "TYD.3.5.3" },
+      { id: "TYD.3.6.1", label: "TYD.3.6.1" }, { id: "TYD.3.6.2", label: "TYD.3.6.2" },
+      { id: "TYD.3.6.3", label: "TYD.3.6.3" }, { id: "TYD.3.7.1", label: "TYD.3.7.1" },
+      { id: "TYD.3.7.2", label: "TYD.3.7.2" }
+    ],
     "4ESO": [
-  {
-    "id": "DIG.4.1.1",
-    "label": "DIG.4.1.1 - Conectar dispositivos y gestionar redes locales alámbricas e inalámbricas proactivamente."
-  },
-  {
-    "id": "DIG.4.1.2",
-    "label": "DIG.4.1.2 - Instalar y mantener sistemas operativos configurando sus características de forma sostenible."
-  },
-  {
-    "id": "DIG.4.1.3",
-    "label": "DIG.4.1.3 - Identificar y resolver problemas técnicos sencillos fomentando el consumo sostenible."
-  },
-  {
-    "id": "DIG.4.2.1",
-    "label": "DIG.4.2.1 - Gestionar el aprendizaje digital configurando el Entorno Personal de Aprendizaje (PLE)."
-  },
-  {
-    "id": "DIG.4.2.2",
-    "label": "DIG.4.2.2 - Buscar, seleccionar y archivar información con sentido crítico y seguridad en la red."
-  },
-  {
-    "id": "DIG.4.2.3",
-    "label": "DIG.4.2.3 - Crear, programar e integrar contenidos digitales respetando licencias y derechos de autor."
-  },
-  {
-    "id": "DIG.4.2.4",
-    "label": "DIG.4.2.4 - Interactuar en espacios virtuales y plataformas colaborativas con actitud respetuosa."
-  },
-  {
-    "id": "DIG.4.3.1",
-    "label": "DIG.4.3.1 - Proteger los datos personales y la huella digital configurando la privacidad."
-  },
-  {
-    "id": "DIG.4.3.2",
-    "label": "DIG.4.3.2 - Configurar contraseñas, sistemas operativos y antivirus periódicamente."
-  },
-  {
-    "id": "DIG.4.3.3",
-    "label": "DIG.4.3.3 - Reaccionar ante amenazas en la red desarrollando prácticas saludables y seguras."
-  },
-  {
-    "id": "DIG.4.4.1",
-    "label": "DIG.4.4.1 - Hacer un uso ético de datos y herramientas digitales aplicando la netiqueta."
-  },
-  {
-    "id": "DIG.4.4.2",
-    "label": "DIG.4.4.2 - Reconocer aportaciones digitales en e-administración y e-commerce considerando brecha digital."
-  },
-  {
-    "id": "DIG.4.4.3",
-    "label": "DIG.4.4.3 - Analizar críticamente mensajes recibidos considerando objetividad, sesgos y caducidad."
-  },
-  {
-    "id": "DIG.4.4.4",
-    "label": "DIG.4.4.4 - Valorar el uso y desarrollo ecosocialmente responsable de tecnologías digitales."
-  }
-]
+      { id: "DIG.4.1.1", label: "DIG.4.1.1" }, { id: "DIG.4.1.2", label: "DIG.4.1.2" },
+      { id: "DIG.4.1.3", label: "DIG.4.1.3" }, { id: "DIG.4.2.1", label: "DIG.4.2.1" },
+      { id: "DIG.4.2.2", label: "DIG.4.2.2" }, { id: "DIG.4.2.3", label: "DIG.4.2.3" },
+      { id: "DIG.4.2.4", label: "DIG.4.2.4" }, { id: "DIG.4.3.1", label: "DIG.4.3.1" },
+      { id: "DIG.4.3.2", label: "DIG.4.3.2" }, { id: "DIG.4.3.3", label: "DIG.4.3.3" },
+      { id: "DIG.4.4.1", label: "DIG.4.4.1" }, { id: "DIG.4.4.2", label: "DIG.4.4.2" },
+      { id: "DIG.4.4.3", label: "DIG.4.4.3" }, { id: "DIG.4.4.4", label: "DIG.4.4.4" }
+    ]
   };
 
-  // LISTADO REAL Y COMPLETO DE ALUMNOS DEL CURSO 2026/2027
   const ALUMNOS_OFICIALES = {
-    "2ESO_A": [
-  "Bada Blanco, Ainara",
-  "Bravo Rodríguez, Lucía",
-  "Contreras Santiago, Manuel",
-  "Contreras Santiago, Paula",
-  "Correa Rodríguez, Ainara",
-  "Costa Redondo, Saray",
-  "Cruz Feria, Esteban",
-  "Cuaresma Rodríguez, Indhira",
-  "Cuaresma Rodríguez, Nayma",
-  "De la Luz Patricio, Elena",
-  "Garcia Caparrós, Indira",
-  "Garrido Fernández, Yamileth",
-  "Gómez Brito, Adriana",
-  "Gómez López, Daniella",
-  "Gutiérrez Valencia, Thomas",
-  "López Gómez, Hugo",
-  "López Salguero, Héctor Jesús",
-  "Mora Chico, Hugo",
-  "Mykhailyshyn, Iryna",
-  "Presa Bueno, Luca",
-  "Rengel Padilla, Alejandra",
-  "Reyes Pérez, Francisco José",
-  "Rodríguez Domínguez, Antonio",
-  "Silva López, Ainhoa",
-  "Torrescusa Borrero, Miguel"
-],
-    "2ESO_B": [
-  "Bautista Lepe, Izan",
-  "Bueno Merino, Indira",
-  "Diallo, Zoumana",
-  "Díaz Pinto, Giulia",
-  "El Hajoui Moustekfy, Ryan",
-  "El Hajoui Moustekfy, Yasmina",
-  "Funes Aranda, Jean Alessandro",
-  "Gil Pire, Camila Sophia",
-  "Gutiérrez Álvarez, Adriano",
-  "Hernández Tarriño, Estrella",
-  "Herrán Góngora, Laura Sofía",
-  "Hierro Masa, Ximena",
-  "Jiménez Vázquez, Indira",
-  "Lemos Del Toro, Alejandro",
-  "Masero Rodríguez, Ana de los Remedios",
-  "Moya Mera, Aitor",
-  "Muñoz López, Yerai",
-  "Núñez Álvarez, Jose",
-  "Pérez Márquez, Juan Marcelo",
-  "Pozo Orta, Julia",
-  "Rodríguez Enríquez, Daniela",
-  "Rodríguez Ospina, Juan David",
-  "Sánchez Alonso, Libertad",
-  "Sánchez Pérez, Erick",
-  "Sola Infantes, Lucía",
-  "Tristán Wert, Aarón"
-],
-    "3ESO_A": [
-  "Becerro Larios, Aitana",
-  "Benítez Márquez, Azahara",
-  "Brito Rasero, Valeria",
-  "Cordón Pérez, Bryam",
-  "Fernández Rebollo, Alejandro",
-  "Flores Rueda, Lucía",
-  "Gálvez Sfatolea, Rocío",
-  "Gómez Damota, Aitor",
-  "Gómez Soto, Francisco Javier",
-  "González Rodríguez, Adriana",
-  "Heredia Medel, Rocío",
-  "Hernández Barrera, Alejandro José",
-  "Ibánez Montagut, Ainhoa",
-  "Martín Griñolo, Paula",
-  "Mateo Ramos, Rubén",
-  "Mora Reyes, Manuel",
-  "Naranjo Romero, David",
-  "Nawaz Kousar, Muhammad Afnan",
-  "Palomares Magro, Jesús",
-  "Palomares Puga, Alejandro",
-  "Pérez Hermoso, Jesús",
-  "Prieto Évora, Judith",
-  "Rodríguez Rodríguez, Alicia",
-  "Silvera Iftimie, José Miguel",
-  "Toledano Millares, Sergio",
-  "Torres Benítez, Diego",
-  "Viatela Arteaga, Juan Manuel"
-],
-    "3ESO_B": [
-  "Beas Castilla, Sara",
-  "Canelo Suárez, Manuel Darío",
-  "Contreras Cuaresma, Daniela",
-  "Díaz Fariña, Iker",
-  "García Varela, Marco",
-  "Gómez Borrero, Alejandro",
-  "Gómez Del Pino, Enrique",
-  "Gómez Fernández, Adrián",
-  "Gutiérrez Colete, Miguel",
-  "Ichou Er Raji, Chaima",
-  "Jiménez Rodriguez, Sheila",
-  "López González, María",
-  "Luque Lorenzo, Adrián",
-  "Márquez Rivero, Oriol",
-  "Martin Cerrejón, Antonio",
-  "Mora Garrido, Rita",
-  "Moreno Lepe, Andrés",
-  "Muñoz Díaz, Coraima",
-  "Nieto González, Daniel",
-  "Orta Gómez, Samuel",
-  "Pérez Paredes, Natalia",
-  "Rodríguez De Lucas, Alejandro",
-  "Romero Barbero, José Antonio",
-  "Suero Robles, Daniel",
-  "Suero Robles, Iván",
-  "Vázquez Boza, María"
-],
-    "4ESO_A": [
-  "Arazo Pérez, Nahyra",
-  "Bacedoni Camero, Minerva",
-  "Cáceres Cruz, Andrea",
-  "Castellano Díaz, Paula",
-  "De la Rosa Paredes, Claudia",
-  "González Rodríguez, Miguel Ángel",
-  "López Borrero, José Francisco",
-  "Luardo Pérez, David",
-  "Marín García, Yaiza",
-  "Márquez Domínguez, Natalia",
-  "Martin Gómez, Alicia",
-  "Oliva Pernil, Eva",
-  "Ortiz Azaustre, Claudia",
-  "Palomares Magro, Juan Manuel",
-  "Paredes Díaz, Ainhoa",
-  "Paredes Gil, Sergio",
-  "Pavón Barrera, Andrea",
-  "Pérez Calvo, Angelo",
-  "Torrado Ternero, Estela"
-],
-    "4ESO_B": [
-  "Araujo Carrasco, José Manuel",
-  "Borrero De Paula, José Antonio",
-  "Boulal, Jilali",
-  "Escudero Limón, Daniela",
-  "Kykish Toporovska, Diana",
-  "Lobato Ramos, Hugo",
-  "Martin Venegas, Ester",
-  "Naranjo Romero, Aitana",
-  "Pérez Rodríguez, Pablo",
-  "Rivero Hernández, Diego Alejandro",
-  "Rivero Hernández, Enrique Alejandro",
-  "Rodríguez Brejano, Alexys",
-  "Salazar Fernández, Yamilet",
-  "Sánchez Lozada, Sergio Enrique",
-  "Sánchez Pérez, Induara",
-  "Sánchez Ternero, Alejandro",
-  "Soto García, Ángela",
-  "Terrón Quintero, José Antonio",
-  "Torres Hernández, Javier",
-  "Wert Hermoso, Laura"
-]
+    "2ESO_A": ["Bada Blanco, Ainara", "Bravo Rodríguez, Lucía", "Contreras Santiago, Manuel", "Contreras Santiago, Paula", "Correa Rodríguez, Ainara", "Costa Redondo, Saray", "Cruz Feria, Esteban", "Cuaresma Rodríguez, Indhira", "Cuaresma Rodríguez, Nayma", "De la Luz Patricio, Elena", "Garcia Caparrós, Indira", "Garrido Fernández, Yamileth", "Gómez Brito, Adriana", "Gómez López, Daniella", "Gutiérrez Valencia, Thomas", "López Gómez, Hugo", "López Salguero, Héctor Jesús", "Mora Chico, Hugo", "Mykhailyshyn, Iryna", "Presa Bueno, Luca", "Rengel Padilla, Alejandra", "Reyes Pérez, Francisco José", "Rodríguez Domínguez, Antonio", "Silva López, Ainhoa", "Torrescusa Borrero, Miguel"],
+    "2ESO_B": ["Bautista Lepe, Izan", "Bueno Merino, Indira", "Diallo, Zoumana", "Díaz Pinto, Giulia", "El Hajoui Moustekfy, Ryan", "El Hajoui Moustekfy, Yasmina", "Funes Aranda, Jean Alessandro", "Gil Pire, Camila Sophia", "Gutiérrez Álvarez, Adriano", "Hernández Tarriño, Estrella", "Herrán Góngora, Laura Sofía", "Hierro Masa, Ximena", "Jiménez Vázquez, Indira", "Lemos Del Toro, Alejandro", "Masero Rodríguez, Ana de los Remedios", "Moya Mera, Aitor", "Muñoz López, Yerai", "Núñez Álvarez, Jose", "Pérez Márquez, Juan Marcelo", "Pozo Orta, Julia", "Rodríguez Enríquez, Daniela", "Rodríguez Ospina, Juan David", "Sánchez Alonso, Libertad", "Sánchez Pérez, Erick", "Sola Infantes, Lucía", "Tristán Wert, Aarón"],
+    "3ESO_A": ["Becerro Larios, Aitana", "Benítez Márquez, Azahara", "Brito Rasero, Valeria", "Cordón Pérez, Bryam", "Fernández Rebollo, Alejandro", "Flores Rueda, Lucía", "Gálvez Sfatolea, Rocío", "Gómez Damota, Aitor", "Gómez Soto, Francisco Javier", "González Rodríguez, Adriana", "Heredia Medel, Rocío", "Hernández Barrera, Alejandro José", "Ibánez Montagut, Ainhoa", "Martín Griñolo, Paula", "Mateo Ramos, Rubén", "Mora Reyes, Manuel", "Naranjo Romero, David", "Nawaz Kousar, Muhammad Afnan", "Palomares Magro, Jesús", "Palomares Puga, Alejandro", "Pérez Hermoso, Jesús", "Prieto Évora, Judith", "Rodríguez Rodríguez, Alicia", "Silvera Iftimie, José Miguel", "Toledano Millares, Sergio", "Torres Benítez, Diego", "Viatela Arteaga, Juan Manuel"],
+    "3ESO_B": ["Beas Castilla, Sara", "Canelo Suárez, Manuel Darío", "Contreras Cuaresma, Daniela", "Díaz Fariña, Iker", "García Varela, Marco", "Gómez Borrero, Alejandro", "Gómez Del Pino, Enrique", "Gómez Fernández, Adrián", "Gutiérrez Colete, Miguel", "Ichou Er Raji, Chaima", "Jiménez Rodriguez, Sheila", "López González, María", "Luque Lorenzo, Adrián", "Márquez Rivero, Oriol", "Martin Cerrejón, Antonio", "Mora Garrido, Rita", "Moreno Lepe, Andrés", "Muñoz Díaz, Coraima", "Nieto González, Daniel", "Orta Gómez, Samuel", "Pérez Paredes, Natalia", "Rodríguez De Lucas, Alejandro", "Romero Barbero, José Antonio", "Suero Robles, Daniel", "Suero Robles, Iván", "Vázquez Boza, María"],
+    "4ESO_A": ["Arazo Pérez, Nahyra", "Bacedoni Camero, Minerva", "Cáceres Cruz, Andrea", "Castellano Díaz, Paula", "De la Rosa Paredes, Claudia", "González Rodríguez, Miguel Ángel", "López Borrero, José Francisco", "Luardo Pérez, David", "Marín García, Yaiza", "Márquez Domínguez, Natalia", "Martin Gómez, Alicia", "Oliva Pernil, Eva", "Ortiz Azaustre, Claudia", "Palomares Magro, Juan Manuel", "Paredes Díaz, Ainhoa", "Paredes Gil, Sergio", "Pavón Barrera, Andrea", "Pérez Calvo, Angelo", "Torrado Ternero, Estela"],
+    "4ESO_B": ["Araujo Carrasco, José Manuel", "Borrero De Paula, José Antonio", "Boulal, Jilali", "Escudero Limón, Daniela", "Kykish Toporovska, Diana", "Lobato Ramos, Hugo", "Martin Venegas, Ester", "Naranjo Romero, Aitana", "Pérez Rodríguez, Pablo", "Rivero Hernández, Diego Alejandro", "Rivero Hernández, Enrique Alejandro", "Rodríguez Brejano, Alexys", "Salazar Fernández, Yamilet", "Sánchez Lozada, Sergio Enrique", "Sánchez Pérez, Induara", "Sánchez Ternero, Alejandro", "Soto García, Ángela", "Terrón Quintero, José Antonio", "Torres Hernández, Javier", "Wert Hermoso, Laura"]
   };
 
-  let alumnosBD = {};
-
-  function cargarAlumnosBD() {
-    const guardado = localStorage.getItem("evaluador_directo_alumnos_v2");
-    if (guardado) {
-      try {
-        alumnosBD = JSON.parse(guardado);
-      } catch(e) {
-        alumnosBD = JSON.parse(JSON.stringify(ALUMNOS_OFICIALES));
-      }
-    } else {
-      alumnosBD = JSON.parse(JSON.stringify(ALUMNOS_OFICIALES));
-      guardarAlumnosBD();
-    }
-  }
-
-  function guardarAlumnosBD() {
-    localStorage.setItem("evaluador_directo_alumnos_v2", JSON.stringify(alumnosBD));
-  }
-
-  function abrirModalAlumnos() {
-    const curso = document.getElementById("selectCurso").value;
-    document.getElementById("modalTituloGrupo").textContent = `👥 Modificar Lista de Alumnos (${curso.replace('_', ' ')})`;
-    const lista = alumnosBD[curso] || [];
-    document.getElementById("txtListaAlumnos").value = lista.join("\n");
-    document.getElementById("modalAlumnos").style.display = "flex";
-  }
-
-  function cerrarModalAlumnos() {
-    document.getElementById("modalAlumnos").style.display = "none";
-  }
-
-  function guardarListaAlumnosCustom() {
-    const curso = document.getElementById("selectCurso").value;
-    const txt = document.getElementById("txtListaAlumnos").value;
-    const lineas = txt.split("\n").map(l => l.trim()).filter(l => l.length > 0);
-
-    alumnosBD[curso] = lineas;
-    guardarAlumnosBD();
-    cerrarModalAlumnos();
-    renderizarTablaAlumnos();
-    alert("✅ Lista de alumnos actualizada correctamente para " + curso.replace('_', ' ') + ".");
-  }
-
-  // ESTADO GENERAL DE PRUEBAS Y CALIFICACIONES
-  let estadoGeneral = {};
-  let pruebaActualId = null;
-  let criteriosSeleccionados = [];
-  let notasAlumnadoLocal = {};
+  let estadoPruebas = {}; // estadoPruebas[curso][eval] = [ { id, nombre, criterios: [], notas: { alum: { critId: val } } } ]
+  let pruebaActivaId = null;
 
   function obtenerNivelCurso(curso) {
     if (curso.startsWith("2ESO")) return "2ESO";
@@ -669,523 +259,254 @@
     return "2ESO";
   }
 
-  function obtenerCriteriosNivelActual() {
-    const curso = document.getElementById("selectCurso").value;
-    const nivel = obtenerNivelCurso(curso);
-    return CRITERIOS_POR_NIVEL[nivel] || CRITERIOS_POR_NIVEL["2ESO"];
-  }
-
-    function cargarEstadoStorage() {
-    estadoGeneral = {};
-    const guardado = localStorage.getItem("evaluador_directo_pruebas_v8");
-    if (guardado) {
-      try {
-        estadoGeneral = JSON.parse(guardado);
-      } catch (e) {
-        estadoGeneral = {};
-      }
-    } else {
-      estadoGeneral = {};
+  function cargarEstadoPruebas() {
+    const raw = localStorage.getItem("evaluador_directo_pruebas_v8");
+    if (raw) {
+      try { estadoPruebas = JSON.parse(raw); } catch(e) { estadoPruebas = {}; }
     }
+    asegurarEstructuraCursoEval();
   }
 
-  function guardarEstadoStorage() {
-    try {
-      localStorage.setItem("evaluador_directo_pruebas_v8", JSON.stringify(estadoGeneral));
-    } catch(e) {
-      console.error("No se pudo guardar en localStorage", e);
-    }
-  }
-
-  function cambiarCurso() {
-    actualizarSelectorPruebas();
-  }
-
-  function cambiarEvaluacion() {
-    actualizarSelectorPruebas();
-  }
-
-  function actualizarSelectorPruebas() {
+  function asegurarEstructuraCursoEval() {
     const curso = document.getElementById("selectCurso").value;
-    const eval = document.getElementById("selectEval").value;
+    const evalSel = document.getElementById("selectEval").value;
+    if (!estadoPruebas[curso]) estadoPruebas[curso] = {};
+    if (!estadoPruebas[curso][evalSel]) estadoPruebas[curso][evalSel] = [];
 
-    if (!estadoGeneral[curso]) estadoGeneral[curso] = {};
-    if (!estadoGeneral[curso][eval]) estadoGeneral[curso][eval] = [];
-
-    const listaPruebas = estadoGeneral[curso][eval];
-    const select = document.getElementById("selectPrueba");
-    select.innerHTML = "";
-
-    if (listaPruebas.length === 0) {
-      const listaCritNivel = obtenerCriteriosNivelActual();
-      const crit1 = listaCritNivel[0] ? listaCritNivel[0].id : "1.1";
-
+    if (estadoPruebas[curso][evalSel].length === 0) {
       const nuevaP = {
-        id: "prueba_" + Date.now(),
-        nombre: "Examen 1",
-        criteriosConfig: [
-          { id: crit1, peso: 2 }
-        ],
+        id: "p_" + Date.now(),
+        nombre: "Examen / Práctica 1",
+        criterios: [],
         notas: {}
       };
-      listaPruebas.push(nuevaP);
-      guardarEstadoStorage();
+      estadoPruebas[curso][evalSel].push(nuevaP);
+      pruebaActivaId = nuevaP.id;
+    } else if (!pruebaActivaId || !estadoPruebas[curso][evalSel].find(p => p.id === pruebaActivaId)) {
+      pruebaActivaId = estadoPruebas[curso][evalSel][0].id;
     }
-
-    listaPruebas.forEach((p) => {
-      const opt = document.createElement("option");
-      opt.value = p.id;
-      opt.textContent = p.nombre;
-      select.appendChild(opt);
-    });
-
-    select.value = listaPruebas[0].id;
-    cargarPruebaSeleccionada();
   }
 
-  function cargarPruebaSeleccionada() {
+  function obtenerPruebaActiva() {
     const curso = document.getElementById("selectCurso").value;
-    const eval = document.getElementById("selectEval").value;
-    const pId = document.getElementById("selectPrueba").value;
-
-    const lista = (estadoGeneral[curso] && estadoGeneral[curso][eval]) ? estadoGeneral[curso][eval] : [];
-    const prueba = lista.find(p => p.id === pId);
-
-    if (!prueba) return;
-
-    pruebaActualId = prueba.id;
-    document.getElementById("nombreExamen").value = prueba.nombre;
-    criteriosSeleccionados = JSON.parse(JSON.stringify(prueba.criteriosConfig || []));
-    notasAlumnadoLocal = JSON.parse(JSON.stringify(prueba.notas || {}));
-
-    renderizarCriteriosSelector();
-    renderizarEncabezadosTabla();
-    renderizarTablaAlumnos();
+    const evalSel = document.getElementById("selectEval").value;
+    return (estadoPruebas[curso] && estadoPruebas[curso][evalSel]) 
+      ? estadoPruebas[curso][evalSel].find(p => p.id === pruebaActivaId) 
+      : null;
   }
 
-  function renderizarCriteriosSelector() {
-    const cont = document.getElementById("contenedorCriterios");
-    cont.innerHTML = "";
-
-    const criteriosDisponibles = obtenerCriteriosNivelActual();
-
-    criteriosDisponibles.forEach(crit => {
-      const configExistente = criteriosSeleccionados.find(c => c.id === crit.id);
-      const isChecked = !!configExistente;
-      const pesoVal = configExistente ? configExistente.peso : 1;
-
-      const div = document.createElement("div");
-      div.className = "criterio-card";
-      div.innerHTML = `
-        <div style="display:flex; align-items:center; gap:8px; flex:1;">
-          <input type="checkbox" id="chk_${crit.id}" value="${crit.id}" ${isChecked ? "checked" : ""} onchange="actualizarConfigCriterios()">
-          <label for="chk_${crit.id}">${crit.label}</label>
-        </div>
-        <div class="criterio-weight-wrapper">
-          <span>Nº Qs:</span>
-          <input type="number" id="peso_${crit.id}" class="input-peso" min="1" max="20" value="${pesoVal}" onchange="actualizarConfigCriterios()" ${!isChecked ? "disabled" : ""}>
-        </div>
-      `;
-      cont.appendChild(div);
-    });
+  function renderizarTodo() {
+    asegurarEstructuraCursoEval();
+    renderizarTabs();
+    renderizarChipsCriterios();
+    renderizarTablaNotas();
   }
 
-  function actualizarConfigCriterios() {
-    criteriosSeleccionados = [];
-    const criteriosDisponibles = obtenerCriteriosNivelActual();
-
-    criteriosDisponibles.forEach(crit => {
-      const chk = document.getElementById(`chk_${crit.id}`);
-      const pesoInput = document.getElementById(`peso_${crit.id}`);
-
-      if (chk && chk.checked) {
-        if (pesoInput) pesoInput.disabled = false;
-        const pesoNum = Math.max(1, parseFloat(pesoInput ? pesoInput.value : 1) || 1);
-        criteriosSeleccionados.push({ id: crit.id, peso: pesoNum });
-      } else if (pesoInput) {
-        pesoInput.disabled = true;
-      }
-    });
-
-    renderizarEncabezadosTabla();
-    renderizarTablaAlumnos();
-  }
-
-  function renderizarEncabezadosTabla() {
-    const tr = document.getElementById("headersTabla");
-    tr.innerHTML = `
-      <th style="width: 40px;">#</th>
-      <th style="min-width: 220px;">Nombre del Alumno/a</th>
-    `;
-
-    criteriosSeleccionados.forEach(crit => {
-      const th = document.createElement("th");
-      th.style.textAlign = "center";
-      th.innerHTML = `
-        ${crit.id}<br>
-        <small style="font-weight:600; color:#0284c7;">(${crit.peso} Qs)</small>
-      `;
-      tr.appendChild(th);
-    });
-
-    const thExamen = document.createElement("th");
-    thExamen.style.textAlign = "center";
-    thExamen.style.background = "#e0f2fe";
-    thExamen.style.color = "#0369a1";
-    thExamen.innerHTML = `⭐ Nota Examen<br><small>(Media Ponderada)</small>`;
-    tr.appendChild(thExamen);
-  }
-
-  function renderizarTablaAlumnos() {
+  function renderizarTabs() {
     const curso = document.getElementById("selectCurso").value;
-    const listaAlumnos = alumnosBD[curso] || [];
+    const evalSel = document.getElementById("selectEval").value;
+    const lista = estadoPruebas[curso][evalSel] || [];
+    const container = document.getElementById("listaPruebasTabs");
+
+    container.innerHTML = "";
+    lista.forEach(p => {
+      const tab = document.createElement("div");
+      tab.className = "prueba-tab" + (p.id === pruebaActivaId ? " active" : "");
+      tab.innerHTML = `<span>📝 ${p.nombre || "Prueba sin nombre"}</span>`;
+      tab.onclick = () => {
+        pruebaActivaId = p.id;
+        renderizarTodo();
+      };
+      container.appendChild(tab);
+    });
+
+    const pActiva = obtenerPruebaActiva();
+    if (pActiva) {
+      document.getElementById("inputNombrePrueba").value = pActiva.nombre || "";
+    }
+  }
+
+  function renderizarChipsCriterios() {
+    const curso = document.getElementById("selectCurso").value;
+    const nivel = obtenerNivelCurso(curso);
+    const criterios = CRITERIOS_POR_NIVEL[nivel] || [];
+    const pActiva = obtenerPruebaActiva();
+    const seleccionados = pActiva ? (pActiva.criterios || []) : [];
+
+    const container = document.getElementById("chipsCriterios");
+    container.innerHTML = "";
+
+    criterios.forEach(crit => {
+      const chip = document.createElement("div");
+      const isSelected = seleccionados.includes(crit.id);
+      chip.className = "crit-chip" + (isSelected ? " selected" : "");
+      chip.textContent = crit.id;
+      chip.onclick = () => toggleCriterioPrueba(crit.id);
+      container.appendChild(chip);
+    });
+  }
+
+  function toggleCriterioPrueba(critId) {
+    const pActiva = obtenerPruebaActiva();
+    if (!pActiva) return;
+    if (!pActiva.criterios) pActiva.criterios = [];
+
+    const idx = pActiva.criterios.indexOf(critId);
+    if (idx >= 0) {
+      pActiva.criterios.splice(idx, 1);
+    } else {
+      pActiva.criterios.push(critId);
+    }
+    renderizarTodo();
+    sincronizarConMatriz(true);
+  }
+
+  function renderizarTablaNotas() {
+    const curso = document.getElementById("selectCurso").value;
+    const alumnos = ALUMNOS_OFICIALES[curso] || [];
+    const pActiva = obtenerPruebaActiva();
+    const criteriosSel = pActiva ? (pActiva.criterios || []) : [];
+
+    const headersTr = document.getElementById("headersTabla");
+    let htmlHead = `<th class="col-sticky-1">#</th><th class="col-sticky-2">Alumno/a</th>`;
+
+    criteriosSel.forEach(critId => {
+      htmlHead += `<th style="min-width:70px;">${critId}</th>`;
+    });
+    htmlHead += `<th style="min-width:80px; background:#e0f2fe; color:#0369a1;">📊 Media</th>`;
+    headersTr.innerHTML = htmlHead;
+
     const tbody = document.getElementById("bodyTabla");
     tbody.innerHTML = "";
 
-    if (listaAlumnos.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:20px; color:#64748b;">No hay alumnos en este grupo. Haz clic en "👥 Editar / Pegar Lista de Alumnos" para cargarlos.</td></tr>`;
+    if (alumnos.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="20" style="padding:15px; color:#64748b;">No hay alumnos cargados.</td></tr>`;
       return;
     }
 
-    listaAlumnos.forEach((alumno, idx) => {
-      if (!notasAlumnadoLocal[alumno]) {
-        notasAlumnadoLocal[alumno] = {};
-      }
+    if (!pActiva.notas) pActiva.notas = {};
 
+    alumnos.forEach((alum, idx) => {
       const tr = document.createElement("tr");
-      tr.id = `fila_alumno_${idx}`;
+      if (!pActiva.notas[alum]) pActiva.notas[alum] = {};
 
-      let htmlFila = `
-        <td style="font-weight:700; color:#64748b;">${idx + 1}</td>
-        <td style="font-weight:700; color:#1e293b;">${alumno}</td>
-      `;
+      let htmlRow = `<td class="col-sticky-1">${idx + 1}</td><td class="col-sticky-2">${alum}</td>`;
+      let suma = 0, count = 0;
 
-      criteriosSeleccionados.forEach(crit => {
-        const valActual = (notasAlumnadoLocal[alumno] && notasAlumnadoLocal[alumno][crit.id] !== undefined) ? notasAlumnadoLocal[alumno][crit.id] : "";
-        htmlFila += `
-          <td style="text-align:center;">
+      criteriosSel.forEach(critId => {
+        const val = pActiva.notas[alum][critId] !== undefined ? pActiva.notas[alum][critId] : "";
+        if (val !== "") {
+          suma += parseFloat(val);
+          count++;
+        }
+        htmlRow += `
+          <td>
             <input type="number" step="0.1" min="0" max="10" class="input-nota" 
-              value="${valActual}" 
-              oninput="actualizarNotaCriterio('${alumno.replace(/'/g, "\\'")}', '${crit.id}', this.value, ${idx})">
+              value="${val}" 
+              onchange="actualizarNotaAlumno('${alum.replace(/'/g, "\'")}', '${critId}', this.value)">
           </td>
         `;
       });
 
-      htmlFila += `
-        <td style="text-align:center;" id="notaExamen_cell_${idx}">
-          <span class="badge-examen badge-pass">-</span>
-        </td>
-      `;
+      const mediaStr = count > 0 ? (suma / count).toFixed(2) : "-";
+      htmlRow += `<td style="font-weight:800; color:#0369a1; background:#f0f9ff;">${mediaStr}</td>`;
 
-      tr.innerHTML = htmlFila;
+      tr.innerHTML = htmlRow;
       tbody.appendChild(tr);
-      calcularNotaFilaAlumno(alumno, idx);
     });
   }
 
-  function actualizarNotaCriterio(alumno, critId, valor, filaIdx) {
-    if (!notasAlumnadoLocal[alumno]) notasAlumnadoLocal[alumno] = {};
-    if (valor === "" || isNaN(valor)) {
-      delete notasAlumnadoLocal[alumno][critId];
+  function actualizarNotaAlumno(alum, critId, val) {
+    const pActiva = obtenerPruebaActiva();
+    if (!pActiva) return;
+    if (!pActiva.notas[alum]) pActiva.notas[alum] = {};
+
+    if (val === "" || isNaN(parseFloat(val))) {
+      delete pActiva.notas[alum][critId];
     } else {
-      notasAlumnadoLocal[alumno][critId] = parseFloat(valor);
+      pActiva.notas[alum][critId] = parseFloat(val);
     }
-    calcularNotaFilaAlumno(alumno, filaIdx);
-    
-    // Auto-guardado y auto-sincronización instantánea en segundo plano
+
     guardarPruebaActual(true);
-    sincronizarConMatriz(true);
+    renderizarTablaNotas();
   }
 
-  function calcularNotaFilaAlumno(alumno, filaIdx) {
-    const cell = document.getElementById(`notaExamen_cell_${filaIdx}`);
-    if (!cell) return;
-
-    let sumaPonderada = 0;
-    let totalPreguntas = 0;
-
-    criteriosSeleccionados.forEach(crit => {
-      const nota = notasAlumnadoLocal[alumno] ? notasAlumnadoLocal[alumno][crit.id] : undefined;
-      if (nota !== undefined && nota !== null && !isNaN(nota)) {
-        sumaPonderada += nota * crit.peso;
-        totalPreguntas += crit.peso;
-      }
-    });
-
-    if (totalPreguntas === 0) {
-      cell.innerHTML = `<span class="badge-examen" style="background:#f1f5f9; color:#64748b;">-</span>`;
-      return;
-    }
-
-    const notaExamenFinal = sumaPonderada / totalPreguntas;
-    const notaTexto = notaExamenFinal.toFixed(2);
-    const esAprobado = notaExamenFinal >= 5.0;
-
-    cell.innerHTML = `
-      <span class="badge-examen ${esAprobado ? 'badge-pass' : 'badge-fail'}">
-        ${notaTexto}
-      </span>
-    `;
-  }
-
-  function guardarPruebaActual(silencioso = false) {
-    const curso = document.getElementById("selectCurso").value;
-    const eval = document.getElementById("selectEval").value;
-    const nombre = document.getElementById("nombreExamen").value.trim() || "Nueva Prueba";
-
-    if (!estadoGeneral[curso]) estadoGeneral[curso] = {};
-    if (!estadoGeneral[curso][eval]) estadoGeneral[curso][eval] = [];
-
-    const lista = estadoGeneral[curso][eval];
-    let prueba = lista.find(p => p.id === pruebaActualId);
-
-    if (!prueba) {
-      prueba = { id: "prueba_" + Date.now() };
-      lista.push(prueba);
-      pruebaActualId = prueba.id;
-    }
-
-    prueba.nombre = nombre;
-    prueba.criteriosConfig = criteriosSeleccionados;
-    prueba.notas = notasAlumnadoLocal;
-
-    guardarEstadoStorage();
-
-    const select = document.getElementById("selectPrueba");
-    let optFound = false;
-    for (let opt of select.options) {
-      if (opt.value === prueba.id) {
-        opt.textContent = nombre;
-        optFound = true;
-        break;
-      }
-    }
-    if (!optFound) {
-      const newOpt = document.createElement("option");
-      newOpt.value = prueba.id;
-      newOpt.textContent = nombre;
-      select.appendChild(newOpt);
-    }
-    select.value = prueba.id;
-
-    if (!silencioso) {
-      alert("✅ Prueba guardada correctamente para " + curso.replace('_', ' ') + " (" + eval + ").");
+  function guardarNombrePruebaActual() {
+    const pActiva = obtenerPruebaActiva();
+    if (pActiva) {
+      pActiva.nombre = document.getElementById("inputNombrePrueba").value;
+      renderizarTabs();
+      guardarPruebaActual(true);
     }
   }
 
   function crearNuevaPrueba() {
     const curso = document.getElementById("selectCurso").value;
-    const eval = document.getElementById("selectEval").value;
+    const evalSel = document.getElementById("selectEval").value;
 
-    const nombre = prompt("Introduce el nombre de la nueva prueba/examen:", "Examen ");
-    if (!nombre || !nombre.trim()) return;
-
-    const listaCrit = obtenerCriteriosNivelActual();
-    const c1 = listaCrit[0] ? listaCrit[0].id : "1.1";
-
-    const nuevaPrueba = {
-      id: "prueba_" + Date.now(),
-      nombre: nombre.trim(),
-      criteriosConfig: [
-        { id: c1, peso: 2 }
-      ],
+    const nuevaP = {
+      id: "p_" + Date.now(),
+      nombre: "Nueva Prueba " + ((estadoPruebas[curso][evalSel] || []).length + 1),
+      criterios: [],
       notas: {}
     };
 
-    if (!estadoGeneral[curso]) estadoGeneral[curso] = {};
-    if (!estadoGeneral[curso][eval]) estadoGeneral[curso][eval] = [];
+    if (!estadoPruebas[curso]) estadoPruebas[curso] = {};
+    if (!estadoPruebas[curso][evalSel]) estadoPruebas[curso][evalSel] = [];
 
-    estadoGeneral[curso][eval].push(nuevaPrueba);
-    guardarEstadoStorage();
-
-    actualizarSelectorPruebas();
-    document.getElementById("selectPrueba").value = nuevaPrueba.id;
-    cargarPruebaSeleccionada();
+    estadoPruebas[curso][evalSel].push(nuevaP);
+    pruebaActivaId = nuevaP.id;
+    renderizarTodo();
+    guardarPruebaActual(true);
   }
 
-    function eliminarPruebaActual() {
+  function eliminarPruebaActual() {
     const curso = document.getElementById("selectCurso").value;
-    const eval = document.getElementById("selectEval").value;
-    const lista = (estadoGeneral[curso] && estadoGeneral[curso][eval]) ? estadoGeneral[curso][eval] : [];
+    const evalSel = document.getElementById("selectEval").value;
+    const lista = estadoPruebas[curso][evalSel] || [];
 
     if (lista.length <= 1) {
-      alert("⚠️ No puedes eliminar la única prueba de este grupo. Puedes renombrarla.");
+      alert("⚠️ Debe existir al menos una prueba por trimestre.");
       return;
     }
 
-    if (confirm("¿Deseas eliminar la prueba actual? Se eliminará de la matriz general de forma inmediata.")) {
-      estadoGeneral[curso][eval] = lista.filter(p => p.id !== pruebaActualId);
-      guardarEstadoStorage();
-      sincronizarConMatriz(true); // Purge deleted test immediately from matriz!
-      actualizarSelectorPruebas();
+    if (confirm("¿Estás seguro de eliminar esta prueba y todas sus notas?")) {
+      estadoPruebas[curso][evalSel] = lista.filter(p => p.id !== pruebaActivaId);
+      pruebaActivaId = estadoPruebas[curso][evalSel][0].id;
+      renderizarTodo();
+      guardarPruebaActual(true);
     }
   }
 
-  function exportarCSV() {
-    let csv = "Alumno;";
-    criteriosSeleccionados.forEach(c => csv += c.id + "_(Peso_" + c.peso + ");");
-    csv += "Nota_Examen_Ponderada\n";
-
-    const curso = document.getElementById("selectCurso").value;
-    const listaAlumnos = alumnosBD[curso] || [];
-
-    listaAlumnos.forEach(alumno => {
-      csv += '"' + alumno + '";';
-      let suma = 0, pesoTot = 0;
-
-      criteriosSeleccionados.forEach(c => {
-        const val = notasAlumnadoLocal[alumno] ? notasAlumnadoLocal[alumno][c.id] : "";
-        csv += (val !== undefined ? val : "") + ";";
-        if (val !== "" && val !== undefined && !isNaN(val)) {
-          suma += val * c.peso;
-          pesoTot += c.peso;
-        }
-      });
-
-      const notaEx = pesoTot > 0 ? (suma / pesoTot).toFixed(2) : "";
-      csv += notaEx + "\n";
-    });
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "Notas_" + curso + "_" + document.getElementById("nombreExamen").value.replace(/\s+/g, '_') + ".csv";
-    link.click();
+  function cambiarCursoPrueba() {
+    pruebaActivaId = null;
+    renderizarTodo();
   }
 
-    function sincronizarConMatriz(silencioso = false) {
-    guardarPruebaActual(true);
+  function cambiarEvalPrueba() {
+    pruebaActivaId = null;
+    renderizarTodo();
+  }
 
-    const cursoActual = document.getElementById("selectCurso").value;
-    const evalActual = document.getElementById("selectEval").value;
+  function guardarPruebaActual(silencioso = false) {
+    localStorage.setItem("evaluador_directo_pruebas_v8", JSON.stringify(estadoPruebas));
+    sincronizarConMatriz(silencioso);
+  }
 
-    const ALL_MATRIZ_KEYS = [
-      "evaluador_matriz_seguimiento",
-      "seguimiento_notas",
-      "cuaderno_seguimiento_v1",
-      "matriz_seguimiento_v1",
-      "evaluador_seguimiento_v1",
-      "matriz_notas_lomloe",
-      "cuaderno_seguimiento",
-      "matriz_seguimiento",
-      "notas_matriz",
-      "cuaderno_datos"
-    ];
-
-    // Rebuild matrix completely FROM SCRATCH using ONLY active tests in estadoGeneral.
-    // This permanently purges deleted tests and guarantees exact sync.
-    const matrizGlobalExhaustiva = {};
-    let countTotalNotas = 0;
-
-    if (estadoGeneral && typeof estadoGeneral === "object") {
-      Object.keys(estadoGeneral).forEach(cursoKey => {
-        const cursoObj = estadoGeneral[cursoKey];
-        if (!cursoObj || typeof cursoObj !== "object") return;
-
-        const cAliasList = [
-          cursoKey,
-          cursoKey.replace("_", " "),
-          cursoKey.replace("ESO_", "º ESO "),
-          cursoKey.replace("ESO_", "ºESO_"),
-          cursoKey.replace("ESO_", "º ESO_"),
-          cursoKey.toLowerCase(),
-          cursoKey.replace("_", " ").toLowerCase(),
-          cursoKey.replace("ESO_", "º ESO ").toLowerCase()
-        ];
-
-        Object.keys(cursoObj).forEach(evalKey => {
-          const pruebasLista = cursoObj[evalKey];
-          if (!Array.isArray(pruebasLista)) return;
-
-          const eAliasList = [
-            evalKey,
-            evalKey.replace("T", ""),
-            evalKey.replace("T", "E"),
-            evalKey.replace("T", "ª Evaluación"),
-            evalKey.replace("T", "º Trimestre"),
-            evalKey.toLowerCase()
-          ];
-
-          const acumNotas = {};
-
-          pruebasLista.forEach(prueba => {
-            if (!prueba || !prueba.notas) return;
-            Object.keys(prueba.notas).forEach(alumno => {
-              if (!acumNotas[alumno]) acumNotas[alumno] = {};
-              const notasAlumnoPrueba = prueba.notas[alumno];
-              Object.keys(notasAlumnoPrueba).forEach(critId => {
-                const val = parseFloat(notasAlumnoPrueba[critId]);
-                if (!isNaN(val)) {
-                  if (!acumNotas[alumno][critId]) acumNotas[alumno][critId] = [];
-                  acumNotas[alumno][critId].push(val);
-                }
-              });
-            });
-          });
-
-          const finalNotasAlumno = {};
-          Object.keys(acumNotas).forEach(alumno => {
-            finalNotasAlumno[alumno] = {};
-            Object.keys(acumNotas[alumno]).forEach(critId => {
-              const arr = acumNotas[alumno][critId];
-              if (arr.length > 0) {
-                const media = arr.reduce((a, b) => a + b, 0) / arr.length;
-                const rounded = Math.round(media * 100) / 100;
-                finalNotasAlumno[alumno][critId] = rounded;
-                countTotalNotas++;
-              }
-            });
-          });
-
-          cAliasList.forEach(cAlias => {
-            if (!matrizGlobalExhaustiva[cAlias]) matrizGlobalExhaustiva[cAlias] = {};
-
-            Object.keys(finalNotasAlumno).forEach(alumno => {
-              if (!matrizGlobalExhaustiva[cAlias][alumno]) matrizGlobalExhaustiva[cAlias][alumno] = {};
-              Object.assign(matrizGlobalExhaustiva[cAlias][alumno], finalNotasAlumno[alumno]);
-            });
-
-            eAliasList.forEach(eAlias => {
-              if (!matrizGlobalExhaustiva[cAlias][eAlias]) matrizGlobalExhaustiva[cAlias][eAlias] = {};
-
-              Object.keys(finalNotasAlumno).forEach(alumno => {
-                if (!matrizGlobalExhaustiva[cAlias][eAlias][alumno]) matrizGlobalExhaustiva[cAlias][eAlias][alumno] = {};
-                Object.assign(matrizGlobalExhaustiva[cAlias][eAlias][alumno], finalNotasAlumno[alumno]);
-              });
-            });
-          });
-        });
-      });
-    }
-
-    const jsonStr = JSON.stringify(matrizGlobalExhaustiva);
-    ALL_MATRIZ_KEYS.forEach(key => {
-      try {
-        localStorage.setItem(key, jsonStr);
-      } catch(e) {
-        console.error("Error writing key " + key, e);
-      }
-    });
-
+  function sincronizarConMatriz(silencioso = false) {
     window.dispatchEvent(new Event('storage'));
-
     const statusEl = document.getElementById("autoSyncStatus");
     if (statusEl) {
       statusEl.textContent = "⚡ Auto-sincronizado a las " + new Date().toLocaleTimeString();
     }
-
     if (!silencioso) {
-      alert("✅ Sincronización limpia completada!\n\n" +
-            "• Grupo: " + cursoActual.replace('_', ' ') + " (" + evalActual + ")\n" +
-            "• Criterios activos transferidos: " + countTotalNotas + "\n" +
-            "• Se han purgado permanentemente las pruebas eliminadas y transferido las notas actuales.");
+      alert("✅ Pruebas sincronizadas con éxito con el Cuaderno de Seguimiento.");
     }
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    cargarAlumnosBD();
-    cargarEstadoStorage();
-    actualizarSelectorPruebas();
+    cargarEstadoPruebas();
+    renderizarTodo();
   });
 </script>
 
