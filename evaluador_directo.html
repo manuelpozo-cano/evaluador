@@ -51,28 +51,33 @@
       border-left: 4px solid var(--primary); padding-left: 10px;
     }
 
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px; }
     .form-group { display: flex; flex-direction: column; gap: 6px; }
     .form-group label { font-size: 0.85rem; font-weight: 700; color: #475569; }
     .form-control {
       padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.92rem;
-      outline: none; transition: border-color 0.2s;
+      outline: none; transition: border-color 0.2s; background: white;
     }
     .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
 
+    .pruebas-bar {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: #f1f5f9;
+      padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px;
+    }
+
     /* SELECCIÓN DE CRITERIOS CON Nº DE PREGUNTAS / PESO */
     .criterios-selector {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; margin-top: 10px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 10px; margin-top: 10px;
       max-height: 280px; overflow-y: auto; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc;
     }
     .criterio-card {
       background: white; border: 1px solid #e2e8f0; padding: 10px 12px; border-radius: 8px;
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
     }
-    .criterio-card label { font-size: 0.85rem; font-weight: 700; color: #334155; cursor: pointer; flex: 1; }
+    .criterio-card label { font-size: 0.84rem; font-weight: 700; color: #334155; cursor: pointer; flex: 1; }
     .criterio-weight-wrapper { display: flex; align-items: center; gap: 6px; }
     .criterio-weight-wrapper span { font-size: 0.75rem; font-weight: 700; color: #64748b; white-space: nowrap; }
-    .input-peso { width: 65px; padding: 5px 8px; font-size: 0.85rem; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border); }
+    .input-peso { width: 60px; padding: 5px 6px; font-size: 0.85rem; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border); }
 
     .notice-box {
       background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; margin-top: 15px;
@@ -102,8 +107,8 @@
 
     .actions-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
     .btn {
-      padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;
-      border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+      padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer;
+      border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
     }
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: var(--primary-dark); }
@@ -111,6 +116,8 @@
     .btn-success:hover { background: #15803d; }
     .btn-secondary { background: #64748b; color: white; }
     .btn-secondary:hover { background: #475569; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: #991b1b; }
 
     footer { text-align: center; margin-top: 30px; padding: 15px; font-size: 0.82rem; color: #64748b; border-top: 1px solid var(--border); }
   </style>
@@ -128,51 +135,67 @@
 
   <!-- CONFIGURACIÓN DE LA PRUEBA / EXAMEN -->
   <div class="card">
-    <div class="card-title">⚙️ 1. Configuración de la Prueba o Examen</div>
+    <div class="card-title">⚙️ 1. Configuración de la Prueba y Selección de Curso</div>
+    
     <div class="form-grid">
       <div class="form-group">
-        <label for="nombreExamen">Nombre del Examen / Actividad:</label>
-        <input type="text" id="nombreExamen" class="form-control" value="Examen Tema 1: Plásticos y Materiales" placeholder="Ej. Examen Tema 1">
-      </div>
-      <div class="form-group">
         <label for="selectCurso">Curso y Grupo:</label>
-        <select id="selectCurso" class="form-control" onchange="cargarListaAlumnos()">
-          <option value="2ESO_A">2º ESO A</option>
+        <select id="selectCurso" class="form-control" onchange="cambiarCurso()">
+          <option value="2ESO_A" selected>2º ESO A</option>
           <option value="2ESO_B">2º ESO B</option>
-          <option value="3ESO_A" selected>3º ESO A</option>
+          <option value="3ESO_A">3º ESO A</option>
           <option value="3ESO_B">3º ESO B</option>
         </select>
       </div>
       <div class="form-group">
         <label for="selectEval">Evaluación / Trimestre:</label>
-        <select id="selectEval" class="form-control">
-          <option value="1T">1ª Evaluación</option>
+        <select id="selectEval" class="form-control" onchange="cambiarEvaluacion()">
+          <option value="1T" selected>1ª Evaluación</option>
           <option value="2T">2ª Evaluación</option>
           <option value="3T">3ª Evaluación</option>
         </select>
       </div>
     </div>
 
+    <!-- BARRA DE GESTIÓN DE PRUEBAS / EXÁMENES GUARDADOS -->
+    <div class="pruebas-bar">
+      <div class="form-group" style="flex:1; min-width:220px;">
+        <label for="selectPrueba">Prueba o Actividad Guardada:</label>
+        <select id="selectPrueba" class="form-control" onchange="cargarPruebaSeleccionada()">
+          <!-- Se carga dinámicamente -->
+        </select>
+      </div>
+      <div class="form-group" style="flex:1; min-width:220px;">
+        <label for="nombreExamen">Nombre de la Prueba:</label>
+        <input type="text" id="nombreExamen" class="form-control" value="Examen 1. La Tecnologia" placeholder="Ej. Examen 1. La Tecnologia">
+      </div>
+      <div style="display:flex; gap:8px; align-self:flex-end;">
+        <button class="btn btn-primary" onclick="guardarPruebaActual()">💾 Guardar Prueba</button>
+        <button class="btn btn-secondary" onclick="crearNuevaPrueba()">➕ Nueva Prueba</button>
+        <button class="btn btn-danger" onclick="eliminarPruebaActual()">🗑️ Eliminar</button>
+      </div>
+    </div>
+
     <label style="font-size:0.88rem; font-weight:800; color:#1e293b; margin-bottom:8px; display:block;">
-      🎯 Selecciona Criterios e indica el Peso / Nº de Preguntas en este Examen:
+      🎯 Selecciona Criterios e indica el Peso / Nº de Preguntas en esta Prueba:
     </label>
     <div class="criterios-selector" id="contenedorCriterios"></div>
 
     <div class="notice-box">
       <span>💡</span>
       <div>
-        <strong>¿Cómo funciona el cálculo ponderado?</strong><br>
-        La <strong>Nota Global del Examen</strong> se calcula sumando <code>(Nota Criterio × Nº Preguntas)</code> y dividiendo entre el total de preguntas.
-        Sin embargo, al guardar o sincronizar con la Matriz General (<code>seguimiento.html</code>), <strong>cada criterio guarda su nota pura independiente</strong>.
+        <strong>¿Cómo funciona la ponderación LOMLOE?</strong><br>
+        La <strong>Nota Global del Examen</strong> se calcula mediante media ponderada: <code>Sumatorio(Nota Criterio × Nº Preguntas) / Total Preguntas</code>.
+        Al guardar o sincronizar con la Matriz General (<code>seguimiento.html</code>), <strong>cada criterio mantiene su nota pura e independiente</strong> para el cuaderno trimestral.
       </div>
     </div>
   </div>
 
   <!-- REGISTRO DE NOTAS DEL ALUMNADO -->
   <div class="card">
-    <div class="card-title">📊 2. Registro Directo de Calificaciones</div>
+    <div class="card-title">📊 2. Registro Directo de Calificaciones de la Clase</div>
     <p style="font-size:0.85rem; color:#64748b; margin-bottom:12px;">
-      Introduce la nota de cada criterio (0 - 10). La nota del examen se actualizará en tiempo real según el peso de cada criterio.
+      Introduce la nota de cada criterio (0 a 10). La nota del examen se recalculará automáticamente según el peso asignado a cada criterio.
     </p>
 
     <div class="table-container">
@@ -181,7 +204,6 @@
           <tr id="headersTabla">
             <th>#</th>
             <th>Nombre del Alumno/a</th>
-            <!-- Las columnas de los criterios y nota examen se generan dinámicamente -->
           </tr>
         </thead>
         <tbody id="bodyTabla"></tbody>
@@ -191,7 +213,7 @@
     <div class="actions-bar">
       <div>
         <button class="btn btn-secondary" onclick="exportarCSV()">📥 Descargar Datos (CSV / Excel)</button>
-        <button class="btn btn-primary" onclick="guardarLocalmente()">💾 Guardar en Local</button>
+        <button class="btn btn-primary" onclick="guardarPruebaActual()">💾 Guardar Todo</button>
       </div>
       <button class="btn btn-success" onclick="sincronizarConMatriz()">🔄 Sincronizar con Cuaderno de Seguimiento</button>
     </div>
@@ -203,7 +225,7 @@
 </div>
 
 <script>
-  // BANCO DE CRITERIOS SEGÚN PROGRAMACIÓN
+  // BANCO DE CRITERIOS OFICIALES
   const LISTA_CRITERIOS = [
     { id: "1.1", label: "Crit 1.1 - Análisis de necesidades tecnológicas" },
     { id: "1.2", label: "Crit 1.2 - Diseño de soluciones creativas" },
@@ -215,29 +237,139 @@
     { id: "4.1", label: "Crit 4.1 - Sostenibilidad y Huella de Carbono (CO2)" }
   ];
 
-  // BASE DE DATOS DE ALUMNOS POR GRUPO
+  // LISTADOS COMPLETOS DE ALUMNADO POR CLASE
   const ALUMNOS_BD = {
+    "2ESO_A": [
+      "Alonso Martín, Beatriz", "Castro Gómez, Daniel", "García Torres, Hugo",
+      "Lara Ramos, Marta", "Navarro Serrano, Pablo", "Pérez López, Adrián",
+      "Rodríguez Ruiz, Sofia", "Sánchez Fernández, Carlos"
+    ],
+    "2ESO_B": [
+      "Álvarez Gil, Mario", "Benítez Cano, Lucía", "Delgado Vega, Javier",
+      "Gómez Prieto, Irene", "Martínez Romero, Gonzalo", "Vázquez Morales, Elena"
+    ],
     "3ESO_A": [
       "Álvarez Gómez, Alejandro", "Blanco Pérez, Carmen", "Cano Ruiz, David",
       "Díaz Fernández, Elena", "García López, Francisco", "Hernández Marín, Isabel",
       "Jiménez Navarro, Jorge", "López Martínez, Lucía", "Moreno Sánchez, Manuel"
     ],
-    "2ESO_A": [
-      "Alonso Martín, Beatriz", "Castro Gómez, Daniel", "García Torres, Hugo",
-      "Lara Ramos, Marta", "Navarro Serrano, Pablo"
+    "3ESO_B": [
+      "Aguilar Roldán, Cristina", "Caballero Ortiz, Marcos", "Domínguez Pastor, Raúl",
+      "Esteban Molina, Natalia", "Iglesias Serrano, Víctor"
     ]
   };
 
-  // ESTADO DE CONFIGURACIÓN DE LA PRUEBA
-  let criteriosSeleccionados = [
-    { id: "1.1", peso: 3 },
-    { id: "2.3", peso: 1 },
-    { id: "3.2", peso: 2 }
-  ];
+  // ESTRUCTURA GLOBAL EN LOCALSTORAGE DE TODAS LAS PRUEBAS
+  // Clave principal: evaluador_directo_pruebas_v3
+  let estadoGeneral = {
+    "2ESO_A": {
+      "1T": [
+        {
+          id: "ex_1_tec_2esoa",
+          nombre: "Examen 1. La Tecnologia",
+          criteriosConfig: [
+            { id: "1.1", peso: 3 },
+            { id: "2.1", peso: 2 },
+            { id: "2.2", peso: 1 }
+          ],
+          notas: {
+            "Alonso Martín, Beatriz": { "1.1": 8.0, "2.1": 6.5, "2.2": 9.0 },
+            "Castro Gómez, Daniel": { "1.1": 5.0, "2.1": 4.0, "2.2": 7.0 },
+            "García Torres, Hugo": { "1.1": 9.0, "2.1": 8.5, "2.2": 10.0 }
+          }
+        }
+      ]
+    }
+  };
 
-  let notasAlumnado = {};
+  let pruebaActualId = null;
+  let criteriosSeleccionados = [];
+  let notasAlumnadoLocal = {};
 
-  function inicializarCriterios() {
+  function cargarEstadoStorage() {
+    const guardado = localStorage.getItem("evaluador_directo_pruebas_v3");
+    if (guardado) {
+      try {
+        estadoGeneral = JSON.parse(guardado);
+      } catch (e) {
+        console.error("Error al leer localStorage:", e);
+      }
+    } else {
+      guardarEstadoStorage();
+    }
+  }
+
+  function guardarEstadoStorage() {
+    localStorage.setItem("evaluador_directo_pruebas_v3", JSON.stringify(estadoGeneral));
+  }
+
+  function cambiarCurso() {
+    actualizarSelectorPruebas();
+  }
+
+  function cambiarEvaluacion() {
+    actualizarSelectorPruebas();
+  }
+
+  function actualizarSelectorPruebas() {
+    const curso = document.getElementById("selectCurso").value;
+    const eval = document.getElementById("selectEval").value;
+
+    if (!estadoGeneral[curso]) estadoGeneral[curso] = {};
+    if (!estadoGeneral[curso][eval]) estadoGeneral[curso][eval] = [];
+
+    const listaPruebas = estadoGeneral[curso][eval];
+    const select = document.getElementById("selectPrueba");
+    select.innerHTML = "";
+
+    if (listaPruebas.length === 0) {
+      // Crear prueba por defecto si está vacío
+      const nuevaP = {
+        id: "prueba_" + Date.now(),
+        nombre: curso.startsWith("2ESO") ? "Examen 1. La Tecnologia" : "Examen 1. Plásticos y Materiales",
+        criteriosConfig: [
+          { id: "1.1", peso: 3 },
+          { id: "2.1", peso: 2 }
+        ],
+        notas: {}
+      };
+      listaPruebas.push(nuevaP);
+      guardarEstadoStorage();
+    }
+
+    listaPruebas.forEach((p) => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.nombre;
+      select.appendChild(opt);
+    });
+
+    // Seleccionar la primera prueba de la lista
+    select.value = listaPruebas[0].id;
+    cargarPruebaSeleccionada();
+  }
+
+  function cargarPruebaSeleccionada() {
+    const curso = document.getElementById("selectCurso").value;
+    const eval = document.getElementById("selectEval").value;
+    const pId = document.getElementById("selectPrueba").value;
+
+    const lista = (estadoGeneral[curso] && estadoGeneral[curso][eval]) ? estadoGeneral[curso][eval] : [];
+    const prueba = lista.find(p => p.id === pId);
+
+    if (!prueba) return;
+
+    pruebaActualId = prueba.id;
+    document.getElementById("nombreExamen").value = prueba.nombre;
+    criteriosSeleccionados = JSON.parse(JSON.stringify(prueba.criteriosConfig || []));
+    notasAlumnadoLocal = JSON.parse(JSON.stringify(prueba.notas || {}));
+
+    renderizarCriteriosSelector();
+    renderizarEncabezadosTabla();
+    renderizarTablaAlumnos();
+  }
+
+  function renderizarCriteriosSelector() {
     const cont = document.getElementById("contenedorCriterios");
     cont.innerHTML = "";
 
@@ -278,7 +410,7 @@
     });
 
     renderizarEncabezadosTabla();
-    recalcularTodasLasNotas();
+    renderizarTablaAlumnos();
   }
 
   function renderizarEncabezadosTabla() {
@@ -306,20 +438,15 @@
     tr.appendChild(thExamen);
   }
 
-  function cargarListaAlumnos() {
-    const grupo = document.getElementById("selectCurso").value;
-    const lista = ALUMNOS_BD[grupo] || ALUMNOS_BD["3ESO_A"];
+  function renderizarTablaAlumnos() {
+    const curso = document.getElementById("selectCurso").value;
+    const listaAlumnos = ALUMNOS_BD[curso] || [];
     const tbody = document.getElementById("bodyTabla");
     tbody.innerHTML = "";
 
-    lista.forEach((alumno, idx) => {
-      if (!notasAlumnado[alumno]) {
-        // Cargar notas de prueba de ejemplo para el primer alumno
-        if (idx === 0) {
-          notasAlumnado[alumno] = { "1.1": 7.0, "2.3": 0.0, "3.2": 4.5 };
-        } else {
-          notasAlumnado[alumno] = {};
-        }
+    listaAlumnos.forEach((alumno, idx) => {
+      if (!notasAlumnadoLocal[alumno]) {
+        notasAlumnadoLocal[alumno] = {};
       }
 
       const tr = document.createElement("tr");
@@ -331,7 +458,7 @@
       `;
 
       criteriosSeleccionados.forEach(crit => {
-        const valActual = notasAlumnado[alumno][crit.id] !== undefined ? notasAlumnado[alumno][crit.id] : "";
+        const valActual = notasAlumnadoLocal[alumno][crit.id] !== undefined ? notasAlumnadoLocal[alumno][crit.id] : "";
         htmlFila += `
           <td style="text-align:center;">
             <input type="number" step="0.1" min="0" max="10" class="input-nota" 
@@ -354,11 +481,11 @@
   }
 
   function actualizarNotaCriterio(alumno, critId, valor, filaIdx) {
-    if (!notasAlumnado[alumno]) notasAlumnado[alumno] = {};
+    if (!notasAlumnadoLocal[alumno]) notasAlumnadoLocal[alumno] = {};
     if (valor === "" || isNaN(valor)) {
-      delete notasAlumnado[alumno][critId];
+      delete notasAlumnadoLocal[alumno][critId];
     } else {
-      notasAlumnado[alumno][critId] = parseFloat(valor);
+      notasAlumnadoLocal[alumno][critId] = parseFloat(valor);
     }
     calcularNotaFilaAlumno(alumno, filaIdx);
   }
@@ -371,7 +498,7 @@
     let totalPreguntas = 0;
 
     criteriosSeleccionados.forEach(crit => {
-      const nota = notasAlumnado[alumno] ? notasAlumnado[alumno][crit.id] : undefined;
+      const nota = notasAlumnadoLocal[alumno] ? notasAlumnadoLocal[alumno][crit.id] : undefined;
       if (nota !== undefined && nota !== null && !isNaN(nota)) {
         sumaPonderada += nota * crit.peso;
         totalPreguntas += crit.peso;
@@ -394,41 +521,110 @@
     `;
   }
 
-  function recalcularTodasLasNotas() {
-    const grupo = document.getElementById("selectCurso").value;
-    const lista = ALUMNOS_BD[grupo] || ALUMNOS_BD["3ESO_A"];
-    const tbody = document.getElementById("bodyTabla");
-    
-    // Re-renderizar filas manteniendo inputs
-    cargarListaAlumnos();
+  function guardarPruebaActual() {
+    const curso = document.getElementById("selectCurso").value;
+    const eval = document.getElementById("selectEval").value;
+    const nombre = document.getElementById("nombreExamen").value.trim() || "Nueva Prueba";
+
+    if (!estadoGeneral[curso]) estadoGeneral[curso] = {};
+    if (!estadoGeneral[curso][eval]) estadoGeneral[curso][eval] = [];
+
+    const lista = estadoGeneral[curso][eval];
+    let prueba = lista.find(p => p.id === pruebaActualId);
+
+    if (!prueba) {
+      prueba = { id: "prueba_" + Date.now() };
+      lista.push(prueba);
+      pruebaActualId = prueba.id;
+    }
+
+    prueba.nombre = nombre;
+    prueba.criteriosConfig = criteriosSeleccionados;
+    prueba.notas = notasAlumnadoLocal;
+
+    guardarEstadoStorage();
+
+    // Actualizar select de pruebas
+    const select = document.getElementById("selectPrueba");
+    let optFound = false;
+    for (let opt of select.options) {
+      if (opt.value === prueba.id) {
+        opt.textContent = nombre;
+        optFound = true;
+        break;
+      }
+    }
+    if (!optFound) {
+      const newOpt = document.createElement("option");
+      newOpt.value = prueba.id;
+      newOpt.textContent = nombre;
+      select.appendChild(newOpt);
+    }
+    select.value = prueba.id;
+
+    alert(`✅ Prueba "${nombre}" guardada correctamente para ${curso} (${eval}).`);
   }
 
-  function guardarLocalmente() {
-    const payload = {
-      nombreExamen: document.getElementById("nombreExamen").value,
-      curso: document.getElementById("selectCurso").value,
-      evaluacion: document.getElementById("selectEval").value,
-      criteriosConfig: criteriosSeleccionados,
-      notasAlumnado: notasAlumnado
+  function crearNuevaPrueba() {
+    const curso = document.getElementById("selectCurso").value;
+    const eval = document.getElementById("selectEval").value;
+
+    const nombre = prompt("Introduce el nombre de la nueva prueba/examen:", "Examen 2. Tema ");
+    if (!nombre || !nombre.trim()) return;
+
+    const nuevaPrueba = {
+      id: "prueba_" + Date.now(),
+      nombre: nombre.trim(),
+      criteriosConfig: [
+        { id: "1.1", peso: 2 },
+        { id: "2.1", peso: 2 }
+      ],
+      notas: {}
     };
-    localStorage.setItem("evaluador_directo_datos", JSON.stringify(payload));
-    alert("✅ Datos guardados localmente con éxito.");
+
+    if (!estadoGeneral[curso]) estadoGeneral[curso] = {};
+    if (!estadoGeneral[curso][eval]) estadoGeneral[curso][eval] = [];
+
+    estadoGeneral[curso][eval].push(nuevaPrueba);
+    guardarEstadoStorage();
+
+    actualizarSelectorPruebas();
+    document.getElementById("selectPrueba").value = nuevaPrueba.id;
+    cargarPruebaSeleccionada();
+  }
+
+  function eliminarPruebaActual() {
+    const curso = document.getElementById("selectCurso").value;
+    const eval = document.getElementById("selectEval").value;
+    const lista = (estadoGeneral[curso] && estadoGeneral[curso][eval]) ? estadoGeneral[curso][eval] : [];
+
+    if (lista.length <= 1) {
+      alert("⚠️ No puedes eliminar la única prueba existente de este grupo. Si lo deseas, renombrala.");
+      return;
+    }
+
+    if (confirm("¿Estás seguro de que deseas eliminar esta prueba?")) {
+      estadoGeneral[curso][eval] = lista.filter(p => p.id !== pruebaActualId);
+      guardarEstadoStorage();
+      actualizarSelectorPruebas();
+    }
   }
 
   function exportarCSV() {
     let csv = "Alumno;";
     criteriosSeleccionados.forEach(c => csv += `Crit_${c.id}_(Peso_${c.peso});`);
-    csv += "Nota_Examen_Ponderada\n";
+    csv += "Nota_Examen_Ponderada
+";
 
-    const grupo = document.getElementById("selectCurso").value;
-    const lista = ALUMNOS_BD[grupo] || ALUMNOS_BD["3ESO_A"];
+    const curso = document.getElementById("selectCurso").value;
+    const listaAlumnos = ALUMNOS_BD[curso] || [];
 
-    lista.forEach(alumno => {
+    listaAlumnos.forEach(alumno => {
       csv += `"${alumno}";`;
       let suma = 0, pesoTot = 0;
 
       criteriosSeleccionados.forEach(c => {
-        const val = notasAlumnado[alumno] ? notasAlumnado[alumno][c.id] : "";
+        const val = notasAlumnadoLocal[alumno] ? notasAlumnadoLocal[alumno][c.id] : "";
         csv += `${val !== undefined ? val : ""};`;
         if (val !== "" && val !== undefined && !isNaN(val)) {
           suma += val * c.peso;
@@ -437,7 +633,8 @@
       });
 
       const notaEx = pesoTot > 0 ? (suma / pesoTot).toFixed(2) : "";
-      csv += `${notaEx}\n`;
+      csv += `${notaEx}
+`;
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -448,13 +645,14 @@
   }
 
   function sincronizarConMatriz() {
-    alert("🔄 Sincronizando con el Cuaderno de Seguimiento (seguimiento.html)...\nLas notas individuales por criterio han sido transferidas a la Matriz General.");
+    guardarPruebaActual();
+    alert("🔄 Sincronizando con el Cuaderno de Seguimiento (seguimiento.html)...
+Las notas individuales por criterio han sido transferidas a la Matriz General.");
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    inicializarCriterios();
-    renderizarEncabezadosTabla();
-    cargarListaAlumnos();
+    cargarEstadoStorage();
+    actualizarSelectorPruebas();
   });
 </script>
 
