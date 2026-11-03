@@ -259,9 +259,8 @@
     ]
   };
 
-  // ESTRUCTURA GLOBAL EN LOCALSTORAGE DE TODAS LAS PRUEBAS
-  // Clave principal: evaluador_directo_pruebas_v3
-  let estadoGeneral = {
+  // DATOS POR DEFECTO CON PRUEBAS GUARDADAS TANTO EN 2º ESO A COMO EN 2º ESO B
+  const DEFAULT_ESTADO = {
     "2ESO_A": {
       "1T": [
         {
@@ -279,28 +278,53 @@
           }
         }
       ]
+    },
+    "2ESO_B": {
+      "1T": [
+        {
+          id: "ex_1_tec_2esob",
+          nombre: "Examen 1. La Tecnologia",
+          criteriosConfig: [
+            { id: "1.1", peso: 3 },
+            { id: "2.1", peso: 2 },
+            { id: "2.2", peso: 1 }
+          ],
+          notas: {
+            "Álvarez Gil, Mario": { "1.1": 7.5, "2.1": 7.0, "2.2": 8.5 },
+            "Benítez Cano, Lucía": { "1.1": 9.0, "2.1": 8.0, "2.2": 9.5 },
+            "Delgado Vega, Javier": { "1.1": 6.0, "2.1": 5.5, "2.2": 6.5 }
+          }
+        }
+      ]
     }
   };
 
+  let estadoGeneral = {};
   let pruebaActualId = null;
   let criteriosSeleccionados = [];
   let notasAlumnadoLocal = {};
 
   function cargarEstadoStorage() {
-    const guardado = localStorage.getItem("evaluador_directo_pruebas_v3");
+    const guardado = localStorage.getItem("evaluador_directo_pruebas_v4");
     if (guardado) {
       try {
         estadoGeneral = JSON.parse(guardado);
       } catch (e) {
         console.error("Error al leer localStorage:", e);
+        estadoGeneral = JSON.parse(JSON.stringify(DEFAULT_ESTADO));
       }
     } else {
+      estadoGeneral = JSON.parse(JSON.stringify(DEFAULT_ESTADO));
       guardarEstadoStorage();
     }
   }
 
   function guardarEstadoStorage() {
-    localStorage.setItem("evaluador_directo_pruebas_v3", JSON.stringify(estadoGeneral));
+    try {
+      localStorage.setItem("evaluador_directo_pruebas_v4", JSON.stringify(estadoGeneral));
+    } catch(e) {
+      console.error("No se pudo guardar en localStorage", e);
+    }
   }
 
   function cambiarCurso() {
@@ -323,7 +347,6 @@
     select.innerHTML = "";
 
     if (listaPruebas.length === 0) {
-      // Crear prueba por defecto si está vacío
       const nuevaP = {
         id: "prueba_" + Date.now(),
         nombre: curso.startsWith("2ESO") ? "Examen 1. La Tecnologia" : "Examen 1. Plásticos y Materiales",
@@ -344,7 +367,6 @@
       select.appendChild(opt);
     });
 
-    // Seleccionar la primera prueba de la lista
     select.value = listaPruebas[0].id;
     cargarPruebaSeleccionada();
   }
@@ -544,7 +566,6 @@
 
     guardarEstadoStorage();
 
-    // Actualizar select de pruebas
     const select = document.getElementById("selectPrueba");
     let optFound = false;
     for (let opt of select.options) {
@@ -613,8 +634,7 @@
   function exportarCSV() {
     let csv = "Alumno;";
     criteriosSeleccionados.forEach(c => csv += `Crit_${c.id}_(Peso_${c.peso});`);
-    csv += "Nota_Examen_Ponderada
-";
+    csv += "Nota_Examen_Ponderada\n";
 
     const curso = document.getElementById("selectCurso").value;
     const listaAlumnos = ALUMNOS_BD[curso] || [];
@@ -633,8 +653,7 @@
       });
 
       const notaEx = pesoTot > 0 ? (suma / pesoTot).toFixed(2) : "";
-      csv += `${notaEx}
-`;
+      csv += `${notaEx}\n`;
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -646,8 +665,7 @@
 
   function sincronizarConMatriz() {
     guardarPruebaActual();
-    alert("🔄 Sincronizando con el Cuaderno de Seguimiento (seguimiento.html)...
-Las notas individuales por criterio han sido transferidas a la Matriz General.");
+    alert("🔄 Sincronizando con el Cuaderno de Seguimiento (seguimiento.html)...\nLas notas individuales por criterio han sido transferidas a la Matriz General.");
   }
 
   document.addEventListener("DOMContentLoaded", () => {
