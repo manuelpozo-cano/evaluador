@@ -111,24 +111,26 @@
     .btn-secondary { background: #64748b; color: white; }
     .btn-secondary:hover { background: #475569; }
 
-    /* ADAPTACIÓN MÓVIL EN VERTICAL */
+    /* MÓVIL EN VERTICAL (<768px) */
     @media screen and (max-width: 768px) {
       body { padding: 8px; }
       header { padding: 12px; margin-bottom: 12px; }
       .card { padding: 12px; margin-bottom: 12px; }
-      th.col-sticky-1, td.col-sticky-1 { display: none; }
+      th.col-sticky-1, td.col-sticky-1 { display: none !important; }
       th.col-sticky-2, td.col-sticky-2 {
         left: 0 !important;
-        min-width: 110px !important;
-        max-width: 125px !important;
-        font-size: 0.75rem !important;
-        padding: 6px 4px !important;
+        min-width: 105px !important;
+        max-width: 115px !important;
+        font-size: 0.74rem !important;
+        padding: 5px 3px !important;
         white-space: normal !important;
         word-break: break-word !important;
+        line-height: 1.2 !important;
       }
-      .input-nota-matriz { width: 48px; padding: 4px 2px; font-size: 0.82rem; }
+      .input-nota-matriz { width: 46px; padding: 3px 1px; font-size: 0.80rem; }
     }
 
+    /* MODAL EDICIÓN LISTA DE ALUMNOS */
     .modal-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
@@ -143,6 +145,12 @@
     .textarea-alumnos {
       width: 100%; height: 260px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
       font-family: monospace; font-size: 0.88rem; margin-bottom: 14px; outline: none; line-height: 1.4;
+    }
+
+    .diagnostic-banner {
+      background: #fef3c7; border: 1px solid #fde68a; color: #92400e; padding: 10px 14px;
+      border-radius: 8px; font-size: 0.84rem; font-weight: 600; margin-bottom: 15px;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
     }
   </style>
 </head>
@@ -160,9 +168,14 @@
     </div>
   </header>
 
+  <div id="diagnosticBanner" class="diagnostic-banner">
+    <span id="diagnosticText">🔍 Buscando notas y SdAs guardadas en este dispositivo...</span>
+    <button onclick="verDetalleMemoria()" style="background:#b45309; color:white; border:none; padding:4px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:0.78rem;">📋 Diagnóstico de Memoria</button>
+  </div>
+
   <div class="card">
     <div class="card-title">
-      <span>⚙️ Selección de Grupo y Trimestre</span>
+      <span>⚙️ Selección de Grupo y Modo de Calificación</span>
       <button class="btn btn-secondary" onclick="abrirModalAlumnos()" style="font-size:0.82rem; padding:6px 12px;">👥 Editar Lista de Alumnos</button>
     </div>
 
@@ -179,9 +192,9 @@
         </select>
       </div>
       <div class="form-group">
-        <label for="selectEval">Vista de Calificaciones / Trimestre:</label>
+        <label for="selectEval">Modo de Visualización:</label>
         <select id="selectEval" class="form-control" onchange="renderizarMatrizSeguimiento()">
-          <option value="GLOBAL" selected>🌐 Nota Global / Curso Completo</option>
+          <option value="GLOBAL" selected>🌐 Nota Global / Curso Completo (Anual)</option>
           <option value="1T">1ª Evaluación</option>
           <option value="2T">2ª Evaluación</option>
           <option value="3T">3ª Evaluación</option>
@@ -192,8 +205,8 @@
 
   <div class="card">
     <div class="card-title">
-      <span>📋 Matriz Trimestral de Calificaciones por Criterio</span>
-      <small style="font-weight:600; color:#64748b; font-size:0.82rem;">Acumula todas las SdAs y pruebas guardadas (ENIAC, Presupuestos, Doblador, etc.).</small>
+      <span>📋 Matriz de Calificaciones por Criterio</span>
+      <small style="font-weight:600; color:#64748b; font-size:0.82rem;">Recopila las notas de todas las SdAs y pruebas (ENIAC, Presupuestos, Doblador, etc.).</small>
     </div>
 
     <div class="table-container">
@@ -207,10 +220,10 @@
 
     <div class="actions-bar">
       <div>
-        <button class="btn btn-secondary" onclick="exportarCSVMatriz()">📥 Exportar Cuaderno (CSV)</button>
+        <button class="btn btn-secondary" onclick="exportarCSVMatriz()">📥 Descargar Cuaderno (CSV)</button>
         <button class="btn btn-primary" onclick="guardarCambiosManuales()">💾 Guardar Cambios</button>
       </div>
-      <button class="btn btn-success" onclick="cargarYRefrescarDatos()">🔄 Recargar / Refrescar Datos</button>
+      <button class="btn btn-success" onclick="cargarYRefrescarDatos()">🔄 Forzar Recarga de Notas</button>
     </div>
   </div>
 </div>
@@ -223,7 +236,7 @@
       <button onclick="cerrarModalAlumnos()" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✖</button>
     </div>
     <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">
-      Puedes modificar la lista del grupo si hay incorporaciones o bajas:
+      Puedes modificar la lista del grupo si hay altas o bajas:
     </p>
     <textarea id="txtListaAlumnos" class="textarea-alumnos"></textarea>
     <div style="display:flex; justify-content:flex-end; gap:10px;">
@@ -236,124 +249,350 @@
 <script>
   const CRITERIOS_POR_NIVEL = {
     "2ESO": [
-      { id: "TYD.2.1.1", label: "TYD.2.1.1 - Definir problemas sencillos o necesidades básicas buscando información." },
-      { id: "TYD.2.1.2", label: "TYD.2.1.2 - Comprender y examinar productos tecnológicos mediante método científico." },
-      { id: "TYD.2.1.3", label: "TYD.2.1.3 - Medidas preventivas para protección de dispositivos, datos y salud." },
-      { id: "TYD.2.2.1", label: "TYD.2.2.1 - Idear y diseñar soluciones eficaces, innovadoras y sostenibles." },
-      { id: "TYD.2.2.2", label: "TYD.2.2.2 - Seleccionar, planificar y organizar materiales, herramientas y tareas." },
-      { id: "TYD.2.3.1", label: "TYD.2.3.1 - Fabricar objetos/modelos manipulando materiales con seguridad." },
-      { id: "TYD.2.4.1", label: "TYD.2.4.1 - Representar y comunicar el proceso de creación elaborando documentación." },
-      { id: "TYD.2.5.1", label: "TYD.2.5.1 - Describir y diseñar soluciones mediante algoritmos y diagramas de flujo." },
-      { id: "TYD.2.5.2", label: "TYD.2.5.2 - Programar aplicaciones sencillas incorporando IA básica." },
-      { id: "TYD.2.5.3", label: "TYD.2.5.3 - Automatizar procesos y sistemas simples mediante robots y control." },
-      { id: "TYD.2.6.1", label: "TYD.2.6.1 - Uso eficiente y seguro de dispositivos cotidianos y ciberseguridad." },
-      { id: "TYD.2.6.2", label: "TYD.2.6.2 - Crear y difundir contenidos digitales respetando derechos de autor." },
-      { id: "TYD.2.6.3", label: "TYD.2.6.3 - Organizar información estructurada con almacenamiento seguro." },
-      { id: "TYD.2.7.1", label: "TYD.2.7.1 - Reconocer la influencia de la tecnología en la sociedad y sostenibilidad." },
-      { id: "TYD.2.7.2", label: "TYD.2.7.2 - Identificar aportaciones de tecnologías emergentes al bienestar." }
-    ],
+  {
+    "id": "TYD.2.1.1",
+    "label": "TYD.2.1.1 - Definir problemas sencillos o necesidades básicas planteadas, buscando y contrastando información crítica y segura."
+  },
+  {
+    "id": "TYD.2.1.2",
+    "label": "TYD.2.1.2 - Comprender y examinar productos tecnológicos de uso habitual mediante método científico y simulación."
+  },
+  {
+    "id": "TYD.2.1.3",
+    "label": "TYD.2.1.3 - Adoptar medidas preventivas para protección de dispositivos, datos y salud personal de manera ética."
+  },
+  {
+    "id": "TYD.2.2.1",
+    "label": "TYD.2.2.1 - Idear y diseñar soluciones eficaces, innovadoras y sostenibles con actitud emprendedora y creativa."
+  },
+  {
+    "id": "TYD.2.2.2",
+    "label": "TYD.2.2.2 - Seleccionar, planificar y organizar materiales, herramientas y tareas para la solución propuesta."
+  },
+  {
+    "id": "TYD.2.3.1",
+    "label": "TYD.2.3.1 - Fabricar objetos/modelos manipulando materiales con herramientas y normas de seguridad."
+  },
+  {
+    "id": "TYD.2.4.1",
+    "label": "TYD.2.4.1 - Representar y comunicar el proceso de creación elaborando documentación técnica y gráfica."
+  },
+  {
+    "id": "TYD.2.5.1",
+    "label": "TYD.2.5.1 - Describir, interpretar y diseñar soluciones informáticas mediante algoritmos y diagramas de flujo."
+  },
+  {
+    "id": "TYD.2.5.2",
+    "label": "TYD.2.5.2 - Programar aplicaciones sencillas para distintos dispositivos incorporando IA básica."
+  },
+  {
+    "id": "TYD.2.5.3",
+    "label": "TYD.2.5.3 - Automatizar procesos y sistemas simples mediante robots y control programable."
+  },
+  {
+    "id": "TYD.2.6.1",
+    "label": "TYD.2.6.1 - Uso eficiente y seguro de dispositivos cotidianos y medidas de ciberseguridad."
+  },
+  {
+    "id": "TYD.2.6.2",
+    "label": "TYD.2.6.2 - Crear y difundir contenidos digitales respetando derechos de autor y etiqueta digital."
+  },
+  {
+    "id": "TYD.2.6.3",
+    "label": "TYD.2.6.3 - Organizar la información de manera estructurada con almacenamiento seguro."
+  },
+  {
+    "id": "TYD.2.7.1",
+    "label": "TYD.2.7.1 - Reconocer la influencia de la tecnología en la sociedad y sostenibilidad ambiental en Andalucía."
+  },
+  {
+    "id": "TYD.2.7.2",
+    "label": "TYD.2.7.2 - Identificar aportaciones de tecnologías emergentes al bienestar e igualdad social."
+  }
+],
     "3ESO": [
-      { id: "TYD.3.1.1", label: "TYD.3.1.1 - Definir problemas o necesidades buscando e interpretando información." },
-      { id: "TYD.3.1.2", label: "TYD.3.1.2 - Examina productos tecnológicos con herramientas de simulación." },
-      { id: "TYD.3.1.3", label: "TYD.3.1.3 - Medidas preventivas para protección de dispositivos y salud." },
-      { id: "TYD.3.2.1", label: "TYD.3.2.1 - Idear y diseñar soluciones eficaces y sostenibles." },
-      { id: "TYD.3.2.2", label: "TYD.3.2.2 - Planificar materiales y tareas de forma colaborativa." },
-      { id: "TYD.3.3.1", label: "TYD.3.3.1 - Fabricar objetos aplicando fundamentos de estructuras y electricidad." },
-      { id: "TYD.3.4.1", label: "TYD.3.4.1 - Comunicar el proceso de creación elaborando documentación técnica." },
-      { id: "TYD.3.5.1", label: "TYD.3.5.1 - Diseñar algoritmos y diagramas de flujo." },
-      { id: "TYD.3.5.2", label: "TYD.3.5.2 - Programar aplicaciones aplicando herramientas de IA." },
-      { id: "TYD.3.5.3", label: "TYD.3.5.3 - Automatizar procesos y sistemas de control con internet." },
-      { id: "TYD.3.6.1", label: "TYD.3.6.1 - Uso eficiente y seguro de dispositivos analizando sus componentes." },
-      { id: "TYD.3.6.2", label: "TYD.3.6.2 - Crear y difundir contenidos en distintas plataformas." },
-      { id: "TYD.3.6.3", label: "TYD.3.6.3 - Organizar la información con almacenamiento seguro." },
-      { id: "TYD.3.7.1", label: "TYD.3.7.1 - Reconocer la influencia tecnológica en la sostenibilidad." },
-      { id: "TYD.3.7.2", label: "TYD.3.7.2 - Aportaciones de tecnologías emergentes en Andalucía." }
-    ],
+  {
+    "id": "TYD.3.1.1",
+    "label": "TYD.3.1.1 - Definir problemas o necesidades planteadas buscando e interpretando información segura."
+  },
+  {
+    "id": "TYD.3.1.2",
+    "label": "TYD.3.1.2 - Comprender y examinar productos y sistemas tecnológicos con herramientas de simulación."
+  },
+  {
+    "id": "TYD.3.1.3",
+    "label": "TYD.3.1.3 - Adoptar medidas preventivas para protección de dispositivos, datos y salud personal."
+  },
+  {
+    "id": "TYD.3.2.1",
+    "label": "TYD.3.2.1 - Idear y diseñar soluciones eficaces, innovadoras y sostenibles a problemas definidos."
+  },
+  {
+    "id": "TYD.3.2.2",
+    "label": "TYD.3.2.2 - Seleccionar, planificar y organizar materiales, herramientas y tareas de forma colaborativa."
+  },
+  {
+    "id": "TYD.3.3.1",
+    "label": "TYD.3.3.1 - Fabricar objetos/modelos aplicando fundamentos de estructuras, mecanismos y electricidad."
+  },
+  {
+    "id": "TYD.3.4.1",
+    "label": "TYD.3.4.1 - Representar y comunicar el proceso de creación elaborando documentación técnica y gráfica."
+  },
+  {
+    "id": "TYD.3.5.1",
+    "label": "TYD.3.5.1 - Describir, interpretar y diseñar algoritmos y diagramas de flujo para resolución de problemas."
+  },
+  {
+    "id": "TYD.3.5.2",
+    "label": "TYD.3.5.2 - Programar aplicaciones para distintos dispositivos aplicando herramientas de IA."
+  },
+  {
+    "id": "TYD.3.5.3",
+    "label": "TYD.3.5.3 - Automatizar procesos y sistemas de control programables con conexión a internet."
+  },
+  {
+    "id": "TYD.3.6.1",
+    "label": "TYD.3.6.1 - Hacer un uso eficiente y seguro de los dispositivos digitales analizando sus componentes."
+  },
+  {
+    "id": "TYD.3.6.2",
+    "label": "TYD.3.6.2 - Crear, elaborar y difundir contenidos en distintas plataformas respetando derechos de autor."
+  },
+  {
+    "id": "TYD.3.6.3",
+    "label": "TYD.3.6.3 - Organizar la información de manera estructurada aplicando técnicas de almacenamiento seguro."
+  },
+  {
+    "id": "TYD.3.7.1",
+    "label": "TYD.3.7.1 - Reconocer la influencia de la tecnología en la sociedad y sostenibilidad ambiental."
+  },
+  {
+    "id": "TYD.3.7.2",
+    "label": "TYD.3.7.2 - Identificar aportaciones de tecnologías emergentes al bienestar e impacto ambiental en Andalucía."
+  }
+],
     "4ESO": [
-      { id: "DIG.4.1.1", label: "DIG.4.1.1 - Conectar dispositivos y gestionar redes locales." },
-      { id: "DIG.4.1.2", label: "DIG.4.1.2 - Instalar y mantener sistemas operativos." },
-      { id: "DIG.4.1.3", label: "DIG.4.1.3 - Resolver problemas técnicos sencillos con consumo sostenible." },
-      { id: "DIG.4.2.1", label: "DIG.4.2.1 - Gestionar el aprendizaje digital configurando el PLE." },
-      { id: "DIG.4.2.2", label: "DIG.4.2.2 - Buscar y archivar información con sentido crítico." },
-      { id: "DIG.4.2.3", label: "DIG.4.2.3 - Crear y programar contenidos digitales respetando licencias." },
-      { id: "DIG.4.2.4", label: "DIG.4.2.4 - Interactuar en espacios virtuales y plataformas colaborativas." },
-      { id: "DIG.4.3.1", label: "DIG.4.3.1 - Proteger datos personales y huella digital." },
-      { id: "DIG.4.3.2", label: "DIG.4.3.2 - Configurar contraseñas, sistemas operativos y antivirus." },
-      { id: "DIG.4.3.3", label: "DIG.4.3.3 - Reaccionar ante amenazas en la red con prácticas saludables." },
-      { id: "DIG.4.4.1", label: "DIG.4.4.1 - Uso ético de datos aplicando la netiqueta." },
-      { id: "DIG.4.4.2", label: "DIG.4.4.2 - Reconocer aportaciones digitales en e-administración considerando brecha digital." },
-      { id: "DIG.4.4.3", label: "DIG.4.4.3 - Analizar críticamente mensajes considerando objetividad y sesgos." },
-      { id: "DIG.4.4.4", label: "DIG.4.4.4 - Valorar el uso responsable de tecnologías digitales." }
-    ]
+  {
+    "id": "DIG.4.1.1",
+    "label": "DIG.4.1.1 - Conectar dispositivos y gestionar redes locales alámbricas e inalámbricas proactivamente."
+  },
+  {
+    "id": "DIG.4.1.2",
+    "label": "DIG.4.1.2 - Instalar y mantener sistemas operativos configurando sus características de forma sostenible."
+  },
+  {
+    "id": "DIG.4.1.3",
+    "label": "DIG.4.1.3 - Identificar y resolver problemas técnicos sencillos fomentando el consumo sostenible."
+  },
+  {
+    "id": "DIG.4.2.1",
+    "label": "DIG.4.2.1 - Gestionar el aprendizaje digital configurando el Entorno Personal de Aprendizaje (PLE)."
+  },
+  {
+    "id": "DIG.4.2.2",
+    "label": "DIG.4.2.2 - Buscar, seleccionar y archivar información con sentido crítico y seguridad en la red."
+  },
+  {
+    "id": "DIG.4.2.3",
+    "label": "DIG.4.2.3 - Crear, programar e integrar contenidos digitales respetando licencias y derechos de autor."
+  },
+  {
+    "id": "DIG.4.2.4",
+    "label": "DIG.4.2.4 - Interactuar en espacios virtuales y plataformas colaborativas con actitud respetuosa."
+  },
+  {
+    "id": "DIG.4.3.1",
+    "label": "DIG.4.3.1 - Proteger los datos personales y la huella digital configurando la privacidad."
+  },
+  {
+    "id": "DIG.4.3.2",
+    "label": "DIG.4.3.2 - Configurar contraseñas, sistemas operativos y antivirus periódicamente."
+  },
+  {
+    "id": "DIG.4.3.3",
+    "label": "DIG.4.3.3 - Reaccionar ante amenazas en la red desarrollando prácticas saludables y seguras."
+  },
+  {
+    "id": "DIG.4.4.1",
+    "label": "DIG.4.4.1 - Hacer un uso ético de datos y herramientas digitales aplicando la netiqueta."
+  },
+  {
+    "id": "DIG.4.4.2",
+    "label": "DIG.4.4.2 - Reconocer aportaciones digitales en e-administración y e-commerce considerando brecha digital."
+  },
+  {
+    "id": "DIG.4.4.3",
+    "label": "DIG.4.4.3 - Analizar críticamente mensajes recibidos considerando objetividad, sesgos y caducidad."
+  },
+  {
+    "id": "DIG.4.4.4",
+    "label": "DIG.4.4.4 - Valorar el uso y desarrollo ecosocialmente responsable de tecnologías digitales."
+  }
+]
   };
 
   const ALUMNOS_OFICIALES = {
     "2ESO_A": [
-      "Bada Blanco, Ainara", "Bravo Rodríguez, Lucía", "Contreras Santiago, Manuel",
-      "Contreras Santiago, Paula", "Correa Rodríguez, Ainara", "Costa Redondo, Saray",
-      "Cruz Feria, Esteban", "Cuaresma Rodríguez, Indhira", "Cuaresma Rodríguez, Nayma",
-      "De la Luz Patricio, Elena", "Garcia Caparrós, Indira", "Garrido Fernández, Yamileth",
-      "Gómez Brito, Adriana", "Gómez López, Daniella", "Gutiérrez Valencia, Thomas",
-      "López Gómez, Hugo", "López Salguero, Héctor Jesús", "Mora Chico, Hugo",
-      "Mykhailyshyn, Iryna", "Presa Bueno, Luca", "Rengel Padilla, Alejandra",
-      "Reyes Pérez, Francisco José", "Rodríguez Domínguez, Antonio", "Silva López, Ainhoa",
-      "Torrescusa Borrero, Miguel"
-    ],
+  "Bada Blanco, Ainara",
+  "Bravo Rodríguez, Lucía",
+  "Contreras Santiago, Manuel",
+  "Contreras Santiago, Paula",
+  "Correa Rodríguez, Ainara",
+  "Costa Redondo, Saray",
+  "Cruz Feria, Esteban",
+  "Cuaresma Rodríguez, Indhira",
+  "Cuaresma Rodríguez, Nayma",
+  "De la Luz Patricio, Elena",
+  "Garcia Caparrós, Indira",
+  "Garrido Fernández, Yamileth",
+  "Gómez Brito, Adriana",
+  "Gómez López, Daniella",
+  "Gutiérrez Valencia, Thomas",
+  "López Gómez, Hugo",
+  "López Salguero, Héctor Jesús",
+  "Mora Chico, Hugo",
+  "Mykhailyshyn, Iryna",
+  "Presa Bueno, Luca",
+  "Rengel Padilla, Alejandra",
+  "Reyes Pérez, Francisco José",
+  "Rodríguez Domínguez, Antonio",
+  "Silva López, Ainhoa",
+  "Torrescusa Borrero, Miguel"
+],
     "2ESO_B": [
-      "Bautista Lepe, Izan", "Bueno Merino, Indira", "Diallo, Zoumana",
-      "Díaz Pinto, Giulia", "El Hajoui Moustekfy, Ryan", "El Hajoui Moustekfy, Yasmina",
-      "Funes Aranda, Jean Alessandro", "Gil Pire, Camila Sophia", "Gutiérrez Álvarez, Adriano",
-      "Hernández Tarriño, Estrella", "Herrán Góngora, Laura Sofía", "Hierro Masa, Ximena",
-      "Jiménez Vázquez, Indira", "Lemos Del Toro, Alejandro", "Masero Rodríguez, Ana de los Remedios",
-      "Moya Mera, Aitor", "Muñoz López, Yerai", "Núñez Álvarez, Jose",
-      "Pérez Márquez, Juan Marcelo", "Pozo Orta, Julia", "Rodríguez Enríquez, Daniela",
-      "Rodríguez Ospina, Juan David", "Sánchez Alonso, Libertad", "Sánchez Pérez, Erick",
-      "Sola Infantes, Lucía", "Tristán Wert, Aarón"
-    ],
+  "Bautista Lepe, Izan",
+  "Bueno Merino, Indira",
+  "Diallo, Zoumana",
+  "Díaz Pinto, Giulia",
+  "El Hajoui Moustekfy, Ryan",
+  "El Hajoui Moustekfy, Yasmina",
+  "Funes Aranda, Jean Alessandro",
+  "Gil Pire, Camila Sophia",
+  "Gutiérrez Álvarez, Adriano",
+  "Hernández Tarriño, Estrella",
+  "Herrán Góngora, Laura Sofía",
+  "Hierro Masa, Ximena",
+  "Jiménez Vázquez, Indira",
+  "Lemos Del Toro, Alejandro",
+  "Masero Rodríguez, Ana de los Remedios",
+  "Moya Mera, Aitor",
+  "Muñoz López, Yerai",
+  "Núñez Álvarez, Jose",
+  "Pérez Márquez, Juan Marcelo",
+  "Pozo Orta, Julia",
+  "Rodríguez Enríquez, Daniela",
+  "Rodríguez Ospina, Juan David",
+  "Sánchez Alonso, Libertad",
+  "Sánchez Pérez, Erick",
+  "Sola Infantes, Lucía",
+  "Tristán Wert, Aarón"
+],
     "3ESO_A": [
-      "Becerro Larios, Aitana", "Benítez Márquez, Azahara", "Brito Rasero, Valeria",
-      "Cordón Pérez, Bryam", "Fernández Rebollo, Alejandro", "Flores Rueda, Lucía",
-      "Gálvez Sfatolea, Rocío", "Gómez Damota, Aitor", "Gómez Soto, Francisco Javier",
-      "González Rodríguez, Adriana", "Heredia Medel, Rocío", "Hernández Barrera, Alejandro José",
-      "Ibánez Montagut, Ainhoa", "Martín Griñolo, Paula", "Mateo Ramos, Rubén",
-      "Mora Reyes, Manuel", "Naranjo Romero, David", "Nawaz Kousar, Muhammad Afnan",
-      "Palomares Magro, Jesús", "Palomares Puga, Alejandro", "Pérez Hermoso, Jesús",
-      "Prieto Évora, Judith", "Rodríguez Rodríguez, Alicia", "Silvera Iftimie, José Miguel",
-      "Toledano Millares, Sergio", "Torres Benítez, Diego", "Viatela Arteaga, Juan Manuel"
-    ],
+  "Becerro Larios, Aitana",
+  "Benítez Márquez, Azahara",
+  "Brito Rasero, Valeria",
+  "Cordón Pérez, Bryam",
+  "Fernández Rebollo, Alejandro",
+  "Flores Rueda, Lucía",
+  "Gálvez Sfatolea, Rocío",
+  "Gómez Damota, Aitor",
+  "Gómez Soto, Francisco Javier",
+  "González Rodríguez, Adriana",
+  "Heredia Medel, Rocío",
+  "Hernández Barrera, Alejandro José",
+  "Ibánez Montagut, Ainhoa",
+  "Martín Griñolo, Paula",
+  "Mateo Ramos, Rubén",
+  "Mora Reyes, Manuel",
+  "Naranjo Romero, David",
+  "Nawaz Kousar, Muhammad Afnan",
+  "Palomares Magro, Jesús",
+  "Palomares Puga, Alejandro",
+  "Pérez Hermoso, Jesús",
+  "Prieto Évora, Judith",
+  "Rodríguez Rodríguez, Alicia",
+  "Silvera Iftimie, José Miguel",
+  "Toledano Millares, Sergio",
+  "Torres Benítez, Diego",
+  "Viatela Arteaga, Juan Manuel"
+],
     "3ESO_B": [
-      "Beas Castilla, Sara", "Canelo Suárez, Manuel Darío", "Contreras Cuaresma, Daniela",
-      "Díaz Fariña, Iker", "García Varela, Marco", "Gómez Borrero, Alejandro",
-      "Gómez Del Pino, Enrique", "Gómez Fernández, Adrián", "Gutiérrez Colete, Miguel",
-      "Ichou Er Raji, Chaima", "Jiménez Rodriguez, Sheila", "López González, María",
-      "Luque Lorenzo, Adrián", "Márquez Rivero, Oriol", "Martin Cerrejón, Antonio",
-      "Mora Garrido, Rita", "Moreno Lepe, Andrés", "Muñoz Díaz, Coraima",
-      "Nieto González, Daniel", "Orta Gómez, Samuel", "Pérez Paredes, Natalia",
-      "Rodríguez De Lucas, Alejandro", "Romero Barbero, José Antonio", "Suero Robles, Daniel",
-      "Suero Robles, Iván", "Vázquez Boza, María"
-    ],
+  "Beas Castilla, Sara",
+  "Canelo Suárez, Manuel Darío",
+  "Contreras Cuaresma, Daniela",
+  "Díaz Fariña, Iker",
+  "García Varela, Marco",
+  "Gómez Borrero, Alejandro",
+  "Gómez Del Pino, Enrique",
+  "Gómez Fernández, Adrián",
+  "Gutiérrez Colete, Miguel",
+  "Ichou Er Raji, Chaima",
+  "Jiménez Rodriguez, Sheila",
+  "López González, María",
+  "Luque Lorenzo, Adrián",
+  "Márquez Rivero, Oriol",
+  "Martin Cerrejón, Antonio",
+  "Mora Garrido, Rita",
+  "Moreno Lepe, Andrés",
+  "Muñoz Díaz, Coraima",
+  "Nieto González, Daniel",
+  "Orta Gómez, Samuel",
+  "Pérez Paredes, Natalia",
+  "Rodríguez De Lucas, Alejandro",
+  "Romero Barbero, José Antonio",
+  "Suero Robles, Daniel",
+  "Suero Robles, Iván",
+  "Vázquez Boza, María"
+],
     "4ESO_A": [
-      "Arazo Pérez, Nahyra", "Bacedoni Camero, Minerva", "Cáceres Cruz, Andrea",
-      "Castellano Díaz, Paula", "De la Rosa Paredes, Claudia", "González Rodríguez, Miguel Ángel",
-      "López Borrero, José Francisco", "Luardo Pérez, David", "Marín García, Yaiza",
-      "Márquez Domínguez, Natalia", "Martin Gómez, Alicia", "Oliva Pernil, Eva",
-      "Ortiz Azaustre, Claudia", "Palomares Magro, Juan Manuel", "Paredes Díaz, Ainhoa",
-      "Paredes Gil, Sergio", "Pavón Barrera, Andrea", "Pérez Calvo, Angelo",
-      "Torrado Ternero, Estela"
-    ],
+  "Arazo Pérez, Nahyra",
+  "Bacedoni Camero, Minerva",
+  "Cáceres Cruz, Andrea",
+  "Castellano Díaz, Paula",
+  "De la Rosa Paredes, Claudia",
+  "González Rodríguez, Miguel Ángel",
+  "López Borrero, José Francisco",
+  "Luardo Pérez, David",
+  "Marín García, Yaiza",
+  "Márquez Domínguez, Natalia",
+  "Martin Gómez, Alicia",
+  "Oliva Pernil, Eva",
+  "Ortiz Azaustre, Claudia",
+  "Palomares Magro, Juan Manuel",
+  "Paredes Díaz, Ainhoa",
+  "Paredes Gil, Sergio",
+  "Pavón Barrera, Andrea",
+  "Pérez Calvo, Angelo",
+  "Torrado Ternero, Estela"
+],
     "4ESO_B": [
-      "Araujo Carrasco, José Manuel", "Borrero De Paula, José Antonio", "Boulal, Jilali",
-      "Escudero Limón, Daniela", "Kykish Toporovska, Diana", "Lobato Ramos, Hugo",
-      "Martin Venegas, Ester", "Naranjo Romero, Aitana", "Pérez Rodríguez, Pablo",
-      "Rivero Hernández, Diego Alejandro", "Rivero Hernández, Enrique Alejandro", "Rodríguez Brejano, Alexys",
-      "Salazar Fernández, Yamilet", "Sánchez Lozada, Sergio Enrique", "Sánchez Pérez, Induara",
-      "Sánchez Ternero, Alejandro", "Soto García, Ángela", "Terrón Quintero, José Antonio",
-      "Torres Hernández, Javier", "Wert Hermoso, Laura"
-    ]
+  "Araujo Carrasco, José Manuel",
+  "Borrero De Paula, José Antonio",
+  "Boulal, Jilali",
+  "Escudero Limón, Daniela",
+  "Kykish Toporovska, Diana",
+  "Lobato Ramos, Hugo",
+  "Martin Venegas, Ester",
+  "Naranjo Romero, Aitana",
+  "Pérez Rodríguez, Pablo",
+  "Rivero Hernández, Diego Alejandro",
+  "Rivero Hernández, Enrique Alejandro",
+  "Rodríguez Brejano, Alexys",
+  "Salazar Fernández, Yamilet",
+  "Sánchez Lozada, Sergio Enrique",
+  "Sánchez Pérez, Induara",
+  "Sánchez Ternero, Alejandro",
+  "Soto García, Ángela",
+  "Terrón Quintero, José Antonio",
+  "Torres Hernández, Javier",
+  "Wert Hermoso, Laura"
+]
   };
 
   let alumnosBD = {};
   let matrizAcumuladaBD = {}; // curso -> eval -> alumno -> crit -> [array de notas]
+  let totalKeysEncontradas = 0;
 
   function cargarAlumnosBD() {
     const guardado = localStorage.getItem("evaluador_directo_alumnos_v2");
@@ -404,74 +643,44 @@
     matrizAcumuladaBD[cursoNorm][eKey][alumnoName][critId].push(valNum);
   }
 
-  function procesarObjetoData(parsedObj, keyName) {
-    if (!parsedObj || typeof parsedObj !== "object") return;
-    const courseFromKey = normalizarCurso(keyName);
+  function procesarObjetoRecursivo(obj, cursoContext, evalContext, keyName) {
+    if (!obj || typeof obj !== "object") return;
 
-    Object.keys(parsedObj).forEach(k1 => {
-      const val1 = parsedObj[k1];
-      const cursoNorm = courseFromKey || normalizarCurso(k1);
+    Object.keys(obj).forEach(k => {
+      const val = obj[k];
+      const detectedCourse = normalizarCurso(k) || cursoContext;
 
-      if (cursoNorm) {
-        if (Array.isArray(val1)) {
-          val1.forEach(prueba => {
-            if (prueba && prueba.notas) {
-              Object.keys(prueba.notas).forEach(alum => {
-                Object.keys(prueba.notas[alum]).forEach(crit => {
-                  registrarNota(cursoNorm, "1T", alum, crit, prueba.notas[alum][crit]);
-                });
-              });
-            }
-          });
-        } else if (typeof val1 === "object" && val1) {
-          Object.keys(val1).forEach(k2 => {
-            const val2 = val1[k2];
-            const evalNorm = normalizarEval(k2);
-
-            if (Array.isArray(val2)) {
-              val2.forEach(prueba => {
-                if (prueba && prueba.notas) {
-                  Object.keys(prueba.notas).forEach(alum => {
-                    Object.keys(prueba.notas[alum]).forEach(crit => {
-                      registrarNota(cursoNorm, evalNorm, alum, crit, prueba.notas[alum][crit]);
-                    });
-                  });
-                }
-              });
-            } else if (typeof val2 === "object" && val2) {
-              const isStudent = k2.includes(",") || k2.includes(" ");
-              if (isStudent) {
-                Object.keys(val2).forEach(crit => {
-                  const scoreVal = val2[crit];
-                  if (typeof scoreVal === "object" && scoreVal && scoreVal.nota !== undefined) {
-                    registrarNota(cursoNorm, "1T", k2, crit, scoreVal.nota);
-                  } else {
-                    registrarNota(cursoNorm, "1T", k2, crit, scoreVal);
-                  }
-                });
-              } else {
-                Object.keys(val2).forEach(alum => {
-                  const notasObj = val2[alum];
-                  if (typeof notasObj === "object" && notasObj) {
-                    Object.keys(notasObj).forEach(crit => {
-                      const scoreVal = notasObj[crit];
-                      if (typeof scoreVal === "object" && scoreVal && scoreVal.nota !== undefined) {
-                        registrarNota(cursoNorm, evalNorm, alum, crit, scoreVal.nota);
-                      } else {
-                        registrarNota(cursoNorm, evalNorm, alum, crit, scoreVal);
-                      }
-                    });
-                  }
+      if (Array.isArray(val)) {
+        // Podría ser un array de pruebas (Evaluador Directo)
+        val.forEach(p => {
+          if (p && p.notas) {
+            Object.keys(p.notas).forEach(alum => {
+              if (typeof p.notas[alum] === "object") {
+                Object.keys(p.notas[alum]).forEach(crit => {
+                  registrarNota(detectedCourse, evalContext || "1T", alum, crit, p.notas[alum][crit]);
                 });
               }
+            });
+          }
+        });
+      } else if (typeof val === "object" && val !== null) {
+        const detectedEval = normalizarEval(k);
+        const isStudentName = k.includes(",") || k.includes(" ");
+
+        if (isStudentName && detectedCourse) {
+          // Es un alumno directamente: k = Alumno, val = { CRITERIO: NOTA }
+          Object.keys(val).forEach(crit => {
+            const score = val[crit];
+            if (typeof score === "object" && score && score.nota !== undefined) {
+              registrarNota(detectedCourse, evalContext || "1T", k, crit, score.nota);
+            } else {
+              registrarNota(detectedCourse, evalContext || "1T", k, crit, score);
             }
           });
-        }
-      } else if (k1.includes(",") || k1.includes(" ")) {
-        if (courseFromKey && typeof val1 === "object" && val1) {
-          Object.keys(val1).forEach(crit => {
-            registrarNota(courseFromKey, "1T", k1, crit, val1[crit]);
-          });
+        } else {
+          // Continuar explorando niveles más profundos
+          const newEvalContext = (k.toUpperCase().includes("EVAL") || k.toUpperCase().includes("1T") || k.toUpperCase().includes("2T") || k.toUpperCase().includes("3T")) ? detectedEval : evalContext;
+          procesarObjetoRecursivo(val, detectedCourse, newEvalContext, keyName);
         }
       }
     });
@@ -479,22 +688,43 @@
 
   function cargarYRefrescarDatos() {
     matrizAcumuladaBD = {};
+    totalKeysEncontradas = 0;
 
     for (let i = 0; i < localStorage.length; i++) {
       const storageKey = localStorage.key(i);
       if (!storageKey || storageKey.includes("alumnos")) continue;
+
       try {
         const raw = localStorage.getItem(storageKey);
         if (!raw) continue;
         const parsed = JSON.parse(raw);
-        procesarObjetoData(parsed, storageKey);
+        totalKeysEncontradas++;
+        procesarObjetoRecursivo(parsed, normalizarCurso(storageKey), null, storageKey);
       } catch(e) {}
+    }
+
+    const diagEl = document.getElementById("diagnosticText");
+    if (diagEl) {
+      diagEl.textContent = `✅ Memoria escaneada: ${totalKeysEncontradas} registros de actividades/SdAs analizados en este navegador.`;
     }
 
     const badge = document.getElementById("syncStatusBadge");
     if (badge) badge.textContent = "⚡ Actualizado (" + new Date().toLocaleTimeString() + ")";
 
     renderizarMatrizSeguimiento();
+  }
+
+  function verDetalleMemoria() {
+    let msg = `📋 RESUMEN DE DATOS EN ESTE DISPOSITIVO (${localStorage.length} claves en LocalStorage):
+
+`;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      const str = localStorage.getItem(k);
+      msg += `• [${k}]: ${str ? str.substring(0, 70) + '...' : 'Vacio'}
+`;
+    }
+    alert(msg);
   }
 
   function obtenerNivelCurso(curso) {
@@ -578,7 +808,7 @@
           <td>
             <input type="number" step="0.1" min="0" max="10" class="input-nota-matriz" 
               value="${mediaCritVal}" 
-              onchange="actualizarNotaMatrizManual('${alumno.replace(/'/g, "\\'")}', '${crit.id}', this.value)">
+              onchange="actualizarNotaMatrizManual('${alumno.replace(/'/g, "\'")}', '${crit.id}', this.value)">
           </td>
         `;
       });
