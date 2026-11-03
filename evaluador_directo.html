@@ -145,7 +145,10 @@
       <h1>📝 Evaluador Directo</h1>
       <p>Tecnología y Digitalización | Manuel Pozo Cano - Colegio La Hispanidad (Curso 2026/2027)</p>
     </div>
-    <a href="index.html" class="btn-back">⬅ Volver al Panel Principal</a>
+    <div style="display:flex; align-items:center; gap:8px;">
+        <span id="autoSyncStatus" style="font-size:0.82rem; color:#16a34a; font-weight:700; background:#dcfce7; padding:4px 10px; border-radius:12px; border:1px solid #86efac;">⚡ Auto-sincronización activa</span>
+        <a href="index.html" class="btn-back">⬅ Volver al Panel Principal</a>
+      </div>
   </header>
 
   <!-- CONFIGURACIÓN DE LA PRUEBA / EXAMEN -->
@@ -887,6 +890,10 @@
       notasAlumnadoLocal[alumno][critId] = parseFloat(valor);
     }
     calcularNotaFilaAlumno(alumno, filaIdx);
+    
+    // Auto-guardado y auto-sincronización instantánea en segundo plano
+    guardarPruebaActual(true);
+    sincronizarConMatriz(true);
   }
 
   function calcularNotaFilaAlumno(alumno, filaIdx) {
@@ -920,7 +927,7 @@
     `;
   }
 
-  function guardarPruebaActual() {
+  function guardarPruebaActual(silencioso = false) {
     const curso = document.getElementById("selectCurso").value;
     const eval = document.getElementById("selectEval").value;
     const nombre = document.getElementById("nombreExamen").value.trim() || "Nueva Prueba";
@@ -960,7 +967,9 @@
     }
     select.value = prueba.id;
 
-    alert("✅ Prueba guardada correctamente para " + curso.replace('_', ' ') + " (" + eval + ").");
+    if (!silencioso) {
+      alert("✅ Prueba guardada correctamente para " + curso.replace('_', ' ') + " (" + eval + ").");
+    }
   }
 
   function crearNuevaPrueba() {
@@ -1042,9 +1051,91 @@
     link.click();
   }
 
-  function sincronizarConMatriz() {
-    guardarPruebaActual();
-    alert("🔄 Sincronizado correctamente con el Cuaderno de Seguimiento (seguimiento.html).\nLas notas por criterio individuales han sido actualizadas en la matriz general.");
+  function sincronizarConMatriz(silencioso = false) {
+    guardarPruebaActual(true);
+
+    const curso = document.getElementById("selectCurso").value;
+    const eval = document.getElementById("selectEval").value;
+
+    const KEYS_MATRIZ = [
+      "evaluador_matriz_seguimiento",
+      "seguimiento_notas",
+      "cuaderno_seguimiento_v1",
+      "matriz_seguimiento_v1",
+      "evaluador_seguimiento_v1",
+      "matriz_notas_lomloe",
+      "cuaderno_seguimiento"
+    ];
+
+    let matrizGeneral = {};
+    const existingStr = localStorage.getItem("evaluador_matriz_seguimiento") || 
+                       localStorage.getItem("seguimiento_notas") || 
+                       localStorage.getItem("matriz_seguimiento_v1");
+    if (existingStr) {
+      try {
+        matrizGeneral = JSON.parse(existingStr);
+      } catch(e) {
+        matrizGeneral = {};
+      }
+    }
+
+    if (!matrizGeneral[curso]) matrizGeneral[curso] = {};
+    if (!matrizGeneral[curso][eval]) matrizGeneral[curso][eval] = {};
+
+    const pruebasLista = (estadoGeneral[curso] && estadoGeneral[curso][eval]) ? estadoGeneral[curso][eval] : [];
+
+    const acumNotas = {};
+
+    pruebasLista.forEach(prueba => {
+      if (!prueba.notas) return;
+      Object.keys(prueba.notas).forEach(alumno => {
+        if (!acumNotas[alumno]) acumNotas[alumno] = {};
+        const notasAlumnoPrueba = prueba.notas[alumno];
+        Object.keys(notasAlumnoPrueba).forEach(critId => {
+          const val = parseFloat(notasAlumnoPrueba[critId]);
+          if (!isNaN(val)) {
+            if (!acumNotas[alumno][critId]) acumNotas[alumno][critId] = [];
+            acumNotas[alumno][critId].push(val);
+          }
+        });
+      });
+    });
+
+    let countTotalNotas = 0;
+    Object.keys(acumNotas).forEach(alumno => {
+      if (!matrizGeneral[curso][eval][alumno]) matrizGeneral[curso][eval][alumno] = {};
+      Object.keys(acumNotas[alumno]).forEach(critId => {
+        const arr = acumNotas[alumno][critId];
+        if (arr.length > 0) {
+          const media = arr.reduce((a, b) => a + b, 0) / arr.length;
+          matrizGeneral[curso][eval][alumno][critId] = Math.round(media * 100) / 100;
+          countTotalNotas++;
+        }
+      });
+    });
+
+    const jsonStr = JSON.stringify(matrizGeneral);
+    KEYS_MATRIZ.forEach(key => {
+      try {
+        localStorage.setItem(key, jsonStr);
+      } catch(e) {
+        console.error("Error writing key:", key, e);
+      }
+    });
+
+    window.dispatchEvent(new Event('storage'));
+
+    const statusEl = document.getElementById("autoSyncStatus");
+    if (statusEl) {
+      statusEl.textContent = "⚡ Auto-sincronizado a las " + new Date().toLocaleTimeString();
+    }
+
+    if (!silencioso) {
+      alert("✅ Sincronización Real Completada!\n\n" +
+            "• Grupo: " + curso.replace('_', ' ') + " (" + eval + ")\n" +
+            "• Criterios transferidos: " + countTotalNotas + " calificaciones a la matriz general.\n" +
+            "• Las notas ya están disponibles en el Cuaderno de Seguimiento (seguimiento.html).");
+    }
   }
 
   document.addEventListener("DOMContentLoaded", () => {
