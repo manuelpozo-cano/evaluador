@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cuaderno de Seguimiento LOMLOE - Tecnología y Digitalización</title>
+  
+  <!-- Carga SDK Firebase (Compat para HTML Vanilla) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
   <style>
     :root {
       --primary: #0284c7;
@@ -111,7 +116,6 @@
     .btn-secondary { background: #64748b; color: white; }
     .btn-secondary:hover { background: #475569; }
 
-    /* MÓVIL EN VERTICAL (<768px) */
     @media screen and (max-width: 768px) {
       body { padding: 8px; }
       header { padding: 12px; margin-bottom: 12px; }
@@ -130,7 +134,6 @@
       .input-nota-matriz { width: 46px; padding: 3px 1px; font-size: 0.80rem; }
     }
 
-    /* MODAL EDICIÓN LISTA DE ALUMNOS */
     .modal-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
@@ -146,12 +149,6 @@
       width: 100%; height: 260px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
       font-family: monospace; font-size: 0.88rem; margin-bottom: 14px; outline: none; line-height: 1.4;
     }
-
-    .diagnostic-banner {
-      background: #fef3c7; border: 1px solid #fde68a; color: #92400e; padding: 10px 14px;
-      border-radius: 8px; font-size: 0.84rem; font-weight: 600; margin-bottom: 15px;
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
-    }
   </style>
 </head>
 <body>
@@ -163,15 +160,10 @@
       <p>Tecnología y Digitalización | Manuel Pozo Cano - Colegio La Hispanidad (Curso 2026/2027)</p>
     </div>
     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-      <span id="syncStatusBadge" style="font-size:0.82rem; color:#16a34a; font-weight:700; background:#dcfce7; padding:4px 10px; border-radius:12px; border:1px solid #86efac;">⚡ Sincronizado</span>
+      <span id="syncStatusBadge" style="font-size:0.82rem; color:#16a34a; font-weight:700; background:#dcfce7; padding:4px 10px; border-radius:12px; border:1px solid #86efac;">☁️ Nube Activa</span>
       <a href="index.html" class="btn-back">⬅ Volver al Panel Principal</a>
     </div>
   </header>
-
-  <div id="diagnosticBanner" class="diagnostic-banner">
-    <span id="diagnosticText">🔍 Buscando notas y SdAs guardadas en este dispositivo...</span>
-    <button onclick="verDetalleMemoria()" style="background:#b45309; color:white; border:none; padding:4px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:0.78rem;">📋 Diagnóstico de Memoria</button>
-  </div>
 
   <div class="card">
     <div class="card-title">
@@ -206,7 +198,7 @@
   <div class="card">
     <div class="card-title">
       <span>📋 Matriz de Calificaciones por Criterio</span>
-      <small style="font-weight:600; color:#64748b; font-size:0.82rem;">Recopila las notas de todas las SdAs y pruebas (ENIAC, Presupuestos, Doblador, etc.).</small>
+      <small style="font-weight:600; color:#64748b; font-size:0.82rem;">Sincronizado automáticamente en la nube (Firebase Firestore) en todos tus dispositivos.</small>
     </div>
 
     <div class="table-container">
@@ -223,7 +215,7 @@
         <button class="btn btn-secondary" onclick="exportarCSVMatriz()">📥 Descargar Cuaderno (CSV)</button>
         <button class="btn btn-primary" onclick="guardarCambiosManuales()">💾 Guardar Cambios</button>
       </div>
-      <button class="btn btn-success" onclick="cargarYRefrescarDatos()">🔄 Forzar Recarga de Notas</button>
+      <button class="btn btn-success" onclick="sincronizarConNubeFirestore()">🔄 Sincronizar Nube Ahora</button>
     </div>
   </div>
 </div>
@@ -247,6 +239,21 @@
 </div>
 
 <script>
+  // CONFIGURACIÓN OFICIAL FIREBASE
+  const firebaseConfig = {
+    apiKey: "AIzaSyAvb4fN7F3eRM_e35VP8MF--3FzHNvbN-U",
+    authDomain: "cyberbreakout-hispanidad.firebaseapp.com",
+    databaseURL: "https://cyberbreakout-hispanidad-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "cyberbreakout-hispanidad",
+    storageBucket: "cyberbreakout-hispanidad.firebasestorage.app",
+    messagingSenderId: "997498647623",
+    appId: "1:997498647623:web:abeb516da0cde8a66ced62",
+    measurementId: "G-E8CB81PK4E"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
   const CRITERIOS_POR_NIVEL = {
     "2ESO": [
   {
@@ -591,21 +598,11 @@
   };
 
   let alumnosBD = {};
-  let matrizAcumuladaBD = {}; // curso -> eval -> alumno -> crit -> [array de notas]
-  let totalKeysEncontradas = 0;
+  let matrizAcumuladaBD = {};
 
-  function cargarAlumnosBD() {
-    const guardado = localStorage.getItem("evaluador_directo_alumnos_v2");
-    if (guardado) {
-      try { alumnosBD = JSON.parse(guardado); } catch(e) { alumnosBD = JSON.parse(JSON.stringify(ALUMNOS_OFICIALES)); }
-    } else {
-      alumnosBD = JSON.parse(JSON.stringify(ALUMNOS_OFICIALES));
-      localStorage.setItem("evaluador_directo_alumnos_v2", JSON.stringify(alumnosBD));
-    }
-  }
-
-  function guardarAlumnosBD() {
-    localStorage.setItem("evaluador_directo_alumnos_v2", JSON.stringify(alumnosBD));
+  function normalizarTexto(txt) {
+    if (!txt) return "";
+    return txt.toString().trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   }
 
   function normalizarCurso(keyStr) {
@@ -623,10 +620,25 @@
   function normalizarEval(keyStr) {
     if (!keyStr || typeof keyStr !== "string") return "1T";
     const k = keyStr.toUpperCase();
-    if (k.includes("1")) return "1T";
     if (k.includes("2")) return "2T";
     if (k.includes("3")) return "3T";
     return "1T";
+  }
+
+  function cargarAlumnosBD() {
+    const guardado = localStorage.getItem("evaluador_directo_alumnos_v2");
+    if (guardado) {
+      try { alumnosBD = JSON.parse(guardado); } catch(e) { alumnosBD = JSON.parse(JSON.stringify(ALUMNOS_OFICIALES)); }
+    } else {
+      alumnosBD = JSON.parse(JSON.stringify(ALUMNOS_OFICIALES));
+      localStorage.setItem("evaluador_directo_alumnos_v2", JSON.stringify(alumnosBD));
+    }
+  }
+
+  function guardarAlumnosBD() {
+    localStorage.setItem("evaluador_directo_alumnos_v2", JSON.stringify(alumnosBD));
+    // Guardar también en la nube
+    db.collection("configuracion").doc("alumnos").set(alumnosBD, { merge: true }).catch(err => console.error(err));
   }
 
   function registrarNota(cursoNorm, evalNorm, alumnoName, critId, valor) {
@@ -635,52 +647,53 @@
     if (isNaN(valNum)) return;
 
     const eKey = evalNorm || "1T";
+    const alumNorm = normalizarTexto(alumnoName);
+
     if (!matrizAcumuladaBD[cursoNorm]) matrizAcumuladaBD[cursoNorm] = {};
     if (!matrizAcumuladaBD[cursoNorm][eKey]) matrizAcumuladaBD[cursoNorm][eKey] = {};
-    if (!matrizAcumuladaBD[cursoNorm][eKey][alumnoName]) matrizAcumuladaBD[cursoNorm][eKey][alumnoName] = {};
-    if (!matrizAcumuladaBD[cursoNorm][eKey][alumnoName][critId]) matrizAcumuladaBD[cursoNorm][eKey][alumnoName][critId] = [];
+    if (!matrizAcumuladaBD[cursoNorm][eKey][alumNorm]) matrizAcumuladaBD[cursoNorm][eKey][alumNorm] = {};
+    if (!matrizAcumuladaBD[cursoNorm][eKey][alumNorm][critId]) matrizAcumuladaBD[cursoNorm][eKey][alumNorm][critId] = [];
 
-    matrizAcumuladaBD[cursoNorm][eKey][alumnoName][critId].push(valNum);
+    matrizAcumuladaBD[cursoNorm][eKey][alumNorm][critId].push(valNum);
   }
 
-  function procesarObjetoRecursivo(obj, cursoContext, evalContext, keyName) {
+  function explorarYExtraer(obj, cursoCtx, evalCtx) {
     if (!obj || typeof obj !== "object") return;
+
+    if (Array.isArray(obj)) {
+      obj.forEach(item => explorarYExtraer(item, cursoCtx, evalCtx));
+      return;
+    }
+
+    if (obj.notas && typeof obj.notas === "object") {
+      Object.keys(obj.notas).forEach(alum => {
+        const alumNotas = obj.notas[alum];
+        if (alumNotas && typeof alumNotas === "object") {
+          Object.keys(alumNotas).forEach(crit => {
+            registrarNota(cursoCtx, evalCtx || "1T", alum, crit, alumNotas[crit]);
+          });
+        }
+      });
+      return;
+    }
 
     Object.keys(obj).forEach(k => {
       const val = obj[k];
-      const detectedCourse = normalizarCurso(k) || cursoContext;
+      const cursoDet = normalizarCurso(k) || cursoCtx;
+      const evalDet = (k.toUpperCase().includes("1T") || k.toUpperCase().includes("2T") || k.toUpperCase().includes("3T") || k.toUpperCase().includes("EVAL")) ? normalizarEval(k) : evalCtx;
 
-      if (Array.isArray(val)) {
-        // Podría ser un array de pruebas (Evaluador Directo)
-        val.forEach(p => {
-          if (p && p.notas) {
-            Object.keys(p.notas).forEach(alum => {
-              if (typeof p.notas[alum] === "object") {
-                Object.keys(p.notas[alum]).forEach(crit => {
-                  registrarNota(detectedCourse, evalContext || "1T", alum, crit, p.notas[alum][crit]);
-                });
-              }
-            });
-          }
-        });
-      } else if (typeof val === "object" && val !== null) {
-        const detectedEval = normalizarEval(k);
-        const isStudentName = k.includes(",") || k.includes(" ");
-
-        if (isStudentName && detectedCourse) {
-          // Es un alumno directamente: k = Alumno, val = { CRITERIO: NOTA }
+      if (typeof val === "object" && val !== null) {
+        if ((k.includes(",") || k.includes(" ")) && cursoDet) {
           Object.keys(val).forEach(crit => {
             const score = val[crit];
             if (typeof score === "object" && score && score.nota !== undefined) {
-              registrarNota(detectedCourse, evalContext || "1T", k, crit, score.nota);
+              registrarNota(cursoDet, evalDet || "1T", k, crit, score.nota);
             } else {
-              registrarNota(detectedCourse, evalContext || "1T", k, crit, score);
+              registrarNota(cursoDet, evalDet || "1T", k, crit, score);
             }
           });
         } else {
-          // Continuar explorando niveles más profundos
-          const newEvalContext = (k.toUpperCase().includes("EVAL") || k.toUpperCase().includes("1T") || k.toUpperCase().includes("2T") || k.toUpperCase().includes("3T")) ? detectedEval : evalContext;
-          procesarObjetoRecursivo(val, detectedCourse, newEvalContext, keyName);
+          explorarYExtraer(val, cursoDet, evalDet);
         }
       }
     });
@@ -688,7 +701,6 @@
 
   function cargarYRefrescarDatos() {
     matrizAcumuladaBD = {};
-    totalKeysEncontradas = 0;
 
     for (let i = 0; i < localStorage.length; i++) {
       const storageKey = localStorage.key(i);
@@ -697,34 +709,56 @@
       try {
         const raw = localStorage.getItem(storageKey);
         if (!raw) continue;
-        const parsed = JSON.parse(raw);
-        totalKeysEncontradas++;
-        procesarObjetoRecursivo(parsed, normalizarCurso(storageKey), null, storageKey);
+        const data = JSON.parse(raw);
+        explorarYExtraer(data, normalizarCurso(storageKey), null);
       } catch(e) {}
     }
-
-    const diagEl = document.getElementById("diagnosticText");
-    if (diagEl) {
-      diagEl.textContent = `✅ Memoria escaneada: ${totalKeysEncontradas} registros de actividades/SdAs analizados en este navegador.`;
-    }
-
-    const badge = document.getElementById("syncStatusBadge");
-    if (badge) badge.textContent = "⚡ Actualizado (" + new Date().toLocaleTimeString() + ")";
 
     renderizarMatrizSeguimiento();
   }
 
-  function verDetalleMemoria() {
-    let msg = `📋 RESUMEN DE DATOS EN ESTE DISPOSITIVO (${localStorage.length} claves en LocalStorage):
+  // ESCUCHA Y SINCRONIZACIÓN EN TIEMPO REAL CON FIREBASE
+  function activarEscuchaNube() {
+    db.collection("evaluaciones").onSnapshot(snapshot => {
+      snapshot.forEach(doc => {
+        try {
+          const data = doc.data();
+          localStorage.setItem(doc.id, JSON.stringify(data));
+        } catch(e) {}
+      });
+      
+      const badge = document.getElementById("syncStatusBadge");
+      if (badge) badge.textContent = "☁️ Nube Sincronizada (" + new Date().toLocaleTimeString() + ")";
 
-`;
+      cargarYRefrescarDatos();
+    }, err => {
+      console.warn("Modo Offline o error de conexión Nube:", err);
+      const badge = document.getElementById("syncStatusBadge");
+      if (badge) badge.textContent = "⚡ Modo Local";
+    });
+  }
+
+  function sincronizarConNubeFirestore() {
+    const badge = document.getElementById("syncStatusBadge");
+    if (badge) badge.textContent = "⏳ Subiendo a Nube...";
+
+    // Guardar todo el localStorage a Firestore
+    const promises = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      const str = localStorage.getItem(k);
-      msg += `• [${k}]: ${str ? str.substring(0, 70) + '...' : 'Vacio'}
-`;
+      if (!k) continue;
+      try {
+        const val = JSON.parse(localStorage.getItem(k));
+        promises.push(db.collection("evaluaciones").doc(k).set(val, { merge: true }));
+      } catch(e) {}
     }
-    alert(msg);
+
+    Promise.all(promises).then(() => {
+      if (badge) badge.textContent = "☁️ Sincronizado en Nube (" + new Date().toLocaleTimeString() + ")";
+      alert("✅ ¡Todas tus calificaciones han sido subidas a la nube! Ya las tienes disponibles en cualquier dispositivo.");
+    }).catch(err => {
+      alert("⚠️ Hubo un detalle al subir a la nube. Verifica tu conexión.");
+    });
   }
 
   function obtenerNivelCurso(curso) {
@@ -770,6 +804,7 @@
 
     listaAlumnos.forEach((alumno, idx) => {
       const tr = document.createElement("tr");
+      const alumNorm = normalizarTexto(alumno);
 
       let sumaTotalMediaCriterios = 0;
       let countCriteriosEvaluados = 0;
@@ -784,13 +819,13 @@
 
         if (evalSeleccionada === "GLOBAL") {
           Object.keys(datosCursoObj).forEach(eKey => {
-            if (datosCursoObj[eKey][alumno] && datosCursoObj[eKey][alumno][crit.id]) {
-              arrayNotasCrit = arrayNotasCrit.concat(datosCursoObj[eKey][alumno][crit.id]);
+            if (datosCursoObj[eKey][alumNorm] && datosCursoObj[eKey][alumNorm][crit.id]) {
+              arrayNotasCrit = arrayNotasCrit.concat(datosCursoObj[eKey][alumNorm][crit.id]);
             }
           });
         } else {
-          if (datosCursoObj[evalSeleccionada] && datosCursoObj[evalSeleccionada][alumno] && datosCursoObj[evalSeleccionada][alumno][crit.id]) {
-            arrayNotasCrit = datosCursoObj[evalSeleccionada][alumno][crit.id];
+          if (datosCursoObj[evalSeleccionada] && datosCursoObj[evalSeleccionada][alumNorm] && datosCursoObj[evalSeleccionada][alumNorm][crit.id]) {
+            arrayNotasCrit = datosCursoObj[evalSeleccionada][alumNorm][crit.id];
           }
         }
 
@@ -837,15 +872,16 @@
     const curso = document.getElementById("selectCurso").value;
     const evalSel = document.getElementById("selectEval").value;
     const eKey = evalSel === "GLOBAL" ? "1T" : evalSel;
+    const alumNorm = normalizarTexto(alumno);
 
     if (!matrizAcumuladaBD[curso]) matrizAcumuladaBD[curso] = {};
     if (!matrizAcumuladaBD[curso][eKey]) matrizAcumuladaBD[curso][eKey] = {};
-    if (!matrizAcumuladaBD[curso][eKey][alumno]) matrizAcumuladaBD[curso][eKey][alumno] = {};
+    if (!matrizAcumuladaBD[curso][eKey][alumNorm]) matrizAcumuladaBD[curso][eKey][alumNorm] = {};
 
     if (valor === "" || isNaN(valor)) {
-      delete matrizAcumuladaBD[curso][eKey][alumno][critId];
+      delete matrizAcumuladaBD[curso][eKey][alumNorm][critId];
     } else {
-      matrizAcumuladaBD[curso][eKey][alumno][critId] = [Math.round(parseFloat(valor) * 100) / 100];
+      matrizAcumuladaBD[curso][eKey][alumNorm][critId] = [Math.round(parseFloat(valor) * 100) / 100];
     }
 
     guardarCambiosManuales(true);
@@ -860,13 +896,13 @@
     if (matrizAcumuladaBD[curso]) {
       Object.keys(matrizAcumuladaBD[curso]).forEach(eKey => {
         matToSave[curso][eKey] = {};
-        Object.keys(matrizAcumuladaBD[curso][eKey]).forEach(alum => {
-          matToSave[curso][eKey][alum] = {};
-          Object.keys(matrizAcumuladaBD[curso][eKey][alum]).forEach(crit => {
-            const arr = matrizAcumuladaBD[curso][eKey][alum][crit];
+        Object.keys(matrizAcumuladaBD[curso][eKey]).forEach(alumNorm => {
+          matToSave[curso][eKey][alumNorm] = {};
+          Object.keys(matrizAcumuladaBD[curso][eKey][alumNorm]).forEach(crit => {
+            const arr = matrizAcumuladaBD[curso][eKey][alumNorm][crit];
             if (arr && arr.length > 0) {
               const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
-              matToSave[curso][eKey][alum][crit] = Math.round(avg * 100) / 100;
+              matToSave[curso][eKey][alumNorm][crit] = Math.round(avg * 100) / 100;
             }
           });
         });
@@ -884,15 +920,17 @@
     const jsonStr = JSON.stringify(matToSave);
     KEYS_MATRIZ.forEach(key => {
       try { localStorage.setItem(key, jsonStr); } catch(e) {}
+      // Guardar también en Firebase
+      db.collection("evaluaciones").doc(key).set(matToSave, { merge: true }).catch(err => console.error(err));
     });
 
     window.dispatchEvent(new Event('storage'));
 
     const badge = document.getElementById("syncStatusBadge");
-    if (badge) badge.textContent = "⚡ Cambios guardados (" + new Date().toLocaleTimeString() + ")";
+    if (badge) badge.textContent = "☁️ Guardado en Nube (" + new Date().toLocaleTimeString() + ")";
 
     if (!silencioso) {
-      alert("💾 Cambios guardados en la matriz general del cuaderno.");
+      alert("💾 Cambios guardados en el cuaderno y sincronizados en la nube.");
     }
   }
 
@@ -909,6 +947,7 @@
 
     listaAlumnos.forEach(alumno => {
       csv += '"' + alumno + '";';
+      const alumNorm = normalizarTexto(alumno);
       let suma = 0, count = 0;
 
       criteriosList.forEach(c => {
@@ -916,13 +955,13 @@
         if (evalSel === "GLOBAL") {
           if (matrizAcumuladaBD[curso]) {
             Object.keys(matrizAcumuladaBD[curso]).forEach(eKey => {
-              if (matrizAcumuladaBD[curso][eKey][alumno] && matrizAcumuladaBD[curso][eKey][alumno][c.id]) {
-                arr = arr.concat(matrizAcumuladaBD[curso][eKey][alumno][c.id]);
+              if (matrizAcumuladaBD[curso][eKey][alumNorm] && matrizAcumuladaBD[curso][eKey][alumNorm][c.id]) {
+                arr = arr.concat(matrizAcumuladaBD[curso][eKey][alumNorm][c.id]);
               }
             });
           }
-        } else if (matrizAcumuladaBD[curso] && matrizAcumuladaBD[curso][evalSel] && matrizAcumuladaBD[curso][evalSel][alumno]) {
-          arr = matrizAcumuladaBD[curso][evalSel][alumno][c.id] || [];
+        } else if (matrizAcumuladaBD[curso] && matrizAcumuladaBD[curso][evalSel] && matrizAcumuladaBD[curso][evalSel][alumNorm]) {
+          arr = matrizAcumuladaBD[curso][evalSel][alumNorm][c.id] || [];
         }
 
         let scoreStr = "";
@@ -978,6 +1017,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     cargarAlumnosBD();
     cargarYRefrescarDatos();
+    activarEscuchaNube();
   });
 </script>
 
