@@ -19,7 +19,7 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
-    .container { max-width: 1300px; margin: 0 auto; }
+    .container { max-width: 1400px; margin: 0 auto; }
 
     header {
       background: var(--card-bg);
@@ -47,11 +47,11 @@
       border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.04);
     }
     .card-title {
-      font-size: 1.15rem; font-weight: 800; color: #1e293b; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+      font-size: 1.15rem; font-weight: 800; color: #1e293b; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;
       border-left: 4px solid var(--primary); padding-left: 10px;
     }
 
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 16px; }
     .form-group { display: flex; flex-direction: column; gap: 6px; }
     .form-group label { font-size: 0.85rem; font-weight: 700; color: #475569; }
     .form-control {
@@ -61,30 +61,45 @@
     .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
 
     .pruebas-bar {
-      display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: #f1f5f9;
-      padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px;
+      display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; background: #f1f5f9;
+      padding: 14px 18px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px;
     }
 
-    /* SELECCIÓN DE CRITERIOS CON Nº DE PREGUNTAS / PESO */
     .criterios-selector {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 10px; margin-top: 10px;
-      max-height: 280px; overflow-y: auto; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 10px; margin-top: 10px;
+      max-height: 340px; overflow-y: auto; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc;
     }
     .criterio-card {
       background: white; border: 1px solid #e2e8f0; padding: 10px 12px; border-radius: 8px;
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
     }
-    .criterio-card label { font-size: 0.84rem; font-weight: 700; color: #334155; cursor: pointer; flex: 1; }
+    .criterio-card label { font-size: 0.82rem; font-weight: 700; color: #334155; cursor: pointer; flex: 1; line-height: 1.3; }
     .criterio-weight-wrapper { display: flex; align-items: center; gap: 6px; }
     .criterio-weight-wrapper span { font-size: 0.75rem; font-weight: 700; color: #64748b; white-space: nowrap; }
-    .input-peso { width: 60px; padding: 5px 6px; font-size: 0.85rem; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border); }
+    .input-peso { width: 55px; padding: 5px 6px; font-size: 0.85rem; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border); }
 
     .notice-box {
       background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; margin-top: 15px;
       font-size: 0.86rem; color: #1e40af; display: flex; align-items: flex-start; gap: 10px; line-height: 1.4;
     }
 
-    /* TABLA EVALUACIÓN */
+    /* MODAL DE GESTIÓN DE ALUMNOS */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+      display: none; justify-content: center; align-items: center; z-index: 1000;
+    }
+    .modal-card {
+      background: white; border-radius: 12px; padding: 24px; width: 90%; max-width: 650px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid var(--border);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-header h3 { font-size: 1.2rem; color: #1e293b; font-weight: 800; }
+    .textarea-alumnos {
+      width: 100%; height: 260px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+      font-family: monospace; font-size: 0.9rem; margin-bottom: 16px; outline: none; line-height: 1.4;
+    }
+
     .table-container { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); margin-top: 15px; }
     table { width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left; }
     th { background: #f1f5f9; color: #1e293b; font-weight: 800; padding: 10px 12px; border-bottom: 2px solid var(--border); white-space: nowrap; }
@@ -127,24 +142,28 @@
 <div class="container">
   <header>
     <div class="header-titles">
-      <h1>📝 Evaluador Directo (Ponderación LOMLOE)</h1>
-      <p>Tecnología y Digitalización | Manuel Pozo Cano - Colegio La Hispanidad</p>
+      <h1>📝 Evaluador Directo</h1>
+      <p>Tecnología y Digitalización | Manuel Pozo Cano - Colegio La Hispanidad (Curso 2026/2027)</p>
     </div>
     <a href="index.html" class="btn-back">⬅ Volver al Panel Principal</a>
   </header>
 
   <!-- CONFIGURACIÓN DE LA PRUEBA / EXAMEN -->
   <div class="card">
-    <div class="card-title">⚙️ 1. Configuración de la Prueba y Selección de Curso</div>
+    <div class="card-title">
+      <span>⚙️ 1. Configuración de la Prueba y Selección de Curso</span>
+    </div>
     
     <div class="form-grid">
       <div class="form-group">
-        <label for="selectCurso">Curso y Grupo:</label>
+        <label for="selectCurso">Curso y Asignatura:</label>
         <select id="selectCurso" class="form-control" onchange="cambiarCurso()">
-          <option value="2ESO_A" selected>2º ESO A</option>
-          <option value="2ESO_B">2º ESO B</option>
-          <option value="3ESO_A">3º ESO A</option>
-          <option value="3ESO_B">3º ESO B</option>
+          <option value="2ESO_A" selected>2º ESO A - Tecnología y Digitalización</option>
+          <option value="2ESO_B">2º ESO B - Tecnología y Digitalización</option>
+          <option value="3ESO_A">3º ESO A - Tecnología y Digitalización</option>
+          <option value="3ESO_B">3º ESO B - Tecnología y Digitalización</option>
+          <option value="4ESO_A">4º ESO A - Digitalización</option>
+          <option value="4ESO_B">4º ESO B - Digitalización</option>
         </select>
       </div>
       <div class="form-group">
@@ -162,14 +181,13 @@
       <div class="form-group" style="flex:1; min-width:220px;">
         <label for="selectPrueba">Prueba o Actividad Guardada:</label>
         <select id="selectPrueba" class="form-control" onchange="cargarPruebaSeleccionada()">
-          <!-- Se carga dinámicamente -->
         </select>
       </div>
       <div class="form-group" style="flex:1; min-width:220px;">
         <label for="nombreExamen">Nombre de la Prueba:</label>
-        <input type="text" id="nombreExamen" class="form-control" value="Examen 1. La Tecnologia" placeholder="Ej. Examen 1. La Tecnologia">
+        <input type="text" id="nombreExamen" class="form-control" value="Examen 1" placeholder="Ej. Examen 1">
       </div>
-      <div style="display:flex; gap:8px; align-self:flex-end;">
+      <div style="display:flex; gap:8px;">
         <button class="btn btn-primary" onclick="guardarPruebaActual()">💾 Guardar Prueba</button>
         <button class="btn btn-secondary" onclick="crearNuevaPrueba()">➕ Nueva Prueba</button>
         <button class="btn btn-danger" onclick="eliminarPruebaActual()">🗑️ Eliminar</button>
@@ -177,25 +195,28 @@
     </div>
 
     <label style="font-size:0.88rem; font-weight:800; color:#1e293b; margin-bottom:8px; display:block;">
-      🎯 Selecciona Criterios e indica el Peso / Nº de Preguntas en esta Prueba:
+      🎯 Criterios Oficiales de Evaluación (Selecciona e indica el Nº de preguntas por Criterio):
     </label>
     <div class="criterios-selector" id="contenedorCriterios"></div>
 
     <div class="notice-box">
       <span>💡</span>
       <div>
-        <strong>¿Cómo funciona la ponderación LOMLOE?</strong><br>
-        La <strong>Nota Global del Examen</strong> se calcula mediante media ponderada: <code>Sumatorio(Nota Criterio × Nº Preguntas) / Total Preguntas</code>.
-        Al guardar o sincronizar con la Matriz General (<code>seguimiento.html</code>), <strong>cada criterio mantiene su nota pura e independiente</strong> para el cuaderno trimestral.
+        <strong>Cálculo de Nota del Examen:</strong><br>
+        La <strong>Nota Global del Examen</strong> se calcula por media ponderada del examen: <code>Sumatorio(Nota Criterio × Nº Preguntas) / Total Preguntas</code>.<br>
+        En el <strong>Cuaderno de Seguimiento (<code>seguimiento.html</code>)</strong>, cada criterio guarda su nota individual para la matriz general.
       </div>
     </div>
   </div>
 
   <!-- REGISTRO DE NOTAS DEL ALUMNADO -->
   <div class="card">
-    <div class="card-title">📊 2. Registro Directo de Calificaciones de la Clase</div>
+    <div class="card-title">
+      <span>📊 2. Registro Directo de Calificaciones de la Clase</span>
+      <button class="btn btn-secondary" onclick="abrirModalAlumnos()" style="font-size:0.82rem; padding:6px 12px;">👥 Editar / Pegar Lista de Alumnos</button>
+    </div>
     <p style="font-size:0.85rem; color:#64748b; margin-bottom:12px;">
-      Introduce la nota de cada criterio (0 a 10). La nota del examen se recalculará automáticamente según el peso asignado a cada criterio.
+      Introduce la nota de cada criterio (0 a 10). La nota del examen se calcula automáticamente.
     </p>
 
     <div class="table-container">
@@ -224,104 +245,449 @@
   </footer>
 </div>
 
+<!-- MODAL PARA PEGAR LISTADO DE ALUMNOS -->
+<div class="modal-overlay" id="modalAlumnos">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="modalTituloGrupo">👥 Pegar Lista de Alumnos</h3>
+      <button onclick="cerrarModalAlumnos()" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✖</button>
+    </div>
+    <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">
+      Lista oficial de alumnos cargada desde Séneca. Puedes modificarla si hay altas o bajas:
+    </p>
+    <textarea id="txtListaAlumnos" class="textarea-alumnos"></textarea>
+    <div style="display:flex; justify-content:flex-end; gap:10px;">
+      <button class="btn btn-secondary" onclick="cerrarModalAlumnos()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarListaAlumnosCustom()">💾 Guardar Lista de Clase</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  // BANCO DE CRITERIOS OFICIALES
-  const LISTA_CRITERIOS = [
-    { id: "1.1", label: "Crit 1.1 - Análisis de necesidades tecnológicas" },
-    { id: "1.2", label: "Crit 1.2 - Diseño de soluciones creativas" },
-    { id: "2.1", label: "Crit 2.1 - Selección de materiales (Plásticos/Construcción)" },
-    { id: "2.2", label: "Crit 2.2 - Trabajo seguro en el taller" },
-    { id: "2.3", label: "Crit 2.3 - Fabricación y ensamblaje de prototipos" },
-    { id: "3.1", label: "Crit 3.1 - Algoritmia y programación gráfica" },
-    { id: "3.2", label: "Crit 3.2 - Sistemas de control automatizado" },
-    { id: "4.1", label: "Crit 4.1 - Sostenibilidad y Huella de Carbono (CO2)" }
-  ];
+  // BANCO OFICIAL DE CRITERIOS POR ASIGNATURA Y NIVEL (Colegio La Hispanidad)
+  const CRITERIOS_POR_NIVEL = {
+    "2ESO": [
+  {
+    "id": "TYD.2.1.1",
+    "label": "TYD.2.1.1 - Definir problemas sencillos o necesidades básicas planteadas, buscando y contrastando información crítica y segura."
+  },
+  {
+    "id": "TYD.2.1.2",
+    "label": "TYD.2.1.2 - Comprender y examinar productos tecnológicos de uso habitual mediante método científico y simulación."
+  },
+  {
+    "id": "TYD.2.1.3",
+    "label": "TYD.2.1.3 - Adoptar medidas preventivas para protección de dispositivos, datos y salud personal de manera ética."
+  },
+  {
+    "id": "TYD.2.2.1",
+    "label": "TYD.2.2.1 - Idear y diseñar soluciones eficaces, innovadoras y sostenibles con actitud emprendedora y creativa."
+  },
+  {
+    "id": "TYD.2.2.2",
+    "label": "TYD.2.2.2 - Seleccionar, planificar y organizar materiales, herramientas y tareas para la solución propuesta."
+  },
+  {
+    "id": "TYD.2.3.1",
+    "label": "TYD.2.3.1 - Fabricar objetos/modelos manipulando materiales con herramientas y normas de seguridad."
+  },
+  {
+    "id": "TYD.2.4.1",
+    "label": "TYD.2.4.1 - Representar y comunicar el proceso de creación elaborando documentación técnica y gráfica."
+  },
+  {
+    "id": "TYD.2.5.1",
+    "label": "TYD.2.5.1 - Describir, interpretar y diseñar soluciones informáticas mediante algoritmos y diagramas de flujo."
+  },
+  {
+    "id": "TYD.2.5.2",
+    "label": "TYD.2.5.2 - Programar aplicaciones sencillas para distintos dispositivos incorporando IA básica."
+  },
+  {
+    "id": "TYD.2.5.3",
+    "label": "TYD.2.5.3 - Automatizar procesos y sistemas simples mediante robots y control programable."
+  },
+  {
+    "id": "TYD.2.6.1",
+    "label": "TYD.2.6.1 - Uso eficiente y seguro de dispositivos cotidianos y medidas de ciberseguridad."
+  },
+  {
+    "id": "TYD.2.6.2",
+    "label": "TYD.2.6.2 - Crear y difundir contenidos digitales respetando derechos de autor y etiqueta digital."
+  },
+  {
+    "id": "TYD.2.6.3",
+    "label": "TYD.2.6.3 - Organizar la información de manera estructurada con almacenamiento seguro."
+  },
+  {
+    "id": "TYD.2.7.1",
+    "label": "TYD.2.7.1 - Reconocer la influencia de la tecnología en la sociedad y sostenibilidad ambiental en Andalucía."
+  },
+  {
+    "id": "TYD.2.7.2",
+    "label": "TYD.2.7.2 - Identificar aportaciones de tecnologías emergentes al bienestar e igualdad social."
+  }
+],
+    "3ESO": [
+  {
+    "id": "TYD.3.1.1",
+    "label": "TYD.3.1.1 - Definir problemas o necesidades planteadas buscando e interpretando información segura."
+  },
+  {
+    "id": "TYD.3.1.2",
+    "label": "TYD.3.1.2 - Comprender y examinar productos y sistemas tecnológicos con herramientas de simulación."
+  },
+  {
+    "id": "TYD.3.1.3",
+    "label": "TYD.3.1.3 - Adoptar medidas preventivas para protección de dispositivos, datos y salud personal."
+  },
+  {
+    "id": "TYD.3.2.1",
+    "label": "TYD.3.2.1 - Idear y diseñar soluciones eficaces, innovadoras y sostenibles a problemas definidos."
+  },
+  {
+    "id": "TYD.3.2.2",
+    "label": "TYD.3.2.2 - Seleccionar, planificar y organizar materiales, herramientas y tareas de forma colaborativa."
+  },
+  {
+    "id": "TYD.3.3.1",
+    "label": "TYD.3.3.1 - Fabricar objetos/modelos aplicando fundamentos de estructuras, mecanismos y electricidad."
+  },
+  {
+    "id": "TYD.3.4.1",
+    "label": "TYD.3.4.1 - Representar y comunicar el proceso de creación elaborando documentación técnica y gráfica."
+  },
+  {
+    "id": "TYD.3.5.1",
+    "label": "TYD.3.5.1 - Describir, interpretar y diseñar algoritmos y diagramas de flujo para resolución de problemas."
+  },
+  {
+    "id": "TYD.3.5.2",
+    "label": "TYD.3.5.2 - Programar aplicaciones para distintos dispositivos aplicando herramientas de IA."
+  },
+  {
+    "id": "TYD.3.5.3",
+    "label": "TYD.3.5.3 - Automatizar procesos y sistemas de control programables con conexión a internet."
+  },
+  {
+    "id": "TYD.3.6.1",
+    "label": "TYD.3.6.1 - Hacer un uso eficiente y seguro de los dispositivos digitales analizando sus componentes."
+  },
+  {
+    "id": "TYD.3.6.2",
+    "label": "TYD.3.6.2 - Crear, elaborar y difundir contenidos en distintas plataformas respetando derechos de autor."
+  },
+  {
+    "id": "TYD.3.6.3",
+    "label": "TYD.3.6.3 - Organizar la información de manera estructurada aplicando técnicas de almacenamiento seguro."
+  },
+  {
+    "id": "TYD.3.7.1",
+    "label": "TYD.3.7.1 - Reconocer la influencia de la tecnología en la sociedad y sostenibilidad ambiental."
+  },
+  {
+    "id": "TYD.3.7.2",
+    "label": "TYD.3.7.2 - Identificar aportaciones de tecnologías emergentes al bienestar e impacto ambiental en Andalucía."
+  }
+],
+    "4ESO": [
+  {
+    "id": "DIG.4.1.1",
+    "label": "DIG.4.1.1 - Conectar dispositivos y gestionar redes locales alámbricas e inalámbricas proactivamente."
+  },
+  {
+    "id": "DIG.4.1.2",
+    "label": "DIG.4.1.2 - Instalar y mantener sistemas operativos configurando sus características de forma sostenible."
+  },
+  {
+    "id": "DIG.4.1.3",
+    "label": "DIG.4.1.3 - Identificar y resolver problemas técnicos sencillos fomentando el consumo sostenible."
+  },
+  {
+    "id": "DIG.4.2.1",
+    "label": "DIG.4.2.1 - Gestionar el aprendizaje digital configurando el Entorno Personal de Aprendizaje (PLE)."
+  },
+  {
+    "id": "DIG.4.2.2",
+    "label": "DIG.4.2.2 - Buscar, seleccionar y archivar información con sentido crítico y seguridad en la red."
+  },
+  {
+    "id": "DIG.4.2.3",
+    "label": "DIG.4.2.3 - Crear, programar e integrar contenidos digitales respetando licencias y derechos de autor."
+  },
+  {
+    "id": "DIG.4.2.4",
+    "label": "DIG.4.2.4 - Interactuar en espacios virtuales y plataformas colaborativas con actitud respetuosa."
+  },
+  {
+    "id": "DIG.4.3.1",
+    "label": "DIG.4.3.1 - Proteger los datos personales y la huella digital configurando la privacidad."
+  },
+  {
+    "id": "DIG.4.3.2",
+    "label": "DIG.4.3.2 - Configurar contraseñas, sistemas operativos y antivirus periódicamente."
+  },
+  {
+    "id": "DIG.4.3.3",
+    "label": "DIG.4.3.3 - Reaccionar ante amenazas en la red desarrollando prácticas saludables y seguras."
+  },
+  {
+    "id": "DIG.4.4.1",
+    "label": "DIG.4.4.1 - Hacer un uso ético de datos y herramientas digitales aplicando la netiqueta."
+  },
+  {
+    "id": "DIG.4.4.2",
+    "label": "DIG.4.4.2 - Reconocer aportaciones digitales en e-administración y e-commerce considerando brecha digital."
+  },
+  {
+    "id": "DIG.4.4.3",
+    "label": "DIG.4.4.3 - Analizar críticamente mensajes recibidos considerando objetividad, sesgos y caducidad."
+  },
+  {
+    "id": "DIG.4.4.4",
+    "label": "DIG.4.4.4 - Valorar el uso y desarrollo ecosocialmente responsable de tecnologías digitales."
+  }
+]
+  };
 
-  // LISTADOS COMPLETOS DE ALUMNADO POR CLASE
-  const ALUMNOS_BD = {
+  // LISTADO REAL Y COMPLETO DE ALUMNOS DEL CURSO 2026/2027
+  const ALUMNOS_OFICIALES = {
     "2ESO_A": [
-      "Alonso Martín, Beatriz", "Castro Gómez, Daniel", "García Torres, Hugo",
-      "Lara Ramos, Marta", "Navarro Serrano, Pablo", "Pérez López, Adrián",
-      "Rodríguez Ruiz, Sofia", "Sánchez Fernández, Carlos"
-    ],
+  "Bada Blanco, Ainara",
+  "Bravo Rodríguez, Lucía",
+  "Contreras Santiago, Manuel",
+  "Contreras Santiago, Paula",
+  "Correa Rodríguez, Ainara",
+  "Costa Redondo, Saray",
+  "Cruz Feria, Esteban",
+  "Cuaresma Rodríguez, Indhira",
+  "Cuaresma Rodríguez, Nayma",
+  "De la Luz Patricio, Elena",
+  "Garcia Caparrós, Indira",
+  "Garrido Fernández, Yamileth",
+  "Gómez Brito, Adriana",
+  "Gómez López, Daniella",
+  "Gutiérrez Valencia, Thomas",
+  "López Gómez, Hugo",
+  "López Salguero, Héctor Jesús",
+  "Mora Chico, Hugo",
+  "Mykhailyshyn, Iryna",
+  "Presa Bueno, Luca",
+  "Rengel Padilla, Alejandra",
+  "Reyes Pérez, Francisco José",
+  "Rodríguez Domínguez, Antonio",
+  "Silva López, Ainhoa",
+  "Torrescusa Borrero, Miguel"
+],
     "2ESO_B": [
-      "Álvarez Gil, Mario", "Benítez Cano, Lucía", "Delgado Vega, Javier",
-      "Gómez Prieto, Irene", "Martínez Romero, Gonzalo", "Vázquez Morales, Elena"
-    ],
+  "Bautista Lepe, Izan",
+  "Bueno Merino, Indira",
+  "Diallo, Zoumana",
+  "Díaz Pinto, Giulia",
+  "El Hajoui Moustekfy, Ryan",
+  "El Hajoui Moustekfy, Yasmina",
+  "Funes Aranda, Jean Alessandro",
+  "Gil Pire, Camila Sophia",
+  "Gutiérrez Álvarez, Adriano",
+  "Hernández Tarriño, Estrella",
+  "Herrán Góngora, Laura Sofía",
+  "Hierro Masa, Ximena",
+  "Jiménez Vázquez, Indira",
+  "Lemos Del Toro, Alejandro",
+  "Masero Rodríguez, Ana de los Remedios",
+  "Moya Mera, Aitor",
+  "Muñoz López, Yerai",
+  "Núñez Álvarez, Jose",
+  "Pérez Márquez, Juan Marcelo",
+  "Pozo Orta, Julia",
+  "Rodríguez Enríquez, Daniela",
+  "Rodríguez Ospina, Juan David",
+  "Sánchez Alonso, Libertad",
+  "Sánchez Pérez, Erick",
+  "Sola Infantes, Lucía",
+  "Tristán Wert, Aarón"
+],
     "3ESO_A": [
-      "Álvarez Gómez, Alejandro", "Blanco Pérez, Carmen", "Cano Ruiz, David",
-      "Díaz Fernández, Elena", "García López, Francisco", "Hernández Marín, Isabel",
-      "Jiménez Navarro, Jorge", "López Martínez, Lucía", "Moreno Sánchez, Manuel"
-    ],
+  "Becerro Larios, Aitana",
+  "Benítez Márquez, Azahara",
+  "Brito Rasero, Valeria",
+  "Cordón Pérez, Bryam",
+  "Fernández Rebollo, Alejandro",
+  "Flores Rueda, Lucía",
+  "Gálvez Sfatolea, Rocío",
+  "Gómez Damota, Aitor",
+  "Gómez Soto, Francisco Javier",
+  "González Rodríguez, Adriana",
+  "Heredia Medel, Rocío",
+  "Hernández Barrera, Alejandro José",
+  "Ibánez Montagut, Ainhoa",
+  "Martín Griñolo, Paula",
+  "Mateo Ramos, Rubén",
+  "Mora Reyes, Manuel",
+  "Naranjo Romero, David",
+  "Nawaz Kousar, Muhammad Afnan",
+  "Palomares Magro, Jesús",
+  "Palomares Puga, Alejandro",
+  "Pérez Hermoso, Jesús",
+  "Prieto Évora, Judith",
+  "Rodríguez Rodríguez, Alicia",
+  "Silvera Iftimie, José Miguel",
+  "Toledano Millares, Sergio",
+  "Torres Benítez, Diego",
+  "Viatela Arteaga, Juan Manuel"
+],
     "3ESO_B": [
-      "Aguilar Roldán, Cristina", "Caballero Ortiz, Marcos", "Domínguez Pastor, Raúl",
-      "Esteban Molina, Natalia", "Iglesias Serrano, Víctor"
-    ]
+  "Beas Castilla, Sara",
+  "Canelo Suárez, Manuel Darío",
+  "Contreras Cuaresma, Daniela",
+  "Díaz Fariña, Iker",
+  "García Varela, Marco",
+  "Gómez Borrero, Alejandro",
+  "Gómez Del Pino, Enrique",
+  "Gómez Fernández, Adrián",
+  "Gutiérrez Colete, Miguel",
+  "Ichou Er Raji, Chaima",
+  "Jiménez Rodriguez, Sheila",
+  "López González, María",
+  "Luque Lorenzo, Adrián",
+  "Márquez Rivero, Oriol",
+  "Martin Cerrejón, Antonio",
+  "Mora Garrido, Rita",
+  "Moreno Lepe, Andrés",
+  "Muñoz Díaz, Coraima",
+  "Nieto González, Daniel",
+  "Orta Gómez, Samuel",
+  "Pérez Paredes, Natalia",
+  "Rodríguez De Lucas, Alejandro",
+  "Romero Barbero, José Antonio",
+  "Suero Robles, Daniel",
+  "Suero Robles, Iván",
+  "Vázquez Boza, María"
+],
+    "4ESO_A": [
+  "Arazo Pérez, Nahyra",
+  "Bacedoni Camero, Minerva",
+  "Cáceres Cruz, Andrea",
+  "Castellano Díaz, Paula",
+  "De la Rosa Paredes, Claudia",
+  "González Rodríguez, Miguel Ángel",
+  "López Borrero, José Francisco",
+  "Luardo Pérez, David",
+  "Marín García, Yaiza",
+  "Márquez Domínguez, Natalia",
+  "Martin Gómez, Alicia",
+  "Oliva Pernil, Eva",
+  "Ortiz Azaustre, Claudia",
+  "Palomares Magro, Juan Manuel",
+  "Paredes Díaz, Ainhoa",
+  "Paredes Gil, Sergio",
+  "Pavón Barrera, Andrea",
+  "Pérez Calvo, Angelo",
+  "Torrado Ternero, Estela"
+],
+    "4ESO_B": [
+  "Araujo Carrasco, José Manuel",
+  "Borrero De Paula, José Antonio",
+  "Boulal, Jilali",
+  "Escudero Limón, Daniela",
+  "Kykish Toporovska, Diana",
+  "Lobato Ramos, Hugo",
+  "Martin Venegas, Ester",
+  "Naranjo Romero, Aitana",
+  "Pérez Rodríguez, Pablo",
+  "Rivero Hernández, Diego Alejandro",
+  "Rivero Hernández, Enrique Alejandro",
+  "Rodríguez Brejano, Alexys",
+  "Salazar Fernández, Yamilet",
+  "Sánchez Lozada, Sergio Enrique",
+  "Sánchez Pérez, Induara",
+  "Sánchez Ternero, Alejandro",
+  "Soto García, Ángela",
+  "Terrón Quintero, José Antonio",
+  "Torres Hernández, Javier",
+  "Wert Hermoso, Laura"
+]
   };
 
-  // DATOS POR DEFECTO CON PRUEBAS GUARDADAS TANTO EN 2º ESO A COMO EN 2º ESO B
-  const DEFAULT_ESTADO = {
-    "2ESO_A": {
-      "1T": [
-        {
-          id: "ex_1_tec_2esoa",
-          nombre: "Examen 1. La Tecnologia",
-          criteriosConfig: [
-            { id: "1.1", peso: 3 },
-            { id: "2.1", peso: 2 },
-            { id: "2.2", peso: 1 }
-          ],
-          notas: {
-            "Alonso Martín, Beatriz": { "1.1": 8.0, "2.1": 6.5, "2.2": 9.0 },
-            "Castro Gómez, Daniel": { "1.1": 5.0, "2.1": 4.0, "2.2": 7.0 },
-            "García Torres, Hugo": { "1.1": 9.0, "2.1": 8.5, "2.2": 10.0 }
-          }
-        }
-      ]
-    },
-    "2ESO_B": {
-      "1T": [
-        {
-          id: "ex_1_tec_2esob",
-          nombre: "Examen 1. La Tecnologia",
-          criteriosConfig: [
-            { id: "1.1", peso: 3 },
-            { id: "2.1", peso: 2 },
-            { id: "2.2", peso: 1 }
-          ],
-          notas: {
-            "Álvarez Gil, Mario": { "1.1": 7.5, "2.1": 7.0, "2.2": 8.5 },
-            "Benítez Cano, Lucía": { "1.1": 9.0, "2.1": 8.0, "2.2": 9.5 },
-            "Delgado Vega, Javier": { "1.1": 6.0, "2.1": 5.5, "2.2": 6.5 }
-          }
-        }
-      ]
+  let alumnosBD = {};
+
+  function cargarAlumnosBD() {
+    const guardado = localStorage.getItem("evaluador_directo_alumnos_v2");
+    if (guardado) {
+      try {
+        alumnosBD = JSON.parse(guardado);
+      } catch(e) {
+        alumnosBD = JSON.parse(JSON.stringify(ALUMNOS_OFICIALES));
+      }
+    } else {
+      alumnosBD = JSON.parse(JSON.stringify(ALUMNOS_OFICIALES));
+      guardarAlumnosBD();
     }
-  };
+  }
 
+  function guardarAlumnosBD() {
+    localStorage.setItem("evaluador_directo_alumnos_v2", JSON.stringify(alumnosBD));
+  }
+
+  function abrirModalAlumnos() {
+    const curso = document.getElementById("selectCurso").value;
+    document.getElementById("modalTituloGrupo").textContent = `👥 Modificar Lista de Alumnos (${curso.replace('_', ' ')})`;
+    const lista = alumnosBD[curso] || [];
+    document.getElementById("txtListaAlumnos").value = lista.join("\n");
+    document.getElementById("modalAlumnos").style.display = "flex";
+  }
+
+  function cerrarModalAlumnos() {
+    document.getElementById("modalAlumnos").style.display = "none";
+  }
+
+  function guardarListaAlumnosCustom() {
+    const curso = document.getElementById("selectCurso").value;
+    const txt = document.getElementById("txtListaAlumnos").value;
+    const lineas = txt.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+
+    alumnosBD[curso] = lineas;
+    guardarAlumnosBD();
+    cerrarModalAlumnos();
+    renderizarTablaAlumnos();
+    alert("✅ Lista de alumnos actualizada correctamente para " + curso.replace('_', ' ') + ".");
+  }
+
+  // ESTADO GENERAL DE PRUEBAS Y CALIFICACIONES
   let estadoGeneral = {};
   let pruebaActualId = null;
   let criteriosSeleccionados = [];
   let notasAlumnadoLocal = {};
 
+  function obtenerNivelCurso(curso) {
+    if (curso.startsWith("2ESO")) return "2ESO";
+    if (curso.startsWith("3ESO")) return "3ESO";
+    if (curso.startsWith("4ESO")) return "4ESO";
+    return "2ESO";
+  }
+
+  function obtenerCriteriosNivelActual() {
+    const curso = document.getElementById("selectCurso").value;
+    const nivel = obtenerNivelCurso(curso);
+    return CRITERIOS_POR_NIVEL[nivel] || CRITERIOS_POR_NIVEL["2ESO"];
+  }
+
   function cargarEstadoStorage() {
-    const guardado = localStorage.getItem("evaluador_directo_pruebas_v4");
+    const guardado = localStorage.getItem("evaluador_directo_pruebas_v8");
     if (guardado) {
       try {
         estadoGeneral = JSON.parse(guardado);
       } catch (e) {
-        console.error("Error al leer localStorage:", e);
-        estadoGeneral = JSON.parse(JSON.stringify(DEFAULT_ESTADO));
+        estadoGeneral = {};
       }
     } else {
-      estadoGeneral = JSON.parse(JSON.stringify(DEFAULT_ESTADO));
-      guardarEstadoStorage();
+      estadoGeneral = {};
     }
   }
 
   function guardarEstadoStorage() {
     try {
-      localStorage.setItem("evaluador_directo_pruebas_v4", JSON.stringify(estadoGeneral));
+      localStorage.setItem("evaluador_directo_pruebas_v8", JSON.stringify(estadoGeneral));
     } catch(e) {
       console.error("No se pudo guardar en localStorage", e);
     }
@@ -347,12 +713,14 @@
     select.innerHTML = "";
 
     if (listaPruebas.length === 0) {
+      const listaCritNivel = obtenerCriteriosNivelActual();
+      const crit1 = listaCritNivel[0] ? listaCritNivel[0].id : "1.1";
+
       const nuevaP = {
         id: "prueba_" + Date.now(),
-        nombre: curso.startsWith("2ESO") ? "Examen 1. La Tecnologia" : "Examen 1. Plásticos y Materiales",
+        nombre: "Examen 1",
         criteriosConfig: [
-          { id: "1.1", peso: 3 },
-          { id: "2.1", peso: 2 }
+          { id: crit1, peso: 2 }
         ],
         notas: {}
       };
@@ -395,7 +763,9 @@
     const cont = document.getElementById("contenedorCriterios");
     cont.innerHTML = "";
 
-    LISTA_CRITERIOS.forEach(crit => {
+    const criteriosDisponibles = obtenerCriteriosNivelActual();
+
+    criteriosDisponibles.forEach(crit => {
       const configExistente = criteriosSeleccionados.find(c => c.id === crit.id);
       const isChecked = !!configExistente;
       const pesoVal = configExistente ? configExistente.peso : 1;
@@ -403,12 +773,12 @@
       const div = document.createElement("div");
       div.className = "criterio-card";
       div.innerHTML = `
-        <div style="display:flex; align-items:center; gap:8px;">
+        <div style="display:flex; align-items:center; gap:8px; flex:1;">
           <input type="checkbox" id="chk_${crit.id}" value="${crit.id}" ${isChecked ? "checked" : ""} onchange="actualizarConfigCriterios()">
           <label for="chk_${crit.id}">${crit.label}</label>
         </div>
         <div class="criterio-weight-wrapper">
-          <span>Nº Qs / Peso:</span>
+          <span>Nº Qs:</span>
           <input type="number" id="peso_${crit.id}" class="input-peso" min="1" max="20" value="${pesoVal}" onchange="actualizarConfigCriterios()" ${!isChecked ? "disabled" : ""}>
         </div>
       `;
@@ -418,13 +788,15 @@
 
   function actualizarConfigCriterios() {
     criteriosSeleccionados = [];
-    LISTA_CRITERIOS.forEach(crit => {
+    const criteriosDisponibles = obtenerCriteriosNivelActual();
+
+    criteriosDisponibles.forEach(crit => {
       const chk = document.getElementById(`chk_${crit.id}`);
       const pesoInput = document.getElementById(`peso_${crit.id}`);
 
       if (chk && chk.checked) {
-        pesoInput.disabled = false;
-        const pesoNum = Math.max(1, parseFloat(pesoInput.value) || 1);
+        if (pesoInput) pesoInput.disabled = false;
+        const pesoNum = Math.max(1, parseFloat(pesoInput ? pesoInput.value : 1) || 1);
         criteriosSeleccionados.push({ id: crit.id, peso: pesoNum });
       } else if (pesoInput) {
         pesoInput.disabled = true;
@@ -446,7 +818,7 @@
       const th = document.createElement("th");
       th.style.textAlign = "center";
       th.innerHTML = `
-        Crit. ${crit.id}<br>
+        ${crit.id}<br>
         <small style="font-weight:600; color:#0284c7;">(${crit.peso} Qs)</small>
       `;
       tr.appendChild(th);
@@ -462,9 +834,14 @@
 
   function renderizarTablaAlumnos() {
     const curso = document.getElementById("selectCurso").value;
-    const listaAlumnos = ALUMNOS_BD[curso] || [];
+    const listaAlumnos = alumnosBD[curso] || [];
     const tbody = document.getElementById("bodyTabla");
     tbody.innerHTML = "";
+
+    if (listaAlumnos.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:20px; color:#64748b;">No hay alumnos en este grupo. Haz clic en "👥 Editar / Pegar Lista de Alumnos" para cargarlos.</td></tr>`;
+      return;
+    }
 
     listaAlumnos.forEach((alumno, idx) => {
       if (!notasAlumnadoLocal[alumno]) {
@@ -480,12 +857,12 @@
       `;
 
       criteriosSeleccionados.forEach(crit => {
-        const valActual = notasAlumnadoLocal[alumno][crit.id] !== undefined ? notasAlumnadoLocal[alumno][crit.id] : "";
+        const valActual = (notasAlumnadoLocal[alumno] && notasAlumnadoLocal[alumno][crit.id] !== undefined) ? notasAlumnadoLocal[alumno][crit.id] : "";
         htmlFila += `
           <td style="text-align:center;">
             <input type="number" step="0.1" min="0" max="10" class="input-nota" 
               value="${valActual}" 
-              oninput="actualizarNotaCriterio('${alumno}', '${crit.id}', this.value, ${idx})">
+              oninput="actualizarNotaCriterio('${alumno.replace(/'/g, "\\'")}', '${crit.id}', this.value, ${idx})">
           </td>
         `;
       });
@@ -583,22 +960,24 @@
     }
     select.value = prueba.id;
 
-    alert(`✅ Prueba "${nombre}" guardada correctamente para ${curso} (${eval}).`);
+    alert("✅ Prueba guardada correctamente para " + curso.replace('_', ' ') + " (" + eval + ").");
   }
 
   function crearNuevaPrueba() {
     const curso = document.getElementById("selectCurso").value;
     const eval = document.getElementById("selectEval").value;
 
-    const nombre = prompt("Introduce el nombre de la nueva prueba/examen:", "Examen 2. Tema ");
+    const nombre = prompt("Introduce el nombre de la nueva prueba/examen:", "Examen ");
     if (!nombre || !nombre.trim()) return;
+
+    const listaCrit = obtenerCriteriosNivelActual();
+    const c1 = listaCrit[0] ? listaCrit[0].id : "1.1";
 
     const nuevaPrueba = {
       id: "prueba_" + Date.now(),
       nombre: nombre.trim(),
       criteriosConfig: [
-        { id: "1.1", peso: 2 },
-        { id: "2.1", peso: 2 }
+        { id: c1, peso: 2 }
       ],
       notas: {}
     };
@@ -620,11 +999,11 @@
     const lista = (estadoGeneral[curso] && estadoGeneral[curso][eval]) ? estadoGeneral[curso][eval] : [];
 
     if (lista.length <= 1) {
-      alert("⚠️ No puedes eliminar la única prueba existente de este grupo. Si lo deseas, renombrala.");
+      alert("⚠️ No puedes eliminar la única prueba de este grupo. Puedes renombrarla.");
       return;
     }
 
-    if (confirm("¿Estás seguro de que deseas eliminar esta prueba?")) {
+    if (confirm("¿Deseas eliminar la prueba actual?")) {
       estadoGeneral[curso][eval] = lista.filter(p => p.id !== pruebaActualId);
       guardarEstadoStorage();
       actualizarSelectorPruebas();
@@ -633,19 +1012,19 @@
 
   function exportarCSV() {
     let csv = "Alumno;";
-    criteriosSeleccionados.forEach(c => csv += `Crit_${c.id}_(Peso_${c.peso});`);
+    criteriosSeleccionados.forEach(c => csv += c.id + "_(Peso_" + c.peso + ");");
     csv += "Nota_Examen_Ponderada\n";
 
     const curso = document.getElementById("selectCurso").value;
-    const listaAlumnos = ALUMNOS_BD[curso] || [];
+    const listaAlumnos = alumnosBD[curso] || [];
 
     listaAlumnos.forEach(alumno => {
-      csv += `"${alumno}";`;
+      csv += '"' + alumno + '";';
       let suma = 0, pesoTot = 0;
 
       criteriosSeleccionados.forEach(c => {
         const val = notasAlumnadoLocal[alumno] ? notasAlumnadoLocal[alumno][c.id] : "";
-        csv += `${val !== undefined ? val : ""};`;
+        csv += (val !== undefined ? val : "") + ";";
         if (val !== "" && val !== undefined && !isNaN(val)) {
           suma += val * c.peso;
           pesoTot += c.peso;
@@ -653,22 +1032,23 @@
       });
 
       const notaEx = pesoTot > 0 ? (suma / pesoTot).toFixed(2) : "";
-      csv += `${notaEx}\n`;
+      csv += notaEx + "\n";
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `Notas_${document.getElementById("nombreExamen").value.replace(/\s+/g, '_')}.csv`;
+    link.download = "Notas_" + curso + "_" + document.getElementById("nombreExamen").value.replace(/\s+/g, '_') + ".csv";
     link.click();
   }
 
   function sincronizarConMatriz() {
     guardarPruebaActual();
-    alert("🔄 Sincronizando con el Cuaderno de Seguimiento (seguimiento.html)...\nLas notas individuales por criterio han sido transferidas a la Matriz General.");
+    alert("🔄 Sincronizado correctamente con el Cuaderno de Seguimiento (seguimiento.html).\nLas notas por criterio individuales han sido actualizadas en la matriz general.");
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    cargarAlumnosBD();
     cargarEstadoStorage();
     actualizarSelectorPruebas();
   });
