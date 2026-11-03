@@ -637,7 +637,6 @@
 
   function guardarAlumnosBD() {
     localStorage.setItem("evaluador_directo_alumnos_v2", JSON.stringify(alumnosBD));
-    // Guardar también en la nube
     db.collection("configuracion").doc("alumnos").set(alumnosBD, { merge: true }).catch(err => console.error(err));
   }
 
@@ -717,7 +716,6 @@
     renderizarMatrizSeguimiento();
   }
 
-  // ESCUCHA Y SINCRONIZACIÓN EN TIEMPO REAL CON FIREBASE
   function activarEscuchaNube() {
     db.collection("evaluaciones").onSnapshot(snapshot => {
       snapshot.forEach(doc => {
@@ -742,7 +740,6 @@
     const badge = document.getElementById("syncStatusBadge");
     if (badge) badge.textContent = "⏳ Subiendo a Nube...";
 
-    // Guardar todo el localStorage a Firestore
     const promises = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
@@ -755,7 +752,7 @@
 
     Promise.all(promises).then(() => {
       if (badge) badge.textContent = "☁️ Sincronizado en Nube (" + new Date().toLocaleTimeString() + ")";
-      alert("✅ ¡Todas tus calificaciones han sido subidas a la nube! Ya las tienes disponibles en cualquier dispositivo.");
+      alert("✅ ¡Todas tus calificaciones han sido subidas a la nube!");
     }).catch(err => {
       alert("⚠️ Hubo un detalle al subir a la nube. Verifica tu conexión.");
     });
@@ -920,7 +917,6 @@
     const jsonStr = JSON.stringify(matToSave);
     KEYS_MATRIZ.forEach(key => {
       try { localStorage.setItem(key, jsonStr); } catch(e) {}
-      // Guardar también en Firebase
       db.collection("evaluaciones").doc(key).set(matToSave, { merge: true }).catch(err => console.error(err));
     });
 
