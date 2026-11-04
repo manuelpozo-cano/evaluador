@@ -41,7 +41,7 @@
         <div class="bg-white rounded-xl shadow-md p-4 mb-6 border border-slate-200 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-2">
                 <span id="sync-status-dot" class="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></span>
-                <span id="sync-status-text" class="text-xs font-medium text-slate-600">Conectando con Firebase...</span>
+                <span id="sync-status-text" class="text-xs font-medium text-slate-600">Sincronizando datos...</span>
             </div>
             
             <div class="flex flex-wrap gap-2" id="curso-tabs">
@@ -51,8 +51,8 @@
             </div>
 
             <div class="flex gap-2">
-                <button onclick="forzarSubidaLocalAFirebase()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition flex items-center gap-1 shadow-sm" title="Subir notas guardadas en este equipo a la nube">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Forzar Sincronización PC ➔ Nube
+                <button onclick="forzarSincronizacionTotal()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition flex items-center gap-1 shadow-sm" title="Subir y descargar todas las notas con la nube">
+                    <i class="fa-solid fa-rotate"></i> Sincronizar Todo con Nube
                 </button>
             </div>
         </div>
@@ -70,19 +70,16 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse" id="tabla-seguimiento">
                     <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b border-slate-300" id="tabla-head">
-                        <!-- Generado dinámicamente -->
                     </thead>
                     <tbody class="divide-y divide-slate-200" id="tabla-body">
-                        <!-- Generado dinámicamente -->
                     </tbody>
                 </table>
             </div>
         </div>
     </main>
 
-    <!-- Script de Inicialización y Lógica Firebase / LocalStorage -->
     <script>
-        // Configuración Firebase (Proyecto CyberBreakout Hispanidad)
+        // Configuración Firebase
         const firebaseConfig = {
             apiKey: "AIzaSy_Hispanidad_FirebaseKey_Placeholder",
             authDomain: "cyberbreakout-hispanidad.firebaseapp.com",
@@ -92,14 +89,22 @@
             appId: "1:1035515234125:web:hispanidad2026"
         };
 
-        // Inicializar Firebase si no existe
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.firestore();
-        db.enablePersistence({ synchronizeTabs: true }).catch(err => console.log("Persistencia local activada/existente: ", err.code));
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => console.log("Persistencia local activada:", err.code));
 
-        // Criterios LOMLOE por Curso
+        // Normalización flexible de nombres de curso ("2º ESO", "2 ESO A", "2ESO" -> "2ESO")
+        function normalizarCurso(cursoRaw) {
+            if (!cursoRaw) return '2ESO';
+            const str = String(cursoRaw).toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (str.includes('2')) return '2ESO';
+            if (str.includes('3')) return '3ESO';
+            if (str.includes('4')) return '4ESO';
+            return '2ESO';
+        }
+
         const criteriosLOMLOE = {
             '2ESO': ['TYD.2.1.1', 'TYD.2.1.2', 'TYD.2.2.1', 'TYD.2.3.1', 'TYD.2.4.1', 'TYD.2.5.1'],
             '3ESO': ['TYD.3.1.1', 'TYD.3.1.2', 'TYD.3.2.1', 'TYD.3.3.1', 'TYD.3.4.1', 'TYD.3.5.1'],
@@ -107,132 +112,172 @@
         };
 
         let cursoActual = '2ESO';
-        let datosAlumnos = {}; // Estrategia de estado global { alumnoId: { id, nombre, curso, notas: [ { criterio, nota, origen, fecha } ] } }
+        let datosAlumnos = {}; 
 
-        // 1. CARGA INICIAL DE LOCALSTORAGE (Respetar siempre notas locales previa sincronización)
-        function cargarDatosLocales() {
-            try {
-                // Evaluador directo
-                const directoAlumnos = JSON.parse(localStorage.getItem('evaluador_directo_alumnos_v2') || '[]');
-                const directoPruebas = JSON.parse(localStorage.getItem('evaluador_directo_pruebas_v8') || '[]');
-
-                directoAlumnos.forEach(alum => {
-                    if (!datosAlumnos[alum.id]) {
-                        datosAlumnos[alum.id] = { id: alum.id, nombre: alum.nombre, curso: alum.curso || '2ESO', notas: [] };
-                    }
-                });
-
-                directoPruebas.forEach(p => {
-                    if (p.alumnoId && p.criterio && p.nota !== undefined) {
-                        registrarNotaConOrigen(p.alumnoId, p.curso || '2ESO', p.criterio, p.nota, p.origen || 'Evaluador Directo', p.nombreAlumno);
-                    }
-                });
-
-                // SdAs Específicas
-                const sdaKeys = ['doblador_2eso_notas', 'eniac_4eso_notas'];
-                sdaKeys.forEach(key => {
-                    const data = JSON.parse(localStorage.getItem(key) || '[]');
-                    if (Array.isArray(data)) {
-                        data.forEach(item => {
-                            if (item.alumnoId && item.criterio && item.nota !== undefined) {
-                                registrarNotaConOrigen(item.alumnoId, item.curso || '2ESO', item.criterio, item.nota, item.origen || key, item.nombreAlumno);
-                            }
-                        });
-                    }
-                });
-            } catch (err) {
-                console.error("Error al cargar localStorage local:", err);
-            }
-            renderizarTabla();
-        }
-
-        // 2. FUNCIÓN DE REGISTRO SIN DUPLICADOS (REGLA CRÍTICA LOMLOE)
-        function registrarNotaConOrigen(alumnoId, curso, criterio, nota, origen, nombreAlumnoFallback = "Alumno") {
+        // REGISTRO DE NOTAS SIN DUPLICADOS (REGLA LOMLOE)
+        function registrarNotaConOrigen(alumnoId, curso, criterio, nota, origen, nombreAlumnoFallback) {
             if (!alumnoId) return;
-            const origenLimpio = (origen || 'Desconocido').trim();
+            const cursoNorm = normalizarCurso(curso);
+            const origenLimpio = (origen || 'General').trim();
+            const valNota = parseFloat(nota);
 
             if (!datosAlumnos[alumnoId]) {
                 datosAlumnos[alumnoId] = {
                     id: alumnoId,
-                    nombre: nombreAlumnoFallback,
-                    curso: curso || '2ESO',
+                    nombre: nombreAlumnoFallback || 'Alumno',
+                    curso: cursoNorm,
                     notas: []
                 };
             }
 
-            const alumno = datosAlumnos[alumnoId];
-            if (nombreAlumnoFallback && alumno.nombre === "Alumno") alumno.nombre = nombreAlumnoFallback;
-            if (curso) alumno.curso = curso;
+            const alum = datosAlumnos[alumnoId];
+            if (nombreAlumnoFallback && (alum.nombre === 'Alumno' || !alum.nombre)) {
+                alum.nombre = nombreAlumnoFallback;
+            }
+            if (curso) alum.curso = cursoNorm;
 
-            // Buscar si ya existe la nota con el MISMO origen
-            const index = alumno.notas.findIndex(n => n.criterio === criterio && (n.origen || '').trim() === origenLimpio);
-
-            if (index !== -1) {
-                // Actualizar nota existente sin duplicar
-                alumno.notas[index].nota = parseFloat(nota);
-                alumno.notas[index].fecha = new Date().toISOString();
-            } else {
-                // Agregar nueva nota registrada
-                alumno.notas.push({
-                    criterio: criterio,
-                    nota: parseFloat(nota),
-                    origen: origenLimpio,
-                    fecha: new Date().toISOString()
-                });
+            if (!isNaN(valNota) && criterio) {
+                const index = alum.notas.findIndex(n => n.criterio === criterio && (n.origen || '').trim() === origenLimpio);
+                if (index !== -1) {
+                    alum.notas[index].nota = valNota;
+                    alum.notas[index].fecha = new Date().toISOString();
+                } else {
+                    alum.notas.push({
+                        criterio: criterio,
+                        nota: valNota,
+                        origen: origenLimpio,
+                        fecha: new Date().toISOString()
+                    });
+                }
             }
         }
 
-        // 3. LISTENERS EN TIEMPO REAL CON FIREBASE FIRESTORE (SINCRONIZACIÓN MÓVIL / TABLET / PC)
+        // ESCANEO DINÁMICO DE TODO LOCALSTORAGE (Respetar 100% de listas y SdAs cargadas)
+        function escanearTodoLocalStorage() {
+            try {
+                // 1. Alumnos de lista de clase
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.includes('alumnos') || key.includes('evaluador_directo')) {
+                        try {
+                            const parsed = JSON.parse(localStorage.getItem(key));
+                            if (Array.isArray(parsed)) {
+                                parsed.forEach(a => {
+                                    if (a && (a.id || a.alumnoId)) {
+                                        const id = a.id || a.alumnoId;
+                                        const nom = a.nombre || a.nombreAlumno || a.alumno;
+                                        const cur = normalizarCurso(a.curso || a.grupo);
+                                        if (!datosAlumnos[id]) {
+                                            datosAlumnos[id] = { id: id, nombre: nom || 'Alumno', curso: cur, notas: [] };
+                                        } else {
+                                            if (nom) datosAlumnos[id].nombre = nom;
+                                            if (cur) datosAlumnos[id].curso = cur;
+                                        }
+                                    }
+                                });
+                            }
+                        } catch(e){}
+                    }
+                }
+
+                // 2. Pruebas y notas de todas las SdAs y Evaluador Directo
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.includes('alumnos')) continue;
+                    try {
+                        const data = JSON.parse(localStorage.getItem(key));
+                        if (Array.isArray(data)) {
+                            data.forEach(item => {
+                                if (item && (item.alumnoId || item.id) && item.criterio && item.nota !== undefined) {
+                                    registrarNotaConOrigen(
+                                        item.alumnoId || item.id,
+                                        item.curso || item.grupo,
+                                        item.criterio,
+                                        item.nota,
+                                        item.origen || item.sda || key,
+                                        item.nombreAlumno || item.nombre || item.alumno
+                                    );
+                                }
+                            });
+                        }
+                    } catch(e){}
+                }
+            } catch (err) {
+                console.error("Error escaneando localStorage:", err);
+            }
+            renderizarTabla();
+        }
+
+        // LISTENERS DE FIREBASE EN TIEMPO REAL (Móvil, Tablet y PC)
         function inicializarListenersFirebase() {
             const statusDot = document.getElementById('sync-status-dot');
             const statusText = document.getElementById('sync-status-text');
 
-            // Escuchar colección principal de evaluaciones en tiempo real
-            db.collection('evaluaciones').onSnapshot((snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    const data = change.doc.data();
-                    if (data && data.alumnoId && data.criterio) {
-                        registrarNotaConOrigen(data.alumnoId, data.curso, data.criterio, data.nota, data.origen, data.nombreAlumno);
+            // Cargar alumnos guardados en la nube
+            db.collection('alumnos_v2').onSnapshot(snapshot => {
+                snapshot.forEach(doc => {
+                    const a = doc.data();
+                    if (a && a.id) {
+                        if (!datosAlumnos[a.id]) {
+                            datosAlumnos[a.id] = { id: a.id, nombre: a.nombre || 'Alumno', curso: normalizarCurso(a.curso), notas: [] };
+                        } else {
+                            if (a.nombre) datosAlumnos[a.id].nombre = a.nombre;
+                            if (a.curso) datosAlumnos[a.id].curso = normalizarCurso(a.curso);
+                        }
                     }
                 });
+                renderizarTabla();
+            }, err => console.log("Nota alumnos remote sync:", err));
 
+            // Escuchar colección principal de evaluaciones
+            db.collection('evaluaciones').onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    const d = change.doc.data();
+                    if (d && d.alumnoId && d.criterio) {
+                        registrarNotaConOrigen(d.alumnoId, d.curso, d.criterio, d.nota, d.origen, d.nombreAlumno);
+                    }
+                });
                 statusDot.className = "w-3 h-3 rounded-full bg-emerald-500";
                 statusText.innerText = "Sincronizado en tiempo real con Firebase";
                 renderizarTabla();
-            }, (error) => {
-                console.warn("Firebase listening en modo offline/cache:", error);
+            }, err => {
                 statusDot.className = "w-3 h-3 rounded-full bg-amber-500";
                 statusText.innerText = "Modo Local / Caché Activo";
             });
 
-            // Escuchar también la colección evaluacion_directa
-            db.collection('evaluacion_directa').onSnapshot((snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    const data = change.doc.data();
-                    if (data && data.alumnoId && data.criterio) {
-                        registrarNotaConOrigen(data.alumnoId, data.curso, data.criterio, data.nota, data.origen, data.nombreAlumno);
+            // Escuchar colección de evaluacion_directa
+            db.collection('evaluacion_directa').onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    const d = change.doc.data();
+                    if (d && d.alumnoId && d.criterio) {
+                        registrarNotaConOrigen(d.alumnoId, d.curso, d.criterio, d.nota, d.origen, d.nombreAlumno);
                     }
                 });
                 renderizarTabla();
             });
         }
 
-        // 4. FORZAR SUBIDA DE NOTAS LOCALES A LA NUBE
-        function forzarSubidaLocalAFirebase() {
+        // FORZAR SINCRONIZACIÓN TOTAL BIDIRECCIONAL
+        function forzarSincronizacionTotal() {
             let count = 0;
             const batch = db.batch();
 
             Object.values(datosAlumnos).forEach(alumno => {
-                alumno.notas.forEach(notaItem => {
-                    const docId = `${alumno.id}_${notaItem.criterio}_${encodeURIComponent((notaItem.origen || '').trim())}`;
+                // Subir lista de alumnos
+                const alumRef = db.collection('alumnos_v2').doc(alumno.id);
+                batch.set(alumRef, { id: alumno.id, nombre: alumno.nombre, curso: alumno.curso }, { merge: true });
+
+                // Subir notas
+                alumno.notas.forEach(n => {
+                    const docId = `${alumno.id}_${n.criterio}_${encodeURIComponent((n.origen || '').trim())}`;
                     const ref = db.collection('evaluaciones').doc(docId);
                     batch.set(ref, {
                         alumnoId: alumno.id,
                         nombreAlumno: alumno.nombre,
                         curso: alumno.curso,
-                        criterio: notaItem.criterio,
-                        nota: notaItem.nota,
-                        origen: notaItem.origen,
+                        criterio: n.criterio,
+                        nota: n.nota,
+                        origen: n.origen,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
                     count++;
@@ -240,14 +285,13 @@
             });
 
             batch.commit().then(() => {
-                alert(`¡Éxito! Se han sincronizado ${count} calificaciones del almacenamiento local a Firebase.`);
+                alert(`¡Sincronización completada! ${count} calificaciones sincronizadas con la nube.`);
             }).catch(err => {
-                console.error("Error al forzar subida a Firebase:", err);
-                alert("Las notas están guardadas localmente. Se subirán automáticamente al recuperar la conexión.");
+                console.error("Error al sincronizar:", err);
+                alert("Las notas se guardan localmente y se subirán al reconectar.");
             });
         }
 
-        // 5. CAMBIAR CURSO PESTAÑAS
         function cambiarCurso(curso) {
             cursoActual = curso;
             document.querySelectorAll('.curso-btn').forEach(btn => {
@@ -260,19 +304,24 @@
             renderizarTabla();
         }
 
-        // 6. RENDERIZADO DE TABLA MATRIZ
         function renderizarTabla() {
             const head = document.getElementById('tabla-head');
             const body = document.getElementById('tabla-body');
-            const criterios = criteriosLOMLOE[cursoActual] || [];
+            const baseCriterios = criteriosLOMLOE[cursoActual] || [];
 
-            // Filtrar alumnos del curso actual
-            const alumnosFiltrados = Object.values(datosAlumnos).filter(a => a.curso === cursoActual);
+            // Obtener todos los alumnos que pertenezcan a este curso (con normalización)
+            const alumnosFiltrados = Object.values(datosAlumnos).filter(a => normalizarCurso(a.curso) === cursoActual);
             document.getElementById('total-alumnos-badge').innerText = `${alumnosFiltrados.length} Alumnos en ${cursoActual}`;
 
+            // Recopilar criterios dinámicos si existen notas asociadas
+            const criteriosSet = new Set(baseCriterios);
+            alumnosFiltrados.forEach(a => {
+                a.notas.forEach(n => { if (n.criterio) criteriosSet.add(n.criterio); });
+            });
+            const criterios = Array.from(criteriosSet);
+
             // Cabecera
-            let headHTML = `<tr>
-                <th class="py-3 px-4 bg-slate-200 w-1/4">Alumno / Alumna</th>`;
+            let headHTML = `<tr><th class="py-3 px-4 bg-slate-200 w-1/4">Alumno / Alumna</th>`;
             criterios.forEach(crit => {
                 headHTML += `<th class="py-3 px-3 text-center border-l border-slate-300 bg-slate-100">${crit}</th>`;
             });
@@ -281,7 +330,7 @@
 
             // Cuerpo
             if (alumnosFiltrados.length === 0) {
-                body.innerHTML = `<tr><td colspan="${criterios.length + 2}" class="py-6 text-center text-slate-400">No hay registros de alumnos para este curso aún.</td></tr>`;
+                body.innerHTML = `<tr><td colspan="${criterios.length + 2}" class="py-6 text-center text-slate-400">No hay registros de alumnos para ${cursoActual}.</td></tr>`;
                 return;
             }
 
@@ -301,7 +350,7 @@
                         criteriosEvaluados++;
                         const badgeColor = mediaCrit >= 5 ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-rose-100 text-rose-800 border-rose-300';
                         bodyHTML += `<td class="py-3 px-3 text-center border-l border-slate-200">
-                            <span class="inline-block px-2 py-0.5 rounded border text-xs font-bold ${badgeColor}" title="${notasCrit.length} prueba(s) registrada(s)">
+                            <span class="inline-block px-2 py-0.5 rounded border text-xs font-bold ${badgeColor}" title="${notasCrit.length} nota(s)">
                                 ${mediaCrit.toFixed(1)}
                             </span>
                         </td>`;
@@ -321,9 +370,8 @@
             body.innerHTML = bodyHTML;
         }
 
-        // Inicialización al cargar la página
         window.addEventListener('DOMContentLoaded', () => {
-            cargarDatosLocales();
+            escanearTodoLocalStorage();
             inicializarListenersFirebase();
         });
     </script>

@@ -52,7 +52,6 @@
             <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Criterio de Evaluación</label>
                 <select id="select-criterio" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                    <!-- Criterios dinámicos -->
                 </select>
             </div>
 
@@ -79,13 +78,11 @@
 
             <div class="p-6">
                 <div id="contenedor-alumnos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Cards de alumnos generadas dinámicamente -->
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- JS de la aplicación y Firebase -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSy_Hispanidad_FirebaseKey_Placeholder",
@@ -100,7 +97,16 @@
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.firestore();
-        db.enablePersistence({ synchronizeTabs: true }).catch(err => console.log("Persistencia local evaluador:", err.code));
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => console.log("Persistencia local:", err.code));
+
+        function normalizarCurso(cursoRaw) {
+            if (!cursoRaw) return '2ESO';
+            const str = String(cursoRaw).toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (str.includes('2')) return '2ESO';
+            if (str.includes('3')) return '3ESO';
+            if (str.includes('4')) return '4ESO';
+            return '2ESO';
+        }
 
         const criteriosLOMLOE = {
             '2ESO': ['TYD.2.1.1', 'TYD.2.1.2', 'TYD.2.2.1', 'TYD.2.3.1', 'TYD.2.4.1', 'TYD.2.5.1'],
@@ -108,13 +114,35 @@
             '4ESO': ['DIG.4.1.1', 'DIG.4.1.2', 'DIG.4.2.1', 'DIG.4.3.1', 'DIG.4.4.1', 'DIG.4.5.1']
         };
 
-        let listaAlumnos = JSON.parse(localStorage.getItem('evaluador_directo_alumnos_v2') || '[]');
-        if (listaAlumnos.length === 0) {
-            listaAlumnos = [
-                { id: 'alum_1', nombre: 'Ejemplo Alumno 1', curso: '2ESO' },
-                { id: 'alum_2', nombre: 'Ejemplo Alumno 2', curso: '2ESO' }
-            ];
-            localStorage.setItem('evaluador_directo_alumnos_v2', JSON.stringify(listaAlumnos));
+        let listaAlumnos = [];
+
+        function cargarAlumnos() {
+            // Leer sin machacar de evaluador_directo_alumnos_v2 u otras listas en localStorage
+            const local = JSON.parse(localStorage.getItem('evaluador_directo_alumnos_v2') || '[]');
+            if (Array.isArray(local) && local.length > 0) {
+                listaAlumnos = local;
+            }
+
+            // Sincronizar desde la nube si existen alumnos en Firebase
+            db.collection('alumnos_v2').onSnapshot(snapshot => {
+                if (!snapshot.empty) {
+                    const deNube = [];
+                    snapshot.forEach(doc => deNube.push(doc.data()));
+                    if (deNube.length > 0) {
+                        // Combinar sin duplicar por ID
+                        deNube.forEach(aNube => {
+                            const idx = listaAlumnos.findIndex(a => a.id === aNube.id);
+                            if (idx !== -1) {
+                                listaAlumnos[idx] = { ...listaAlumnos[idx], ...aNube };
+                            } else {
+                                listaAlumnos.push(aNube);
+                            }
+                        });
+                        localStorage.setItem('evaluador_directo_alumnos_v2', JSON.stringify(listaAlumnos));
+                        renderizarAlumnos();
+                    }
+                }
+            });
         }
 
         function actualizarCriteriosYCargar() {
@@ -133,14 +161,14 @@
         }
 
         function renderizarAlumnos() {
-            const curso = document.getElementById('select-curso').value;
+            const cursoSeleccionado = document.getElementById('select-curso').value;
             const contenedor = document.getElementById('contenedor-alumnos');
             contenedor.innerHTML = '';
 
-            const alumnosCurso = listaAlumnos.filter(a => (a.curso || '2ESO') === curso);
+            const alumnosCurso = listaAlumnos.filter(a => normalizarCurso(a.curso || a.grupo) === cursoSeleccionado);
 
             if (alumnosCurso.length === 0) {
-                contenedor.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400">No hay alumnos añadidos para este curso. Presiona "+ Añadir Alumno".</div>`;
+                contenedor.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400">No hay alumnos añadidos para ${cursoSeleccionado}. Presiona "+ Añadir Alumno".</div>`;
                 return;
             }
 
@@ -155,7 +183,7 @@
                     <div class="flex items-center gap-2">
                         <input type="number" min="0" max="10" step="0.1" placeholder="0-10" id="input-nota-${alum.id}"
                             class="w-16 bg-white border border-slate-300 text-center font-extrabold text-sm rounded-md py-1.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                        <button onclick="guardarNotaAlumno('${alum.id}', '${alum.nombre}')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-bold text-xs transition flex items-center gap-1 shadow-xs">
+                        <button onclick="guardarNotaAlumno('${alum.id}', '${alum.nombre.replace(/'/g, "\'")}')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-bold text-xs transition flex items-center gap-1 shadow-xs">
                             <i class="fa-solid fa-floppy-disk"></i> Guardar
                         </button>
                     </div>
@@ -180,7 +208,7 @@
             badge.className = "text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold border border-amber-300 animate-pulse";
             badge.innerText = "Guardando...";
 
-            // 1. Guardar en LocalStorage localmente
+            // 1. Guardar en LocalStorage
             let pruebasLocales = JSON.parse(localStorage.getItem('evaluador_directo_pruebas_v8') || '[]');
             const idx = pruebasLocales.findIndex(p => p.alumnoId === alumnoId && p.criterio === criterio && (p.origen || '').trim() === origen);
             if (idx !== -1) {
@@ -190,7 +218,10 @@
             }
             localStorage.setItem('evaluador_directo_pruebas_v8', JSON.stringify(pruebasLocales));
 
-            // 2. Guardar Inmediatamente en Firebase Firestore (Sincronización Remota a Múltiples Dispositivos)
+            // 2. Sincronizar Alumno + Nota en Firebase Firestore (Nube multi-dispositivo)
+            const alumRef = db.collection('alumnos_v2').doc(alumnoId);
+            alumRef.set({ id: alumnoId, nombre: nombreAlumno, curso: curso }, { merge: true });
+
             const docId = `${alumnoId}_${criterio}_${encodeURIComponent(origen)}`;
             db.collection('evaluacion_directa').doc(docId).set({
                 alumnoId: alumnoId,
@@ -217,21 +248,20 @@
 
             const curso = document.getElementById('select-curso').value;
             const nuevoId = 'alum_' + Date.now();
-            listaAlumnos.push({ id: nuevoId, nombre: nombre.trim(), curso: curso });
+            const nuevo = { id: nuevoId, nombre: nombre.trim(), curso: curso };
+
+            listaAlumnos.push(nuevo);
             localStorage.setItem('evaluador_directo_alumnos_v2', JSON.stringify(listaAlumnos));
+            
+            // Subir alumno a Firebase
+            db.collection('alumnos_v2').doc(nuevoId).set(nuevo, { merge: true });
+
             renderizarAlumnos();
         }
 
-        // Listener en tiempo real para recibir notas registradas desde el móvil u otros ordenadores
-        function escucharCambiosEnNube() {
-            db.collection('evaluacion_directa').onSnapshot(snapshot => {
-                console.log("Cambios detectados en la nube");
-            });
-        }
-
         window.addEventListener('DOMContentLoaded', () => {
+            cargarAlumnos();
             actualizarCriteriosYCargar();
-            escucharCambiosEnNube();
         });
     </script>
 </body>
