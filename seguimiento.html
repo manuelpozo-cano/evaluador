@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cuaderno de Seguimiento LOMLOE - Tecnología y Digitalización (v2)</title>
+  <title>Cuaderno de Seguimiento LOMLOE - Tecnología y Digitalización</title>
   
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -169,7 +169,8 @@
     </div>
     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
       <span id="syncStatusBadge" style="font-size:0.82rem; color:#16a34a; font-weight:700; background:#dcfce7; padding:4px 10px; border-radius:12px; border:1px solid #86efac;">☁️ Nube Conectada</span>
-      <a href="evaluador_directo_v2.html" class="btn-back">📝 Ir al Evaluador Directo</a>
+      <a href="index.html" class="btn-back">🏠 Volver al Inicio</a>
+      <a href="evaluador_directo.html" class="btn-back">📝 Ir al Evaluador Directo</a>
     </div>
   </header>
 
@@ -367,10 +368,18 @@
     if (!matrizAcumuladaBD[cursoNorm][eKey][alumNorm]) matrizAcumuladaBD[cursoNorm][eKey][alumNorm] = {};
     if (!matrizAcumuladaBD[cursoNorm][eKey][alumNorm][critId]) matrizAcumuladaBD[cursoNorm][eKey][alumNorm][critId] = [];
 
-    matrizAcumuladaBD[cursoNorm][eKey][alumNorm][critId].push({
-      origen: origenStr || "SdA / Prueba",
-      valor: valNum
-    });
+    const origLimpio = (origenStr || "SdA / Prueba").trim();
+    const arr = matrizAcumuladaBD[cursoNorm][eKey][alumNorm][critId];
+
+    const existIdx = arr.findIndex(item => item.origen === origLimpio);
+    if (existIdx >= 0) {
+      arr[existIdx].valor = valNum;
+    } else {
+      arr.push({
+        origen: origLimpio,
+        valor: valNum
+      });
+    }
   }
 
   function parsearEntradaUniversal(key, data) {
@@ -417,9 +426,6 @@
       const map = { c1: "DIG.4.1.3", c2: "DIG.4.2.2", c3: "DIG.4.2.3", c4: "DIG.4.1.2" };
       Object.keys(map).forEach(ck => {
         if (data[ck] !== undefined && data[ck] !== null) registrarNotaConOrigen(grupo, "1T", alumno, map[ck], data[ck], "SdA Presupuestos PC");
-      });
-      ["DIG.4.1.3", "DIG.4.2.2", "DIG.4.2.3", "DIG.4.1.2"].forEach(critId => {
-        if (data[critId] !== undefined && data[critId] !== null) registrarNotaConOrigen(grupo, "1T", alumno, critId, data[critId], "SdA Presupuestos PC");
       });
       return;
     }
