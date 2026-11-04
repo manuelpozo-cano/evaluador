@@ -1,379 +1,974 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cuaderno de Seguimiento LOMLOE - Manuel Pozo Cano</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase SDK v8 -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cuaderno de Seguimiento LOMLOE - Tecnología y Digitalización</title>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --border: #cbd5e1;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --warning: #d97706;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 15px; line-height: 1.5; }
+    .container { max-width: 1600px; margin: 0 auto; }
+
+    header {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+    .header-titles h1 { font-size: 1.4rem; color: var(--primary-dark); font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .header-titles p { font-size: 0.85rem; color: #64748b; font-weight: 600; margin-top: 2px; }
+    .btn-back {
+      background: #f1f5f9; color: #334155; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px;
+      text-decoration: none; font-weight: 700; font-size: 0.88rem; transition: all 0.2s;
+    }
+    .btn-back:hover { background: #e2e8f0; color: var(--text); }
+
+    .card {
+      background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px;
+      border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+    .card-title {
+      font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;
+      border-left: 4px solid var(--primary); padding-left: 10px; flex-wrap: wrap; gap: 10px;
+    }
+
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.85rem; font-weight: 700; color: #475569; }
+    .form-control {
+      padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.92rem;
+      outline: none; transition: border-color 0.2s; background: white;
+    }
+    .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+
+    .banner-pendientes {
+      background: #fffbebf5; border: 1px solid #fef3c7; border-left: 4px solid var(--warning);
+      border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.86rem; color: #78350f;
+    }
+    .banner-pendientes strong { color: #b45309; }
+    .chip-pendiente {
+      display: inline-block; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;
+      padding: 2px 8px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; margin: 2px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      max-height: 70vh;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      position: relative;
+      background: white;
+    }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.86rem; text-align: left; }
+    
+    th {
+      background: #f1f5f9; color: #1e293b; font-weight: 800; padding: 10px 8px; border-bottom: 2px solid var(--border);
+      position: sticky; top: 0; z-index: 10; white-space: nowrap; text-align: center;
+    }
+    th.col-sticky-1 { position: sticky; left: 0; z-index: 20; background: #f1f5f9; text-align: left; width: 35px; min-width: 35px; }
+    th.col-sticky-2 { position: sticky; left: 35px; z-index: 20; background: #f1f5f9; text-align: left; min-width: 190px; border-right: 2px solid var(--border); }
+
+    td { padding: 8px 8px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; text-align: center; }
+    td.col-sticky-1 { position: sticky; left: 0; background: white; z-index: 5; text-align: left; font-weight: 700; color: #64748b; }
+    td.col-sticky-2 { position: sticky; left: 35px; background: white; z-index: 5; text-align: left; font-weight: 700; color: #1e293b; border-right: 2px solid var(--border); white-space: nowrap; }
+
+    tr:nth-child(even) td { background-color: #fafafa; }
+    tr:nth-child(even) td.col-sticky-1, tr:nth-child(even) td.col-sticky-2 { background-color: #fafafa; }
+    tr:hover td { background-color: #f1f5f9; }
+    tr:hover td.col-sticky-1, tr:hover td.col-sticky-2 { background-color: #f1f5f9; }
+
+    .cell-nota {
+      font-weight: 800; border-radius: 6px; padding: 4px 6px; cursor: pointer; transition: all 0.2s; display: inline-block; min-width: 48px;
+    }
+    .cell-nota:hover { background: #e0f2fe; color: #0369a1; transform: scale(1.06); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+    .student-link {
+      color: #0284c7; font-weight: 700; cursor: pointer; text-decoration: none; transition: color 0.2s;
+    }
+    .student-link:hover { color: #0369a1; text-decoration: underline; }
+
+    .badge-nota {
+      display: inline-block; padding: 4px 8px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; min-width: 50px; text-align: center;
+    }
+    .badge-pass { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .badge-fail { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .badge-empty { background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; }
+
+    .actions-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+    .btn {
+      padding: 9px 16px; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer;
+      border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover { background: #15803d; }
+    .btn-secondary { background: #64748b; color: white; }
+    .btn-secondary:hover { background: #475569; }
+
+    /* MODALES */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+      display: none; justify-content: center; align-items: center; z-index: 1000;
+    }
+    .modal-card {
+      background: white; border-radius: 12px; padding: 22px; width: 92%; max-width: 750px; max-height: 85vh; overflow-y: auto;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid var(--border);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+    .modal-header h3 { font-size: 1.15rem; color: #1e293b; font-weight: 800; }
+    .textarea-alumnos {
+      width: 100%; height: 240px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+      font-family: monospace; font-size: 0.88rem; margin-bottom: 14px; outline: none; line-height: 1.4;
+    }
+
+    .modal-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
+    .modal-table th { background: #f8fafc; color: #475569; padding: 8px; border-bottom: 2px solid var(--border); text-align: left; }
+    .modal-table td { padding: 8px; border-bottom: 1px solid #e2e8f0; }
+
+    .summary-box {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;
+    }
+    .summary-item { text-align: center; }
+    .summary-item label { display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+    .summary-item val { font-size: 1.2rem; font-weight: 800; color: #0284c7; }
+  </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+<body>
 
-    <!-- Header Navigation -->
-    <header class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
-            <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-book-bookmark text-2xl text-amber-400"></i>
-                <div>
-                    <h1 class="font-bold text-lg leading-tight">Cuaderno de Seguimiento LOMLOE</h1>
-                    <p class="text-xs text-indigo-200">Colegio La Hispanidad | Manuel Pozo Cano</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center space-x-2">
-                <a href="index.html" class="px-3 py-1.5 bg-indigo-800 hover:bg-indigo-700 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 shadow-sm">
-                    <i class="fa-solid fa-house"></i> 🏠 Volver al Inicio
-                </a>
-                <a href="evaluador_directo.html" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 shadow-sm">
-                    <i class="fa-solid fa-pen-to-square"></i> 📝 Evaluador Directo
-                </a>
-            </div>
-        </div>
-    </header>
+<div class="container">
+  <header>
+    <div class="header-titles">
+      <h1>📊 Cuaderno de Seguimiento LOMLOE</h1>
+      <p>Tecnología y Digitalización | Manuel Pozo Cano - Colegio La Hispanidad</p>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <span id="syncStatusBadge" style="font-size:0.82rem; color:#16a34a; font-weight:700; background:#dcfce7; padding:4px 10px; border-radius:12px; border:1px solid #86efac;">☁️ Nube Conectada</span>
+      <a href="index.html" class="btn-back">🏠 Volver al Inicio</a>
+      <a href="evaluador_directo.html" class="btn-back">📝 Ir al Evaluador Directo</a>
+    </div>
+  </header>
 
-    <!-- Estado de Sincronización y Filtros -->
-    <main class="max-w-7xl mx-auto w-full px-4 py-6 flex-grow">
-        <div class="bg-white rounded-xl shadow-md p-4 mb-6 border border-slate-200 flex flex-wrap justify-between items-center gap-4">
-            <div class="flex items-center gap-2">
-                <span id="sync-status-dot" class="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></span>
-                <span id="sync-status-text" class="text-xs font-medium text-slate-600">Sincronizando datos...</span>
-            </div>
-            
-            <div class="flex flex-wrap gap-2" id="curso-tabs">
-                <button onclick="cambiarCurso('2ESO')" class="curso-btn px-4 py-1.5 rounded-lg text-xs font-bold transition bg-indigo-600 text-white shadow-sm" data-curso="2ESO">2º ESO (TYD)</button>
-                <button onclick="cambiarCurso('3ESO')" class="curso-btn px-4 py-1.5 rounded-lg text-xs font-bold transition bg-slate-200 text-slate-700 hover:bg-slate-300" data-curso="3ESO">3º ESO (TYD)</button>
-                <button onclick="cambiarCurso('4ESO')" class="curso-btn px-4 py-1.5 rounded-lg text-xs font-bold transition bg-slate-200 text-slate-700 hover:bg-slate-300" data-curso="4ESO">4º ESO (DIG)</button>
-            </div>
+  <div class="card">
+    <div class="card-title">
+      <span>⚙️ Selección de Grupo y Modo de Calificación</span>
+      <button class="btn btn-secondary" onclick="abrirModalAlumnos()" style="font-size:0.82rem; padding:6px 12px;">👥 Editar Lista de Alumnos</button>
+    </div>
 
-            <div class="flex gap-2">
-                <button onclick="forzarSincronizacionTotal()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition flex items-center gap-1 shadow-sm" title="Subir y descargar todas las notas con la nube">
-                    <i class="fa-solid fa-rotate"></i> Sincronizar Todo con Nube
-                </button>
-            </div>
-        </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="selectCurso">Curso y Asignatura:</label>
+        <select id="selectCurso" class="form-control" onchange="renderizarMatrizSeguimiento()">
+          <option value="2ESO_A" selected>2º ESO A - Tecnología y Digitalización</option>
+          <option value="2ESO_B">2º ESO B - Tecnología y Digitalización</option>
+          <option value="3ESO_A">3º ESO A - Tecnología y Digitalización</option>
+          <option value="3ESO_B">3º ESO B - Tecnología y Digitalización</option>
+          <option value="4ESO_A">4º ESO A - Digitalización</option>
+          <option value="4ESO_B">4º ESO B - Digitalización</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="selectEval">Modo de Visualización:</label>
+        <select id="selectEval" class="form-control" onchange="renderizarMatrizSeguimiento()">
+          <option value="GLOBAL" selected>🌐 Nota Global / Curso Completo (Anual)</option>
+          <option value="1T">1ª Evaluación</option>
+          <option value="2T">2ª Evaluación</option>
+          <option value="3T">3ª Evaluación</option>
+        </select>
+      </div>
+    </div>
+  </div>
 
-        <!-- Tabla Matriz de Seguimiento -->
-        <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-            <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-                <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-table-cells text-indigo-600"></i>
-                    Matriz Integradora de Calificaciones por Criterio
-                </h2>
-                <span id="total-alumnos-badge" class="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-full font-semibold">0 Alumnos</span>
-            </div>
+  <div id="bannerPendientesContainer" style="display:none;"></div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs border-collapse" id="tabla-seguimiento">
-                    <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b border-slate-300" id="tabla-head">
-                    </thead>
-                    <tbody class="divide-y divide-slate-200" id="tabla-body">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
+  <div class="card">
+    <div class="card-title">
+      <span>📋 Matriz Integradora de Calificaciones por Criterio (Solo Lectura)</span>
+      <small style="font-weight:600; color:#64748b; font-size:0.82rem;">Haz clic en el alumno para ver su Ficha de Seguimiento o en la nota para ver su origen.</small>
+    </div>
 
-    <script>
-        // Configuración Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSy_Hispanidad_FirebaseKey_Placeholder",
-            authDomain: "cyberbreakout-hispanidad.firebaseapp.com",
-            projectId: "cyberbreakout-hispanidad",
-            storageBucket: "cyberbreakout-hispanidad.appspot.com",
-            messagingSenderId: "1035515234125",
-            appId: "1:1035515234125:web:hispanidad2026"
-        };
+    <div class="table-container">
+      <table id="tablaMatriz">
+        <thead>
+          <tr id="headersMatriz"></tr>
+        </thead>
+        <tbody id="bodyMatriz"></tbody>
+      </table>
+    </div>
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.firestore();
-        db.enablePersistence({ synchronizeTabs: true }).catch(err => console.log("Persistencia local activada:", err.code));
+    <div class="actions-bar">
+      <div>
+        <button class="btn btn-secondary" onclick="exportarCSVMatriz()">📥 Descargar Cuaderno (CSV)</button>
+      </div>
+      <button class="btn btn-success" onclick="sincronizarConNubeFirestore()">🔄 Recargar Datos de Nube</button>
+    </div>
+  </div>
+</div>
 
-        // Normalización flexible de nombres de curso ("2º ESO", "2 ESO A", "2ESO" -> "2ESO")
-        function normalizarCurso(cursoRaw) {
-            if (!cursoRaw) return '2ESO';
-            const str = String(cursoRaw).toUpperCase().replace(/[^A-Z0-9]/g, '');
-            if (str.includes('2')) return '2ESO';
-            if (str.includes('3')) return '3ESO';
-            if (str.includes('4')) return '4ESO';
-            return '2ESO';
-        }
+<!-- MODAL EDICIÓN LISTA DE ALUMNOS -->
+<div class="modal-overlay" id="modalAlumnos">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="modalTituloGrupo">👥 Modificar Lista de Alumnos</h3>
+      <button onclick="cerrarModal('modalAlumnos')" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✖</button>
+    </div>
+    <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">
+      Puedes editar la lista del grupo si hay altas o bajas en la clase:
+    </p>
+    <textarea id="txtListaAlumnos" class="textarea-alumnos"></textarea>
+    <div style="display:flex; justify-content:flex-end; gap:10px;">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalAlumnos')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarListaAlumnosCustom()">💾 Guardar Lista de Clase</button>
+    </div>
+  </div>
+</div>
 
-        const criteriosLOMLOE = {
-            '2ESO': ['TYD.2.1.1', 'TYD.2.1.2', 'TYD.2.2.1', 'TYD.2.3.1', 'TYD.2.4.1', 'TYD.2.5.1'],
-            '3ESO': ['TYD.3.1.1', 'TYD.3.1.2', 'TYD.3.2.1', 'TYD.3.3.1', 'TYD.3.4.1', 'TYD.3.5.1'],
-            '4ESO': ['DIG.4.1.1', 'DIG.4.1.2', 'DIG.4.2.1', 'DIG.4.3.1', 'DIG.4.4.1', 'DIG.4.5.1']
-        };
+<!-- MODAL DETALLE CRITERIO -->
+<div class="modal-overlay" id="modalDetalleCriterio">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="tituloDetalleCrit">🎯 Desglose del Criterio</h3>
+      <button onclick="cerrarModal('modalDetalleCriterio')" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✖</button>
+    </div>
+    <div id="contenidoDetalleCrit"></div>
+    <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+      <button class="btn btn-primary" onclick="cerrarModal('modalDetalleCriterio')">Cerrar</button>
+    </div>
+  </div>
+</div>
 
-        let cursoActual = '2ESO';
-        let datosAlumnos = {}; 
+<!-- MODAL FICHA ALUMNO -->
+<div class="modal-overlay" id="modalFichaAlumno">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="tituloFichaAlumno">👤 Ficha de Seguimiento del Alumno/a</h3>
+      <button onclick="cerrarModal('modalFichaAlumno')" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✖</button>
+    </div>
+    <div id="contenidoFichaAlumno"></div>
+    <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+      <button class="btn btn-primary" onclick="cerrarModal('modalFichaAlumno')">Cerrar Ficha</button>
+    </div>
+  </div>
+</div>
 
-        // REGISTRO DE NOTAS SIN DUPLICADOS (REGLA LOMLOE)
-        function registrarNotaConOrigen(alumnoId, curso, criterio, nota, origen, nombreAlumnoFallback) {
-            if (!alumnoId) return;
-            const cursoNorm = normalizarCurso(curso);
-            const origenLimpio = (origen || 'General').trim();
-            const valNota = parseFloat(nota);
+<script>
+  const firebaseConfig = { projectId: "cyberbreakout-hispanidad" };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-            if (!datosAlumnos[alumnoId]) {
-                datosAlumnos[alumnoId] = {
-                    id: alumnoId,
-                    nombre: nombreAlumnoFallback || 'Alumno',
-                    curso: cursoNorm,
-                    notas: []
-                };
-            }
+  const CRITERIOS_POR_NIVEL = {
+    "2ESO": [
+      { id: "TYD.2.1.1", label: "TYD.2.1.1" }, { id: "TYD.2.1.2", label: "TYD.2.1.2" },
+      { id: "TYD.2.1.3", label: "TYD.2.1.3" }, { id: "TYD.2.2.1", label: "TYD.2.2.1" },
+      { id: "TYD.2.2.2", label: "TYD.2.2.2" }, { id: "TYD.2.3.1", label: "TYD.2.3.1" },
+      { id: "TYD.2.4.1", label: "TYD.2.4.1" }, { id: "TYD.2.5.1", label: "TYD.2.5.1" },
+      { id: "TYD.2.5.2", label: "TYD.2.5.2" }, { id: "TYD.2.5.3", label: "TYD.2.5.3" },
+      { id: "TYD.2.6.1", label: "TYD.2.6.1" }, { id: "TYD.2.6.2", label: "TYD.2.6.2" },
+      { id: "TYD.2.6.3", label: "TYD.2.6.3" }, { id: "TYD.2.7.1", label: "TYD.2.7.1" },
+      { id: "TYD.2.7.2", label: "TYD.2.7.2" }
+    ],
+    "3ESO": [
+      { id: "TYD.3.1.1", label: "TYD.3.1.1" }, { id: "TYD.3.1.2", label: "TYD.3.1.2" },
+      { id: "TYD.3.1.3", label: "TYD.3.1.3" }, { id: "TYD.3.2.1", label: "TYD.3.2.1" },
+      { id: "TYD.3.2.2", label: "TYD.3.2.2" }, { id: "TYD.3.3.1", label: "TYD.3.3.1" },
+      { id: "TYD.3.4.1", label: "TYD.3.4.1" }, { id: "TYD.3.5.1", label: "TYD.3.5.1" },
+      { id: "TYD.3.5.2", label: "TYD.3.5.2" }, { id: "TYD.3.5.3", label: "TYD.3.5.3" },
+      { id: "TYD.3.6.1", label: "TYD.3.6.1" }, { id: "TYD.3.6.2", label: "TYD.3.6.2" },
+      { id: "TYD.3.6.3", label: "TYD.3.6.3" }, { id: "TYD.3.7.1", label: "TYD.3.7.1" },
+      { id: "TYD.3.7.2", label: "TYD.3.7.2" }
+    ],
+    "4ESO": [
+      { id: "DIG.4.1.1", label: "DIG.4.1.1" }, { id: "DIG.4.1.2", label: "DIG.4.1.2" },
+      { id: "DIG.4.1.3", label: "DIG.4.1.3" }, { id: "DIG.4.2.1", label: "DIG.4.2.1" },
+      { id: "DIG.4.2.2", label: "DIG.4.2.2" }, { id: "DIG.4.2.3", label: "DIG.4.2.3" },
+      { id: "DIG.4.2.4", label: "DIG.4.2.4" }, { id: "DIG.4.3.1", label: "DIG.4.3.1" },
+      { id: "DIG.4.3.2", label: "DIG.4.3.2" }, { id: "DIG.4.3.3", label: "DIG.4.3.3" },
+      { id: "DIG.4.4.1", label: "DIG.4.4.1" }, { id: "DIG.4.4.2", label: "DIG.4.4.2" },
+      { id: "DIG.4.4.3", label: "DIG.4.4.3" }, { id: "DIG.4.4.4", label: "DIG.4.4.4" }
+    ]
+  };
 
-            const alum = datosAlumnos[alumnoId];
-            if (nombreAlumnoFallback && (alum.nombre === 'Alumno' || !alum.nombre)) {
-                alum.nombre = nombreAlumnoFallback;
-            }
-            if (curso) alum.curso = cursoNorm;
+  const ALUMNOS_OFICIALES = {
+    "2ESO_A": ["Bada Blanco, Ainara", "Bravo Rodríguez, Lucía", "Contreras Santiago, Manuel", "Contreras Santiago, Paula", "Correa Rodríguez, Ainara", "Costa Redondo, Saray", "Cruz Feria, Esteban", "Cuaresma Rodríguez, Indhira", "Cuaresma Rodríguez, Nayma", "De la Luz Patricio, Elena", "Garcia Caparrós, Indira", "Garrido Fernández, Yamileth", "Gómez Brito, Adriana", "Gómez López, Daniella", "Gutiérrez Valencia, Thomas", "López Gómez, Hugo", "López Salguero, Héctor Jesús", "Mora Chico, Hugo", "Mykhailyshyn, Iryna", "Presa Bueno, Luca", "Rengel Padilla, Alejandra", "Reyes Pérez, Francisco José", "Rodríguez Domínguez, Antonio", "Silva López, Ainhoa", "Torrescusa Borrero, Miguel"],
+    "2ESO_B": ["Bautista Lepe, Izan", "Bueno Merino, Indira", "Diallo, Zoumana", "Díaz Pinto, Giulia", "El Hajoui Moustekfy, Ryan", "El Hajoui Moustekfy, Yasmina", "Funes Aranda, Jean Alessandro", "Gil Pire, Camila Sophia", "Gutiérrez Álvarez, Adriano", "Hernández Tarriño, Estrella", "Herrán Góngora, Laura Sofía", "Hierro Masa, Ximena", "Jiménez Vázquez, Indira", "Lemos Del Toro, Alejandro", "Masero Rodríguez, Ana de los Remedios", "Moya Mera, Aitor", "Muñoz López, Yerai", "Núñez Álvarez, Jose", "Pérez Márquez, Juan Marcelo", "Pozo Orta, Julia", "Rodríguez Enríquez, Daniela", "Rodríguez Ospina, Juan David", "Sánchez Alonso, Libertad", "Sánchez Pérez, Erick", "Sola Infantes, Lucía", "Tristán Wert, Aarón"],
+    "3ESO_A": ["Becerro Larios, Aitana", "Benítez Márquez, Azahara", "Brito Rasero, Valeria", "Cordón Pérez, Bryam", "Fernández Rebollo, Alejandro", "Flores Rueda, Lucía", "Gálvez Sfatolea, Rocío", "Gómez Damota, Aitor", "Gómez Soto, Francisco Javier", "González Rodríguez, Adriana", "Heredia Medel, Rocío", "Hernández Barrera, Alejandro José", "Ibánez Montagut, Ainhoa", "Martín Griñolo, Paula", "Mateo Ramos, Rubén", "Mora Reyes, Manuel", "Naranjo Romero, David", "Nawaz Kousar, Muhammad Afnan", "Palomares Magro, Jesús", "Palomares Puga, Alejandro", "Pérez Hermoso, Jesús", "Prieto Évora, Judith", "Rodríguez Rodríguez, Alicia", "Silvera Iftimie, José Miguel", "Toledano Millares, Sergio", "Torres Benítez, Diego", "Viatela Arteaga, Juan Manuel"],
+    "3ESO_B": ["Beas Castilla, Sara", "Canelo Suárez, Manuel Darío", "Contreras Cuaresma, Daniela", "Díaz Fariña, Iker", "García Varela, Marco", "Gómez Borrero, Alejandro", "Gómez Del Pino, Enrique", "Gómez Fernández, Adrián", "Gutiérrez Colete, Miguel", "Ichou Er Raji, Chaima", "Jiménez Rodriguez, Sheila", "López González, María", "Luque Lorenzo, Adrián", "Márquez Rivero, Oriol", "Martin Cerrejón, Antonio", "Mora Garrido, Rita", "Moreno Lepe, Andrés", "Muñoz Díaz, Coraima", "Nieto González, Daniel", "Orta Gómez, Samuel", "Pérez Paredes, Natalia", "Rodríguez De Lucas, Alejandro", "Romero Barbero, José Antonio", "Suero Robles, Daniel", "Suero Robles, Iván", "Vázquez Boza, María"],
+    "4ESO_A": ["Arazo Pérez, Nahyra", "Bacedoni Camero, Minerva", "Cáceres Cruz, Andrea", "Castellano Díaz, Paula", "De la Rosa Paredes, Claudia", "González Rodríguez, Miguel Ángel", "López Borrero, José Francisco", "Luardo Pérez, David", "Marín García, Yaiza", "Márquez Domínguez, Natalia", "Martin Gómez, Alicia", "Oliva Pernil, Eva", "Ortiz Azaustre, Claudia", "Palomares Magro, Juan Manuel", "Paredes Díaz, Ainhoa", "Paredes Gil, Sergio", "Pavón Barrera, Andrea", "Pérez Calvo, Angelo", "Torrado Ternero, Estela"],
+    "4ESO_B": ["Araujo Carrasco, José Manuel", "Borrero De Paula, José Antonio", "Boulal, Jilali", "Escudero Limón, Daniela", "Kykish Toporovska, Diana", "Lobato Ramos, Hugo", "Martin Venegas, Ester", "Naranjo Romero, Aitana", "Pérez Rodríguez, Pablo", "Rivero Hernández, Diego Alejandro", "Rivero Hernández, Enrique Alejandro", "Rodríguez Brejano, Alexys", "Salazar Fernández, Yamilet", "Sánchez Lozada, Sergio Enrique", "Sánchez Pérez, Induara", "Sánchez Ternero, Alejandro", "Soto García, Ángela", "Terrón Quintero, José Antonio", "Torres Hernández, Javier", "Wert Hermoso, Laura"]
+  };
 
-            if (!isNaN(valNota) && criterio) {
-                const index = alum.notas.findIndex(n => n.criterio === criterio && (n.origen || '').trim() === origenLimpio);
-                if (index !== -1) {
-                    alum.notas[index].nota = valNota;
-                    alum.notas[index].fecha = new Date().toISOString();
-                } else {
-                    alum.notas.push({
-                        criterio: criterio,
-                        nota: valNota,
-                        origen: origenLimpio,
-                        fecha: new Date().toISOString()
+  let alumnosBD = {};
+  let matrizAcumuladaBD = {}; // matriz[curso][eval][alum_norm][crit_id] = [ { origen, valor } ]
+
+  function normalizarTexto(txt) {
+    if (!txt) return "";
+    return txt.toString().trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  }
+
+  function normalizarCurso(keyStr) {
+    if (!keyStr || typeof keyStr !== "string") return null;
+    const k = keyStr.toUpperCase().replace("-", "_").trim();
+    if (["2A", "2ESO_A", "2ESO A"].includes(k) || k.includes("2ESO_A") || k.includes("_2A_") || k.includes("_2A") || k.includes("2A_")) return "2ESO_A";
+    if (["2B", "2ESO_B", "2ESO B"].includes(k) || k.includes("2ESO_B") || k.includes("_2B_") || k.includes("_2B") || k.includes("2B_")) return "2ESO_B";
+    if (["3A", "3ESO_A", "3ESO A"].includes(k) || k.includes("3ESO_A") || k.includes("_3A_") || k.includes("_3A") || k.includes("3A_")) return "3ESO_A";
+    if (["3B", "3ESO_B", "3ESO B"].includes(k) || k.includes("3ESO_B") || k.includes("_3B_") || k.includes("_3B") || k.includes("3B_")) return "3ESO_B";
+    if (["4A", "4ESO_A", "4ESO A"].includes(k) || k.includes("4ESO_A") || k.includes("_4A_") || k.includes("_4A") || k.includes("4A_")) return "4ESO_A";
+    if (["4B", "4ESO_B", "4ESO B"].includes(k) || k.includes("4ESO_B") || k.includes("_4B_") || k.includes("_4B") || k.includes("4B_")) return "4ESO_B";
+    return null;
+  }
+
+  function cargarAlumnosBD() {
+    const guardado = localStorage.getItem("evaluador_directo_alumnos_v2");
+    if (guardado) {
+      try { alumnosBD = JSON.parse(guardado); } catch(e) { alumnosBD = JSON.parse(JSON.stringify(ALUMNOS_OFICIALES)); }
+    } else {
+      alumnosBD = JSON.parse(JSON.stringify(ALUMNOS_OFICIALES));
+      localStorage.setItem("evaluador_directo_alumnos_v2", JSON.stringify(alumnosBD));
+    }
+  }
+
+  function registrarNotaConOrigen(cursoStr, evalStr, alumName, critId, valor, origenStr) {
+    if (!cursoStr || !alumName || !critId) return;
+    const valNum = parseFloat(valor);
+    if (isNaN(valNum)) return;
+
+    const cursoNorm = normalizarCurso(cursoStr);
+    if (!cursoNorm) return;
+
+    const eKey = (evalStr && ["1T", "2T", "3T"].includes(evalStr)) ? evalStr : "1T";
+    const alumNorm = normalizarTexto(alumName);
+
+    if (!matrizAcumuladaBD[cursoNorm]) matrizAcumuladaBD[cursoNorm] = {};
+    if (!matrizAcumuladaBD[cursoNorm][eKey]) matrizAcumuladaBD[cursoNorm][eKey] = {};
+    if (!matrizAcumuladaBD[cursoNorm][eKey][alumNorm]) matrizAcumuladaBD[cursoNorm][eKey][alumNorm] = {};
+    if (!matrizAcumuladaBD[cursoNorm][eKey][alumNorm][critId]) matrizAcumuladaBD[cursoNorm][eKey][alumNorm][critId] = [];
+
+    const origLimpio = (origenStr || "SdA / Prueba").trim();
+    const arr = matrizAcumuladaBD[cursoNorm][eKey][alumNorm][critId];
+
+    const existIdx = arr.findIndex(item => item.origen === origLimpio);
+    if (existIdx >= 0) {
+      arr[existIdx].valor = valNum;
+    } else {
+      arr.push({
+        origen: origLimpio,
+        valor: valNum
+      });
+    }
+  }
+
+  function parsearEntradaUniversal(key, data) {
+    if (!data || typeof data !== "object") return;
+
+    // 1. Doblador 2º ESO
+    if (key.includes("doblador")) {
+      const grupo = data.grupo || (key.split("_")[1] || "2A");
+      const alumno = data.alumno || key.split("_").slice(2).join("_");
+      const map = { c1: "TYD.2.3.1", c2: "TYD.2.2.2", c3: "TYD.2.1.2" };
+      Object.keys(map).forEach(ck => {
+        if (data[ck] !== undefined && data[ck] !== null) registrarNotaConOrigen(grupo, "1T", alumno, map[ck], data[ck], "SdA Doblador 2º ESO");
+      });
+      return;
+    }
+
+    // 2. Retos 3º ESO
+    if (key.includes("retos3eso")) {
+      const parts = key.split("_");
+      const grupo = parts[1] || "3A";
+      const alumno = parts.slice(2).join("_") || data.alumno;
+      const map = { c1: "TYD.3.1.1", c2: "TYD.3.1.3", c3: "TYD.3.2.1", c4: "TYD.3.2.2", c5: "TYD.3.4.1", c6: "TYD.3.7.1" };
+      Object.keys(map).forEach(ck => {
+        if (data[ck] !== undefined && data[ck] !== null) registrarNotaConOrigen(grupo, "1T", alumno, map[ck], data[ck], "SdA Retos 3º ESO");
+      });
+      return;
+    }
+
+    // 3. ENIAC 4º ESO
+    if (key.includes("eniac")) {
+      const grupo = data.grupo || (key.split("_")[1] || "4A");
+      const alumno = data.alumno || key.split("_").slice(2).join("_");
+      const map = { c1: "DIG.4.1.3", c2: "DIG.4.2.2", c3: "DIG.4.2.3", c4: "DIG.4.2.4", c5: "DIG.4.4.4" };
+      Object.keys(map).forEach(ck => {
+        if (data[ck] !== undefined && data[ck] !== null) registrarNotaConOrigen(grupo, "1T", alumno, map[ck], data[ck], "SdA ENIAC 4º ESO");
+      });
+      return;
+    }
+
+    // 4. Presupuestos PC 4º ESO
+    if (key.includes("presupuesto") || key.includes("sda2presupuestos")) {
+      const grupo = data.grupo || data.curso || (key.split("_")[1] || "4A");
+      const alumno = data.alumno || key.split("_").slice(2).join("_");
+      const map = { c1: "DIG.4.1.3", c2: "DIG.4.2.2", c3: "DIG.4.2.3", c4: "DIG.4.1.2" };
+      Object.keys(map).forEach(ck => {
+        if (data[ck] !== undefined && data[ck] !== null) registrarNotaConOrigen(grupo, "1T", alumno, map[ck], data[ck], "SdA Presupuestos PC");
+      });
+      return;
+    }
+
+    // 5. Evaluador Directo Pruebas v8
+    if (key.includes("evaluador_directo_pruebas") || key === "estadoGeneral") {
+      Object.keys(data).forEach(cKey => {
+        const evDict = data[cKey];
+        if (typeof evDict === "object" && evDict) {
+          Object.keys(evDict).forEach(eKey => {
+            const pruebaList = evDict[eKey];
+            if (Array.isArray(pruebaList)) {
+              pruebaList.forEach(p => {
+                const pNombre = p ? (p.nombre || "Prueba Directa") : "Prueba Directa";
+                if (p && p.notas) {
+                  Object.keys(p.notas).forEach(alum => {
+                    Object.keys(p.notas[alum]).forEach(critId => {
+                      registrarNotaConOrigen(cKey, eKey, alum, critId, p.notas[alum][critId], pNombre);
                     });
+                  });
                 }
+              });
             }
+          });
         }
+      });
+      return;
+    }
 
-        // ESCANEO DINÁMICO DE TODO LOCALSTORAGE (Respetar 100% de listas y SdAs cargadas)
-        function escanearTodoLocalStorage() {
-            try {
-                // 1. Alumnos de lista de clase
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.includes('alumnos') || key.includes('evaluador_directo')) {
-                        try {
-                            const parsed = JSON.parse(localStorage.getItem(key));
-                            if (Array.isArray(parsed)) {
-                                parsed.forEach(a => {
-                                    if (a && (a.id || a.alumnoId)) {
-                                        const id = a.id || a.alumnoId;
-                                        const nom = a.nombre || a.nombreAlumno || a.alumno;
-                                        const cur = normalizarCurso(a.curso || a.grupo);
-                                        if (!datosAlumnos[id]) {
-                                            datosAlumnos[id] = { id: id, nombre: nom || 'Alumno', curso: cur, notas: [] };
-                                        } else {
-                                            if (nom) datosAlumnos[id].nombre = nom;
-                                            if (cur) datosAlumnos[id].curso = cur;
-                                        }
-                                    }
-                                });
-                            }
-                        } catch(e){}
-                    }
-                }
-
-                // 2. Pruebas y notas de todas las SdAs y Evaluador Directo
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.includes('alumnos')) continue;
-                    try {
-                        const data = JSON.parse(localStorage.getItem(key));
-                        if (Array.isArray(data)) {
-                            data.forEach(item => {
-                                if (item && (item.alumnoId || item.id) && item.criterio && item.nota !== undefined) {
-                                    registrarNotaConOrigen(
-                                        item.alumnoId || item.id,
-                                        item.curso || item.grupo,
-                                        item.criterio,
-                                        item.nota,
-                                        item.origen || item.sda || key,
-                                        item.nombreAlumno || item.nombre || item.alumno
-                                    );
-                                }
-                            });
-                        }
-                    } catch(e){}
-                }
-            } catch (err) {
-                console.error("Error escaneando localStorage:", err);
-            }
-            renderizarTabla();
-        }
-
-        // LISTENERS DE FIREBASE EN TIEMPO REAL (Móvil, Tablet y PC)
-        function inicializarListenersFirebase() {
-            const statusDot = document.getElementById('sync-status-dot');
-            const statusText = document.getElementById('sync-status-text');
-
-            // Cargar alumnos guardados en la nube
-            db.collection('alumnos_v2').onSnapshot(snapshot => {
-                snapshot.forEach(doc => {
-                    const a = doc.data();
-                    if (a && a.id) {
-                        if (!datosAlumnos[a.id]) {
-                            datosAlumnos[a.id] = { id: a.id, nombre: a.nombre || 'Alumno', curso: normalizarCurso(a.curso), notas: [] };
-                        } else {
-                            if (a.nombre) datosAlumnos[a.id].nombre = a.nombre;
-                            if (a.curso) datosAlumnos[a.id].curso = normalizarCurso(a.curso);
-                        }
-                    }
-                });
-                renderizarTabla();
-            }, err => console.log("Nota alumnos remote sync:", err));
-
-            // Escuchar colección principal de evaluaciones
-            db.collection('evaluaciones').onSnapshot(snapshot => {
-                snapshot.docChanges().forEach(change => {
-                    const d = change.doc.data();
-                    if (d && d.alumnoId && d.criterio) {
-                        registrarNotaConOrigen(d.alumnoId, d.curso, d.criterio, d.nota, d.origen, d.nombreAlumno);
-                    }
-                });
-                statusDot.className = "w-3 h-3 rounded-full bg-emerald-500";
-                statusText.innerText = "Sincronizado en tiempo real con Firebase";
-                renderizarTabla();
-            }, err => {
-                statusDot.className = "w-3 h-3 rounded-full bg-amber-500";
-                statusText.innerText = "Modo Local / Caché Activo";
+    // 6. Matriz genérica
+    Object.keys(data).forEach(cKey => {
+      const cNorm = normalizarCurso(cKey);
+      if (cNorm && typeof data[cKey] === "object") {
+        const sub = data[cKey];
+        Object.keys(sub).forEach(subKey => {
+          if (["1T", "2T", "3T"].includes(subKey.toUpperCase())) {
+            const eKey = subKey.toUpperCase();
+            Object.keys(sub[subKey]).forEach(alum => {
+              Object.keys(sub[subKey][alum]).forEach(critId => {
+                registrarNotaConOrigen(cNorm, eKey, alum, critId, sub[subKey][alum][critId], "Evaluación Directa");
+              });
             });
-
-            // Escuchar colección de evaluacion_directa
-            db.collection('evaluacion_directa').onSnapshot(snapshot => {
-                snapshot.docChanges().forEach(change => {
-                    const d = change.doc.data();
-                    if (d && d.alumnoId && d.criterio) {
-                        registrarNotaConOrigen(d.alumnoId, d.curso, d.criterio, d.nota, d.origen, d.nombreAlumno);
-                    }
-                });
-                renderizarTabla();
+          } else if (typeof sub[subKey] === "object") {
+            Object.keys(sub[subKey]).forEach(critId => {
+              registrarNotaConOrigen(cNorm, "1T", subKey, critId, sub[subKey][critId], "Evaluación Directa");
             });
-        }
-
-        // FORZAR SINCRONIZACIÓN TOTAL BIDIRECCIONAL
-        function forzarSincronizacionTotal() {
-            let count = 0;
-            const batch = db.batch();
-
-            Object.values(datosAlumnos).forEach(alumno => {
-                // Subir lista de alumnos
-                const alumRef = db.collection('alumnos_v2').doc(alumno.id);
-                batch.set(alumRef, { id: alumno.id, nombre: alumno.nombre, curso: alumno.curso }, { merge: true });
-
-                // Subir notas
-                alumno.notas.forEach(n => {
-                    const docId = `${alumno.id}_${n.criterio}_${encodeURIComponent((n.origen || '').trim())}`;
-                    const ref = db.collection('evaluaciones').doc(docId);
-                    batch.set(ref, {
-                        alumnoId: alumno.id,
-                        nombreAlumno: alumno.nombre,
-                        curso: alumno.curso,
-                        criterio: n.criterio,
-                        nota: n.nota,
-                        origen: n.origen,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true });
-                    count++;
-                });
-            });
-
-            batch.commit().then(() => {
-                alert(`¡Sincronización completada! ${count} calificaciones sincronizadas con la nube.`);
-            }).catch(err => {
-                console.error("Error al sincronizar:", err);
-                alert("Las notas se guardan localmente y se subirán al reconectar.");
-            });
-        }
-
-        function cambiarCurso(curso) {
-            cursoActual = curso;
-            document.querySelectorAll('.curso-btn').forEach(btn => {
-                if (btn.dataset.curso === curso) {
-                    btn.className = "curso-btn px-4 py-1.5 rounded-lg text-xs font-bold transition bg-indigo-600 text-white shadow-sm";
-                } else {
-                    btn.className = "curso-btn px-4 py-1.5 rounded-lg text-xs font-bold transition bg-slate-200 text-slate-700 hover:bg-slate-300";
-                }
-            });
-            renderizarTabla();
-        }
-
-        function renderizarTabla() {
-            const head = document.getElementById('tabla-head');
-            const body = document.getElementById('tabla-body');
-            const baseCriterios = criteriosLOMLOE[cursoActual] || [];
-
-            // Obtener todos los alumnos que pertenezcan a este curso (con normalización)
-            const alumnosFiltrados = Object.values(datosAlumnos).filter(a => normalizarCurso(a.curso) === cursoActual);
-            document.getElementById('total-alumnos-badge').innerText = `${alumnosFiltrados.length} Alumnos en ${cursoActual}`;
-
-            // Recopilar criterios dinámicos si existen notas asociadas
-            const criteriosSet = new Set(baseCriterios);
-            alumnosFiltrados.forEach(a => {
-                a.notas.forEach(n => { if (n.criterio) criteriosSet.add(n.criterio); });
-            });
-            const criterios = Array.from(criteriosSet);
-
-            // Cabecera
-            let headHTML = `<tr><th class="py-3 px-4 bg-slate-200 w-1/4">Alumno / Alumna</th>`;
-            criterios.forEach(crit => {
-                headHTML += `<th class="py-3 px-3 text-center border-l border-slate-300 bg-slate-100">${crit}</th>`;
-            });
-            headHTML += `<th class="py-3 px-4 text-center border-l border-slate-300 bg-indigo-100 text-indigo-900">Media Curso</th></tr>`;
-            head.innerHTML = headHTML;
-
-            // Cuerpo
-            if (alumnosFiltrados.length === 0) {
-                body.innerHTML = `<tr><td colspan="${criterios.length + 2}" class="py-6 text-center text-slate-400">No hay registros de alumnos para ${cursoActual}.</td></tr>`;
-                return;
-            }
-
-            let bodyHTML = '';
-            alumnosFiltrados.forEach(alum => {
-                bodyHTML += `<tr class="hover:bg-slate-50 transition">
-                    <td class="py-3 px-4 font-semibold text-slate-900 border-b border-slate-200">${alum.nombre}</td>`;
-
-                let sumaMediasCriterio = 0;
-                let criteriosEvaluados = 0;
-
-                criterios.forEach(crit => {
-                    const notasCrit = alum.notas.filter(n => n.criterio === crit);
-                    if (notasCrit.length > 0) {
-                        const mediaCrit = notasCrit.reduce((acc, curr) => acc + curr.nota, 0) / notasCrit.length;
-                        sumaMediasCriterio += mediaCrit;
-                        criteriosEvaluados++;
-                        const badgeColor = mediaCrit >= 5 ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-rose-100 text-rose-800 border-rose-300';
-                        bodyHTML += `<td class="py-3 px-3 text-center border-l border-slate-200">
-                            <span class="inline-block px-2 py-0.5 rounded border text-xs font-bold ${badgeColor}" title="${notasCrit.length} nota(s)">
-                                ${mediaCrit.toFixed(1)}
-                            </span>
-                        </td>`;
-                    } else {
-                        bodyHTML += `<td class="py-3 px-3 text-center border-l border-slate-200 text-slate-300">-</td>`;
-                    }
-                });
-
-                const mediaFinal = criteriosEvaluados > 0 ? (sumaMediasCriterio / criteriosEvaluados).toFixed(2) : '-';
-                const finalBadge = mediaFinal >= 5 ? 'bg-indigo-600 text-white' : (mediaFinal === '-' ? 'bg-slate-200 text-slate-500' : 'bg-rose-600 text-white');
-
-                bodyHTML += `<td class="py-3 px-4 text-center border-l border-slate-200 font-bold">
-                    <span class="px-2.5 py-1 rounded-md text-xs font-extrabold ${finalBadge}">${mediaFinal}</span>
-                </td></tr>`;
-            });
-
-            body.innerHTML = bodyHTML;
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            escanearTodoLocalStorage();
-            inicializarListenersFirebase();
+          }
         });
-    </script>
+      }
+    });
+  }
+
+  function cargarYRefrescarDatos() {
+    matrizAcumuladaBD = {};
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || k.includes("alumnos")) continue;
+      try {
+        const val = JSON.parse(localStorage.getItem(k));
+        parsearEntradaUniversal(k, val);
+      } catch(e) {}
+    }
+
+    renderizarMatrizSeguimiento();
+  }
+
+  function activarEscuchaNube() {
+    const colecciones = ["evaluaciones", "eniac_4eso_notas", "doblador_2eso_notas", "evaluacion_directa"];
+
+    colecciones.forEach(collName => {
+      db.collection(collName).onSnapshot(snapshot => {
+        snapshot.forEach(doc => {
+          try {
+            const data = doc.data();
+            parsearEntradaUniversal(collName + "_" + doc.id, data);
+          } catch(e) {}
+        });
+        renderizarMatrizSeguimiento();
+        const badge = document.getElementById("syncStatusBadge");
+        if (badge) badge.textContent = "☁️ Nube Sincronizada (" + new Date().toLocaleTimeString() + ")";
+      }, err => {
+        console.warn("Nube offline en " + collName, err);
+      });
+    });
+  }
+
+  function sincronizarConNubeFirestore() {
+    cargarYRefrescarDatos();
+    alert("✅ Datos integrados y actualizados correctamente.");
+  }
+
+  function obtenerNivelCurso(curso) {
+    if (curso.startsWith("2ESO")) return "2ESO";
+    if (curso.startsWith("3ESO")) return "3ESO";
+    if (curso.startsWith("4ESO")) return "4ESO";
+    return "2ESO";
+  }
+
+  function renderizarMatrizSeguimiento() {
+    const curso = document.getElementById("selectCurso").value;
+    const evalSeleccionada = document.getElementById("selectEval").value;
+    const nivel = obtenerNivelCurso(curso);
+
+    const criteriosOficiales = CRITERIOS_POR_NIVEL[nivel] || CRITERIOS_POR_NIVEL["2ESO"];
+    const listaAlumnos = alumnosBD[curso] || [];
+    const datosCursoObj = matrizAcumuladaBD[curso] || {};
+
+    // Determinar qué criterios se muestran en las columnas
+    let criteriosVisibles = [];
+    let criteriosPendientes = [];
+
+    if (evalSeleccionada === "GLOBAL") {
+      criteriosVisibles = [...criteriosOficiales];
+      criteriosPendientes = [];
+    } else {
+      // En modo trimestral (1T, 2T, 3T), filtrar sólo los criterios que TIENEN NOTAS en este trimestre
+      const datosEval = datosCursoObj[evalSeleccionada] || {};
+
+      criteriosOficiales.forEach(crit => {
+        let tieneNotaEnTrimestre = false;
+        Object.keys(datosEval).forEach(alumNorm => {
+          if (datosEval[alumNorm] && datosEval[alumNorm][crit.id] && datosEval[alumNorm][crit.id].length > 0) {
+            tieneNotaEnTrimestre = true;
+          }
+        });
+
+        if (tieneNotaEnTrimestre) {
+          criteriosVisibles.push(crit);
+        } else {
+          criteriosPendientes.push(crit);
+        }
+      });
+    }
+
+    // Renderizar Banner de Criterios Pendientes en Trimestres
+    const bannerContainer = document.getElementById("bannerPendientesContainer");
+    if (evalSeleccionada !== "GLOBAL" && criteriosPendientes.length > 0) {
+      bannerContainer.style.display = "block";
+      let htmlBanner = `
+        <div class="banner-pendientes">
+          📌 <strong>Criterios del Currículo Pendientes de Evaluar en la ${evalSeleccionada.replace('T', 'ª Evaluacion')}:</strong> (${criteriosPendientes.length} sin actividades)<br>
+          <div style="margin-top:6px;">
+      `;
+      criteriosPendientes.forEach(c => {
+        htmlBanner += `<span class="chip-pendiente">${c.id}</span>`;
+      });
+      htmlBanner += `</div></div>`;
+      bannerContainer.innerHTML = htmlBanner;
+    } else {
+      bannerContainer.style.display = "none";
+      bannerContainer.innerHTML = "";
+    }
+
+    // Renderizar Headers de la Tabla
+    const headersTr = document.getElementById("headersMatriz");
+    let htmlHeaders = `
+      <th class="col-sticky-1">#</th>
+      <th class="col-sticky-2">Nombre del Alumno/a</th>
+    `;
+
+    criteriosVisibles.forEach(crit => {
+      htmlHeaders += `<th title="Haz clic en las celdas para ver el origen de ${crit.id}" style="min-width:70px;">${crit.id}</th>`;
+    });
+
+    htmlHeaders += `
+      <th style="min-width:90px; background:#e0f2fe; color:#0369a1;">📊 Media</th>
+      <th style="min-width:95px; background:#fef3c7; color:#92400e;">⭐ Estado</th>
+    `;
+    headersTr.innerHTML = htmlHeaders;
+
+    const tbody = document.getElementById("bodyMatriz");
+    tbody.innerHTML = "";
+
+    if (listaAlumnos.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="35" style="padding:20px; text-align:center; color:#64748b;">No hay alumnos en este grupo.</td></tr>`;
+      return;
+    }
+
+    listaAlumnos.forEach((alumno, idx) => {
+      const tr = document.createElement("tr");
+      const alumNorm = normalizarTexto(alumno);
+
+      let sumaTotalMediaCriterios = 0;
+      let countCriteriosEvaluados = 0;
+
+      let htmlFila = `
+        <td class="col-sticky-1">${idx + 1}</td>
+        <td class="col-sticky-2">
+          <span class="student-link" onclick="abrirFichaAlumno('${alumno.replace(/'/g, "\'")}')" title="Haz clic para ver la Ficha de Seguimiento de ${alumno}">
+            👤 ${alumno}
+          </span>
+        </td>
+      `;
+
+      criteriosVisibles.forEach(crit => {
+        let objetosNotasCrit = [];
+
+        if (evalSeleccionada === "GLOBAL") {
+          Object.keys(datosCursoObj).forEach(eKey => {
+            if (datosCursoObj[eKey][alumNorm] && datosCursoObj[eKey][alumNorm][crit.id]) {
+              objetosNotasCrit = objetosNotasCrit.concat(datosCursoObj[eKey][alumNorm][crit.id]);
+            }
+          });
+        } else {
+          if (datosCursoObj[evalSeleccionada] && datosCursoObj[evalSeleccionada][alumNorm] && datosCursoObj[evalSeleccionada][alumNorm][crit.id]) {
+            objetosNotasCrit = datosCursoObj[evalSeleccionada][alumNorm][crit.id];
+          }
+        }
+
+        let mediaCritVal = "-";
+        let tooltipTexto = "Sin calificar";
+        let tieneNota = false;
+
+        if (objetosNotasCrit.length > 0) {
+          tieneNota = true;
+          const suma = objetosNotasCrit.reduce((a, b) => a + b.valor, 0);
+          const mediaCrit = suma / objetosNotasCrit.length;
+          mediaCritVal = (Math.round(mediaCrit * 100) / 100).toFixed(2);
+
+          sumaTotalMediaCriterios += parseFloat(mediaCritVal);
+          countCriteriosEvaluados++;
+
+          const listaDesglose = objetosNotasCrit.map(item => `${item.origen}: ${item.valor}`).join(" | ");
+          tooltipTexto = `${crit.id} -> ${listaDesglose} => Media: ${mediaCritVal}`;
+        }
+
+        htmlFila += `
+          <td>
+            <span class="cell-nota" style="color: ${tieneNota ? '#0369a1' : '#94a3b8'}; background: ${tieneNota ? '#f0f9ff' : 'transparent'};"
+              title="${tooltipTexto}"
+              onclick="abrirModalDetalleCriterio('${alumno.replace(/'/g, "\'")}', '${crit.id}')">
+              ${mediaCritVal}
+            </span>
+          </td>
+        `;
+      });
+
+      let mediaGlobalTexto = "-";
+      let badgeHtml = `<span class="badge-nota badge-empty">-</span>`;
+
+      if (countCriteriosEvaluados > 0) {
+        const mediaFinal = sumaTotalMediaCriterios / countCriteriosEvaluados;
+        mediaGlobalTexto = mediaFinal.toFixed(2);
+        const esAprobado = mediaFinal >= 5.0;
+        badgeHtml = `<span class="badge-nota ${esAprobado ? 'badge-pass' : 'badge-fail'}">${esAprobado ? 'APROBADO' : 'SUSPENSO'}</span>`;
+      }
+
+      htmlFila += `
+        <td style="font-weight:800; color:#0369a1; background:#f0f9ff;">${mediaGlobalTexto}</td>
+        <td style="background:#fffbeb;">${badgeHtml}</td>
+      `;
+
+      tr.innerHTML = htmlFila;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function abrirModalDetalleCriterio(alumno, critId) {
+    const curso = document.getElementById("selectCurso").value;
+    const evalSel = document.getElementById("selectEval").value;
+    const alumNorm = normalizarTexto(alumno);
+    const datosCursoObj = matrizAcumuladaBD[curso] || {};
+
+    let objetosNotas = [];
+
+    if (evalSel === "GLOBAL") {
+      Object.keys(datosCursoObj).forEach(eKey => {
+        if (datosCursoObj[eKey][alumNorm] && datosCursoObj[eKey][alumNorm][critId]) {
+          objetosNotas = objetosNotas.concat(datosCursoObj[eKey][alumNorm][critId]);
+        }
+      });
+    } else {
+      if (datosCursoObj[evalSel] && datosCursoObj[evalSel][alumNorm] && datosCursoObj[evalSel][alumNorm][critId]) {
+        objetosNotas = datosCursoObj[evalSel][alumNorm][critId];
+      }
+    }
+
+    document.getElementById("tituloDetalleCrit").textContent = `🎯 Desglose de ${critId} - ${alumno}`;
+    
+    const container = document.getElementById("contenidoDetalleCrit");
+    if (objetosNotas.length === 0) {
+      container.innerHTML = `<p style="color:#64748b; padding:15px; text-align:center;">No hay calificaciones registradas para este criterio en ${evalSel}.</p>`;
+    } else {
+      const suma = objetosNotas.reduce((a, b) => a + b.valor, 0);
+      const media = (suma / objetosNotas.length).toFixed(2);
+
+      let html = `
+        <div class="summary-box">
+          <div class="summary-item"><label>Alumno/a</label><val style="font-size:1rem;">${alumno}</val></div>
+          <div class="summary-item"><label>Criterio</label><val style="font-size:1rem;">${critId}</val></div>
+          <div class="summary-item"><label>Nota Media Criterio</label><val style="font-size:1.3rem;">${media}</val></div>
+        </div>
+
+        <h4 style="font-size:0.92rem; color:#1e293b; margin-top:14px; font-weight:800;">📋 Actividades y Pruebas que integran este Criterio:</h4>
+        <table class="modal-table">
+          <thead>
+            <tr>
+              <th>Actividad / Examen / SdA</th>
+              <th style="text-align:right;">Calificación Criterial</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      objetosNotas.forEach(item => {
+        html += `
+          <tr>
+            <td><strong>${item.origen}</strong></td>
+            <td style="text-align:right; font-weight:800; color:#0284c7;">${item.valor.toFixed(2)}</td>
+          </tr>
+        `;
+      });
+
+      html += `
+          </tbody>
+        </table>
+      `;
+      container.innerHTML = html;
+    }
+
+    document.getElementById("modalDetalleCriterio").style.display = "flex";
+  }
+
+  function abrirFichaAlumno(alumno) {
+    const curso = document.getElementById("selectCurso").value;
+    const nivel = obtenerNivelCurso(curso);
+    const criteriosOficiales = CRITERIOS_POR_NIVEL[nivel] || [];
+    const alumNorm = normalizarTexto(alumno);
+    const datosCursoObj = matrizAcumuladaBD[curso] || {};
+
+    document.getElementById("tituloFichaAlumno").textContent = `👤 Ficha de Seguimiento Individual: ${alumno}`;
+
+    let totalCriterios = criteriosOficiales.length;
+    let sumMedias = 0;
+    let evalCount = 0;
+    let pasadosList = [];
+    let suspensosList = [];
+    let noEvaluadosList = [];
+
+    let historialCompleto = [];
+
+    criteriosOficiales.forEach(crit => {
+      let notasCrit = [];
+      Object.keys(datosCursoObj).forEach(eKey => {
+        if (datosCursoObj[eKey][alumNorm] && datosCursoObj[eKey][alumNorm][crit.id]) {
+          datosCursoObj[eKey][alumNorm][crit.id].forEach(item => {
+            notasCrit.push(item);
+            historialCompleto.push({ trim: eKey, crit: crit.id, origen: item.origen, nota: item.valor });
+          });
+        }
+      });
+
+      if (notasCrit.length > 0) {
+        const mediaCrit = notasCrit.reduce((a, b) => a + b.valor, 0) / notasCrit.length;
+        sumMedias += mediaCrit;
+        evalCount++;
+
+        if (mediaCrit >= 5.0) {
+          pasadosList.push({ id: crit.id, media: mediaCrit.toFixed(2) });
+        } else {
+          suspensosList.push({ id: crit.id, media: mediaCrit.toFixed(2) });
+        }
+      } else {
+        noEvaluadosList.push(crit.id);
+      }
+    });
+
+    const notaGlobal = evalCount > 0 ? (sumMedias / evalCount).toFixed(2) : "-";
+
+    let html = `
+      <div class="summary-box">
+        <div class="summary-item"><label>Nota Media Global</label><val style="font-size:1.3rem;">${notaGlobal}</val></div>
+        <div class="summary-item"><label>Criterios Superados</label><val style="color:#16a34a;">${pasadosList.length} / ${evalCount}</val></div>
+        <div class="summary-item"><label>Criterios Suspensos</label><val style="color:#dc2626;">${suspensosList.length}</val></div>
+        <div class="summary-item"><label>Sin Evaluar</label><val style="color:#d97706;">${noEvaluadosList.length}</val></div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <h4 style="font-size:0.88rem; font-weight:800; color:#15803d; margin-bottom:6px;">✅ Criterios Superados (≥ 5.0):</h4>
+        <div>
+    `;
+
+    if (pasadosList.length === 0) html += `<span style="font-size:0.82rem; color:#64748b;">Ninguno aún</span>`;
+    pasadosList.forEach(c => {
+      html += `<span class="badge-nota badge-pass" style="margin:3px;">${c.id}: ${c.media}</span>`;
+    });
+
+    html += `
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <h4 style="font-size:0.88rem; font-weight:800; color:#b91c1c; margin-bottom:6px;">❌ Criterios Suspensos (< 5.0):</h4>
+        <div>
+    `;
+
+    if (suspensosList.length === 0) html += `<span style="font-size:0.82rem; color:#64748b;">Ninguno</span>`;
+    suspensosList.forEach(c => {
+      html += `<span class="badge-nota badge-fail" style="margin:3px;">${c.id}: ${c.media}</span>`;
+    });
+
+    html += `
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <h4 style="font-size:0.88rem; font-weight:800; color:#b45309; margin-bottom:6px;">⏳ Criterios Pendientes por Evaluar:</h4>
+        <div>
+    `;
+
+    if (noEvaluadosList.length === 0) html += `<span style="font-size:0.82rem; color:#64748b;">¡Todos los criterios del curso han sido evaluados!</span>`;
+    noEvaluadosList.forEach(id => {
+      html += `<span class="chip-pendiente">${id}</span>`;
+    });
+
+    html += `
+        </div>
+      </div>
+
+      <h4 style="font-size:0.92rem; color:#1e293b; margin-top:16px; font-weight:800;">📜 Historial Detallado de Calificaciones:</h4>
+      <table class="modal-table">
+        <thead>
+          <tr>
+            <th>Trimestre</th>
+            <th>Criterio</th>
+            <th>Actividad / Examen</th>
+            <th style="text-align:right;">Nota</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    if (historialCompleto.length === 0) {
+      html += `<tr><td colspan="4" style="text-align:center; color:#64748b; padding:12px;">No se han registrado notas aún para este alumno/a.</td></tr>`;
+    } else {
+      historialCompleto.forEach(item => {
+        html += `
+          <tr>
+            <td><strong>${item.trim}</strong></td>
+            <td><span style="font-weight:700; color:#0284c7;">${item.crit}</span></td>
+            <td>${item.origen}</td>
+            <td style="text-align:right; font-weight:800; color:#0369a1;">${item.nota.toFixed(2)}</td>
+          </tr>
+        `;
+      });
+    }
+
+    html += `
+        </tbody>
+      </table>
+    `;
+
+    document.getElementById("contenidoFichaAlumno").innerHTML = html;
+    document.getElementById("modalFichaAlumno").style.display = "flex";
+  }
+
+  function cerrarModal(modalId) {
+    document.getElementById(modalId).style.display = "none";
+  }
+
+  function abrirModalAlumnos() {
+    const curso = document.getElementById("selectCurso").value;
+    document.getElementById("modalTituloGrupo").textContent = `👥 Modificar Lista de Alumnos (${curso.replace('_', ' ')})`;
+    const lista = alumnosBD[curso] || [];
+    document.getElementById("txtListaAlumnos").value = lista.join("\n");
+    document.getElementById("modalAlumnos").style.display = "flex";
+  }
+
+  function guardarListaAlumnosCustom() {
+    const curso = document.getElementById("selectCurso").value;
+    const txt = document.getElementById("txtListaAlumnos").value;
+    const lineas = txt.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+
+    alumnosBD[curso] = lineas;
+    localStorage.setItem("evaluador_directo_alumnos_v2", JSON.stringify(alumnosBD));
+    cerrarModal("modalAlumnos");
+    renderizarMatrizSeguimiento();
+    alert("✅ Lista de alumnos actualizada correctamente para " + curso.replace('_', ' ') + ".");
+  }
+
+  function exportarCSVMatriz() {
+    const curso = document.getElementById("selectCurso").value;
+    const evalSel = document.getElementById("selectEval").value;
+    const nivel = obtenerNivelCurso(curso);
+    const criteriosList = CRITERIOS_POR_NIVEL[nivel] || CRITERIOS_POR_NIVEL["2ESO"];
+    const listaAlumnos = alumnosBD[curso] || [];
+
+    let csv = "Alumno;";
+    criteriosList.forEach(c => csv += c.id + ";");
+    csv += "Media_Criterios;Estado\n";
+
+    listaAlumnos.forEach(alumno => {
+      csv += '"' + alumno + '";';
+      const alumNorm = normalizarTexto(alumno);
+      let suma = 0, count = 0;
+
+      criteriosList.forEach(c => {
+        let arr = [];
+        if (evalSel === "GLOBAL") {
+          if (matrizAcumuladaBD[curso]) {
+            Object.keys(matrizAcumuladaBD[curso]).forEach(eKey => {
+              if (matrizAcumuladaBD[curso][eKey][alumNorm] && matrizAcumuladaBD[curso][eKey][alumNorm][c.id]) {
+                arr = arr.concat(matrizAcumuladaBD[curso][eKey][alumNorm][c.id]);
+              }
+            });
+          }
+        } else if (matrizAcumuladaBD[curso] && matrizAcumuladaBD[curso][evalSel] && matrizAcumuladaBD[curso][evalSel][alumNorm]) {
+          arr = matrizAcumuladaBD[curso][evalSel][alumNorm][c.id] || [];
+        }
+
+        let scoreStr = "";
+        if (arr.length > 0) {
+          const avg = arr.reduce((a, b) => a + b.valor, 0) / arr.length;
+          scoreStr = avg.toFixed(2);
+          suma += avg;
+          count++;
+        }
+        csv += scoreStr + ";";
+      });
+
+      const media = count > 0 ? (suma / count).toFixed(2) : "";
+      const estado = count > 0 ? (parseFloat(media) >= 5 ? "APROBADO" : "SUSPENSO") : "";
+      csv += media + ";" + estado + "\n";
+    });
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "Cuaderno_Seguimiento_" + curso + "_" + evalSel + ".csv";
+    link.click();
+  }
+
+  window.addEventListener("storage", () => {
+    cargarYRefrescarDatos();
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    cargarAlumnosBD();
+    cargarYRefrescarDatos();
+    activarEscuchaNube();
+  });
+</script>
+
 </body>
 </html>

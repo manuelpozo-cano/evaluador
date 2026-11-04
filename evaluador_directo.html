@@ -1,268 +1,597 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evaluador Directo LOMLOE - Manuel Pozo Cano</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase SDK v8 -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaluador Directo LOMLOE - Pruebas y Exámenes</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --border: #cbd5e1;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --warning: #d97706;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 15px; line-height: 1.5; }
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    header {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+    .header-titles h1 { font-size: 1.4rem; color: var(--primary-dark); font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .header-titles p { font-size: 0.85rem; color: #64748b; font-weight: 600; margin-top: 2px; }
+    .btn-back {
+      background: #f1f5f9; color: #334155; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px;
+      text-decoration: none; font-weight: 700; font-size: 0.88rem; transition: all 0.2s;
+    }
+    .btn-back:hover { background: #e2e8f0; color: var(--text); }
+
+    .card {
+      background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px;
+      border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+    .card-title {
+      font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;
+      border-left: 4px solid var(--primary); padding-left: 10px; flex-wrap: wrap; gap: 10px;
+    }
+
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.85rem; font-weight: 700; color: #475569; }
+    .form-control {
+      padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.92rem;
+      outline: none; transition: border-color 0.2s; background: white;
+    }
+    .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+
+    .pruebas-list { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 15px; border-bottom: 1px solid var(--border); }
+    .prueba-tab {
+      padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; background: #f1f5f9; color: #475569;
+      cursor: pointer; border: 1px solid var(--border); white-space: nowrap; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+    }
+    .prueba-tab.active { background: var(--primary); color: white; border-color: var(--primary-dark); }
+    .prueba-tab:hover:not(.active) { background: #e2e8f0; }
+
+    .criterios-checkboxes { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .crit-chip {
+      padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.82rem; background: #f1f5f9; color: #334155;
+      cursor: pointer; border: 1px solid var(--border); user-select: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .crit-chip.selected { background: #e0f2fe; color: #0369a1; border-color: #38bdf8; }
+
+    .preg-config-container {
+      background: #f8fafc; border: 1px dashed var(--border); border-radius: 8px; padding: 12px; margin-top: 10px;
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    }
+    .preg-box {
+      display: flex; align-items: center; gap: 6px; background: white; padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1;
+      font-size: 0.83rem; font-weight: 700; color: #334155;
+    }
+    .preg-input {
+      width: 45px; padding: 3px 4px; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; font-weight: 800; font-size: 0.85rem;
+    }
+
+    .table-container { overflow-x: auto; max-height: 65vh; border-radius: 10px; border: 1px solid var(--border); position: relative; background: white; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.86rem; text-align: left; }
+    th {
+      background: #f1f5f9; color: #1e293b; font-weight: 800; padding: 10px 8px; border-bottom: 2px solid var(--border);
+      position: sticky; top: 0; z-index: 10; white-space: nowrap; text-align: center;
+    }
+    th.col-sticky-1 { position: sticky; left: 0; z-index: 20; background: #f1f5f9; text-align: left; width: 35px; min-width: 35px; }
+    th.col-sticky-2 { position: sticky; left: 35px; z-index: 20; background: #f1f5f9; text-align: left; min-width: 190px; border-right: 2px solid var(--border); }
+
+    td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; text-align: center; }
+    td.col-sticky-1 { position: sticky; left: 0; background: white; z-index: 5; text-align: left; font-weight: 700; color: #64748b; }
+    td.col-sticky-2 { position: sticky; left: 35px; background: white; z-index: 5; text-align: left; font-weight: 700; color: #1e293b; border-right: 2px solid var(--border); white-space: nowrap; }
+
+    tr:nth-child(even) td { background-color: #fafafa; }
+    tr:nth-child(even) td.col-sticky-1, tr:nth-child(even) td.col-sticky-2 { background-color: #fafafa; }
+    tr:hover td { background-color: #f1f5f9; }
+    tr:hover td.col-sticky-1, tr:hover td.col-sticky-2 { background-color: #f1f5f9; }
+
+    .input-nota {
+      width: 58px; padding: 5px 4px; font-size: 0.88rem; font-weight: 700; text-align: center;
+      border: 1px solid #cbd5e1; border-radius: 6px; outline: none; transition: all 0.2s;
+    }
+    .input-nota:focus { border-color: var(--primary); background: #f0f9ff; box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2); }
+
+    .btn {
+      padding: 9px 16px; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer;
+      border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover { background: #15803d; }
+    .btn-secondary { background: #64748b; color: white; }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: #b91c1c; }
+
+    .actions-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+    .badge-puntos { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; }
+  </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+<body>
 
-    <!-- Header Navigation -->
-    <header class="bg-emerald-900 text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
-            <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-pen-to-square text-2xl text-emerald-300"></i>
-                <div>
-                    <h1 class="font-bold text-lg leading-tight">Evaluador Directo LOMLOE</h1>
-                    <p class="text-xs text-emerald-200">Colegio La Hispanidad | Registro Instantáneo</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center space-x-2">
-                <a href="index.html" class="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 shadow-sm">
-                    <i class="fa-solid fa-house"></i> 🏠 Volver al Inicio
-                </a>
-                <a href="seguimiento.html" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 shadow-sm">
-                    <i class="fa-solid fa-book-bookmark"></i> 📊 Cuaderno de Seguimiento
-                </a>
-            </div>
-        </div>
-    </header>
+<div class="container">
+  <header>
+    <div class="header-titles">
+      <h1>📝 Evaluador Directo de Pruebas y Exámenes LOMLOE</h1>
+      <p>Tecnología y Digitalización | Manuel Pozo Cano - Colegio La Hispanidad</p>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <span id="autoSyncStatus" style="font-size:0.82rem; color:#16a34a; font-weight:700; background:#dcfce7; padding:4px 10px; border-radius:12px; border:1px solid #86efac;">⚡ Auto-sincronizado</span>
+      <a href="index.html" class="btn-back">🏠 Volver al Inicio</a>
+      <a href="seguimiento.html" class="btn-back">📊 Cuaderno de Seguimiento</a>
+    </div>
+  </header>
 
-    <!-- Panel Principal -->
-    <main class="max-w-7xl mx-auto w-full px-4 py-6 flex-grow">
-        <!-- Selector de Curso y Criterio -->
-        <div class="bg-white rounded-xl shadow-md p-5 mb-6 border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-            <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Curso / Grupo</label>
-                <select id="select-curso" onchange="actualizarCriteriosYCargar()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                    <option value="2ESO">2º ESO - Tecnología y Digitalización</option>
-                    <option value="3ESO">3º ESO - Tecnología y Digitalización</option>
-                    <option value="4ESO">4º ESO - Digitalización</option>
-                </select>
-            </div>
+  <div class="card">
+    <div class="card-title">
+      <span>📌 Datos del Examen o Prueba Evaluativa</span>
+      <button class="btn btn-success" onclick="crearNuevaPrueba()" style="font-size:0.82rem; padding:6px 12px;">➕ Crear Nueva Prueba</button>
+    </div>
 
-            <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Criterio de Evaluación</label>
-                <select id="select-criterio" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                </select>
-            </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="selectCurso">Curso / Grupo:</label>
+        <select id="selectCurso" class="form-control" onchange="cambiarCursoPrueba()">
+          <option value="2ESO_A" selected>2º ESO A</option>
+          <option value="2ESO_B">2º ESO B</option>
+          <option value="3ESO_A">3º ESO A</option>
+          <option value="3ESO_B">3º ESO B</option>
+          <option value="4ESO_A">4º ESO A</option>
+          <option value="4ESO_B">4º ESO B</option>
+        </select>
+      </div>
 
-            <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nombre de la Prueba / Ejercicio</label>
-                <input type="text" id="input-origen" placeholder="Ej: Examen Tema 1, Reto 2, Práctica Taller" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium">
-            </div>
-        </div>
+      <div class="form-group">
+        <label for="selectEval">Trimestre:</label>
+        <select id="selectEval" class="form-control" onchange="cambiarEvalPrueba()">
+          <option value="1T" selected>1ª Evaluación</option>
+          <option value="2T">2ª Evaluación</option>
+          <option value="3T">3ª Evaluación</option>
+        </select>
+      </div>
 
-        <!-- Alumnos y Asignación de Calificaciones -->
-        <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-            <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-                <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-users text-emerald-600"></i>
-                    Listado de Alumnos y Notas (0 - 10)
-                </h2>
-                <div class="flex items-center gap-2">
-                    <span id="save-status-badge" class="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-semibold border">Listo</span>
-                    <button onclick="agregarNuevoAlumno()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 shadow-sm">
-                        <i class="fa-solid fa-user-plus"></i> + Añadir Alumno
-                    </button>
-                </div>
-            </div>
+      <div class="form-group">
+        <label for="inputNombrePrueba">Nombre de la Prueba / Examen:</label>
+        <input type="text" id="inputNombrePrueba" class="form-control" placeholder="Ej: Examen Unidad 1 - Hardware" onchange="guardarNombrePruebaActual()">
+      </div>
+    </div>
 
-            <div class="p-6">
-                <div id="contenedor-alumnos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                </div>
-            </div>
-        </div>
-    </main>
+    <div style="margin-top:10px;">
+      <label style="font-size:0.85rem; font-weight:700; color:#475569;">📑 Pruebas creadas en este Trimestre:</label>
+      <div id="listaPruebasTabs" class="pruebas-list" style="margin-top:6px;"></div>
+    </div>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSy_Hispanidad_FirebaseKey_Placeholder",
-            authDomain: "cyberbreakout-hispanidad.firebaseapp.com",
-            projectId: "cyberbreakout-hispanidad",
-            storageBucket: "cyberbreakout-hispanidad.appspot.com",
-            messagingSenderId: "1035515234125",
-            appId: "1:1035515234125:web:hispanidad2026"
-        };
+    <div style="margin-top:10px;">
+      <label style="font-size:0.85rem; font-weight:700; color:#475569;">🎯 1. Selecciona los Criterios evaluados en esta prueba:</label>
+      <div id="chipsCriterios" class="criterios-checkboxes"></div>
+    </div>
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
+    <div style="margin-top:10px;">
+      <label style="font-size:0.85rem; font-weight:700; color:#475569;">⚖️ 2. Ajusta el Número de Preguntas por Criterio (Ponderación del Examen):</label>
+      <div id="containerPreguntasConfig" class="preg-config-container">
+        <span style="font-size:0.82rem; color:#64748b;">Selecciona criterios arriba para configurar el número de preguntas.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span>✏️ Calificaciones Criteriales (0-10) y Nota Global del Examen</span>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr id="headersTabla"></tr>
+        </thead>
+        <tbody id="bodyTabla"></tbody>
+      </table>
+    </div>
+
+    <div class="actions-bar">
+      <div>
+        <button class="btn btn-primary" onclick="guardarPruebaActual(false)">💾 Guardar Prueba Actual</button>
+        <button class="btn btn-success" onclick="sincronizarConMatriz(false)">🔄 Sincronizar con Cuaderno</button>
+      </div>
+      <button class="btn btn-danger" onclick="eliminarPruebaActual()">🗑️ Eliminar esta Prueba</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const firebaseConfig = { projectId: "cyberbreakout-hispanidad" };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const CRITERIOS_POR_NIVEL = {
+    "2ESO": [
+      { id: "TYD.2.1.1", label: "TYD.2.1.1" }, { id: "TYD.2.1.2", label: "TYD.2.1.2" },
+      { id: "TYD.2.1.3", label: "TYD.2.1.3" }, { id: "TYD.2.2.1", label: "TYD.2.2.1" },
+      { id: "TYD.2.2.2", label: "TYD.2.2.2" }, { id: "TYD.2.3.1", label: "TYD.2.3.1" },
+      { id: "TYD.2.4.1", label: "TYD.2.4.1" }, { id: "TYD.2.5.1", label: "TYD.2.5.1" },
+      { id: "TYD.2.5.2", label: "TYD.2.5.2" }, { id: "TYD.2.5.3", label: "TYD.2.5.3" },
+      { id: "TYD.2.6.1", label: "TYD.2.6.1" }, { id: "TYD.2.6.2", label: "TYD.2.6.2" },
+      { id: "TYD.2.6.3", label: "TYD.2.6.3" }, { id: "TYD.2.7.1", label: "TYD.2.7.1" },
+      { id: "TYD.2.7.2", label: "TYD.2.7.2" }
+    ],
+    "3ESO": [
+      { id: "TYD.3.1.1", label: "TYD.3.1.1" }, { id: "TYD.3.1.2", label: "TYD.3.1.2" },
+      { id: "TYD.3.1.3", label: "TYD.3.1.3" }, { id: "TYD.3.2.1", label: "TYD.3.2.1" },
+      { id: "TYD.3.2.2", label: "TYD.3.2.2" }, { id: "TYD.3.3.1", label: "TYD.3.3.1" },
+      { id: "TYD.3.4.1", label: "TYD.3.4.1" }, { id: "TYD.3.5.1", label: "TYD.3.5.1" },
+      { id: "TYD.3.5.2", label: "TYD.3.5.2" }, { id: "TYD.3.5.3", label: "TYD.3.5.3" },
+      { id: "TYD.3.6.1", label: "TYD.3.6.1" }, { id: "TYD.3.6.2", label: "TYD.3.6.2" },
+      { id: "TYD.3.6.3", label: "TYD.3.6.3" }, { id: "TYD.3.7.1", label: "TYD.3.7.1" },
+      { id: "TYD.3.7.2", label: "TYD.3.7.2" }
+    ],
+    "4ESO": [
+      { id: "DIG.4.1.1", label: "DIG.4.1.1" }, { id: "DIG.4.1.2", label: "DIG.4.1.2" },
+      { id: "DIG.4.1.3", label: "DIG.4.1.3" }, { id: "DIG.4.2.1", label: "DIG.4.2.1" },
+      { id: "DIG.4.2.2", label: "DIG.4.2.2" }, { id: "DIG.4.2.3", label: "DIG.4.2.3" },
+      { id: "DIG.4.2.4", label: "DIG.4.2.4" }, { id: "DIG.4.3.1", label: "DIG.4.3.1" },
+      { id: "DIG.4.3.2", label: "DIG.4.3.2" }, { id: "DIG.4.3.3", label: "DIG.4.3.3" },
+      { id: "DIG.4.4.1", label: "DIG.4.4.1" }, { id: "DIG.4.4.2", label: "DIG.4.4.2" },
+      { id: "DIG.4.4.3", label: "DIG.4.4.3" }, { id: "DIG.4.4.4", label: "DIG.4.4.4" }
+    ]
+  };
+
+  const ALUMNOS_OFICIALES = {
+    "2ESO_A": ["Bada Blanco, Ainara", "Bravo Rodríguez, Lucía", "Contreras Santiago, Manuel", "Contreras Santiago, Paula", "Correa Rodríguez, Ainara", "Costa Redondo, Saray", "Cruz Feria, Esteban", "Cuaresma Rodríguez, Indhira", "Cuaresma Rodríguez, Nayma", "De la Luz Patricio, Elena", "Garcia Caparrós, Indira", "Garrido Fernández, Yamileth", "Gómez Brito, Adriana", "Gómez López, Daniella", "Gutiérrez Valencia, Thomas", "López Gómez, Hugo", "López Salguero, Héctor Jesús", "Mora Chico, Hugo", "Mykhailyshyn, Iryna", "Presa Bueno, Luca", "Rengel Padilla, Alejandra", "Reyes Pérez, Francisco José", "Rodríguez Domínguez, Antonio", "Silva López, Ainhoa", "Torrescusa Borrero, Miguel"],
+    "2ESO_B": ["Bautista Lepe, Izan", "Bueno Merino, Indira", "Diallo, Zoumana", "Díaz Pinto, Giulia", "El Hajoui Moustekfy, Ryan", "El Hajoui Moustekfy, Yasmina", "Funes Aranda, Jean Alessandro", "Gil Pire, Camila Sophia", "Gutiérrez Álvarez, Adriano", "Hernández Tarriño, Estrella", "Herrán Góngora, Laura Sofía", "Hierro Masa, Ximena", "Jiménez Vázquez, Indira", "Lemos Del Toro, Alejandro", "Masero Rodríguez, Ana de los Remedios", "Moya Mera, Aitor", "Muñoz López, Yerai", "Núñez Álvarez, Jose", "Pérez Márquez, Juan Marcelo", "Pozo Orta, Julia", "Rodríguez Enríquez, Daniela", "Rodríguez Ospina, Juan David", "Sánchez Alonso, Libertad", "Sánchez Pérez, Erick", "Sola Infantes, Lucía", "Tristán Wert, Aarón"],
+    "3ESO_A": ["Becerro Larios, Aitana", "Benítez Márquez, Azahara", "Brito Rasero, Valeria", "Cordón Pérez, Bryam", "Fernández Rebollo, Alejandro", "Flores Rueda, Lucía", "Gálvez Sfatolea, Rocío", "Gómez Damota, Aitor", "Gómez Soto, Francisco Javier", "González Rodríguez, Adriana", "Heredia Medel, Rocío", "Hernández Barrera, Alejandro José", "Ibánez Montagut, Ainhoa", "Martín Griñolo, Paula", "Mateo Ramos, Rubén", "Mora Reyes, Manuel", "Naranjo Romero, David", "Nawaz Kousar, Muhammad Afnan", "Palomares Magro, Jesús", "Palomares Puga, Alejandro", "Pérez Hermoso, Jesús", "Prieto Évora, Judith", "Rodríguez Rodríguez, Alicia", "Silvera Iftimie, José Miguel", "Toledano Millares, Sergio", "Torres Benítez, Diego", "Viatela Arteaga, Juan Manuel"],
+    "3ESO_B": ["Beas Castilla, Sara", "Canelo Suárez, Manuel Darío", "Contreras Cuaresma, Daniela", "Díaz Fariña, Iker", "García Varela, Marco", "Gómez Borrero, Alejandro", "Gómez Del Pino, Enrique", "Gómez Fernández, Adrián", "Gutiérrez Colete, Miguel", "Ichou Er Raji, Chaima", "Jiménez Rodriguez, Sheila", "López González, María", "Luque Lorenzo, Adrián", "Márquez Rivero, Oriol", "Martin Cerrejón, Antonio", "Mora Garrido, Rita", "Moreno Lepe, Andrés", "Muñoz Díaz, Coraima", "Nieto González, Daniel", "Orta Gómez, Samuel", "Pérez Paredes, Natalia", "Rodríguez De Lucas, Alejandro", "Romero Barbero, José Antonio", "Suero Robles, Daniel", "Suero Robles, Iván", "Vázquez Boza, María"],
+    "4ESO_A": ["Arazo Pérez, Nahyra", "Bacedoni Camero, Minerva", "Cáceres Cruz, Andrea", "Castellano Díaz, Paula", "De la Rosa Paredes, Claudia", "González Rodríguez, Miguel Ángel", "López Borrero, José Francisco", "Luardo Pérez, David", "Marín García, Yaiza", "Márquez Domínguez, Natalia", "Martin Gómez, Alicia", "Oliva Pernil, Eva", "Ortiz Azaustre, Claudia", "Palomares Magro, Juan Manuel", "Paredes Díaz, Ainhoa", "Paredes Gil, Sergio", "Pavón Barrera, Andrea", "Pérez Calvo, Angelo", "Torrado Ternero, Estela"],
+    "4ESO_B": ["Araujo Carrasco, José Manuel", "Borrero De Paula, José Antonio", "Boulal, Jilali", "Escudero Limón, Daniela", "Kykish Toporovska, Diana", "Lobato Ramos, Hugo", "Martin Venegas, Ester", "Naranjo Romero, Aitana", "Pérez Rodríguez, Pablo", "Rivero Hernández, Diego Alejandro", "Rivero Hernández, Enrique Alejandro", "Rodríguez Brejano, Alexys", "Salazar Fernández, Yamilet", "Sánchez Lozada, Sergio Enrique", "Sánchez Pérez, Induara", "Sánchez Ternero, Alejandro", "Soto García, Ángela", "Terrón Quintero, José Antonio", "Torres Hernández, Javier", "Wert Hermoso, Laura"]
+  };
+
+  let estadoPruebas = {}; 
+  let pruebaActivaId = null;
+
+  function obtenerNivelCurso(curso) {
+    if (curso.startsWith("2ESO")) return "2ESO";
+    if (curso.startsWith("3ESO")) return "3ESO";
+    if (curso.startsWith("4ESO")) return "4ESO";
+    return "2ESO";
+  }
+
+  function cargarEstadoPruebas() {
+    const raw = localStorage.getItem("evaluador_directo_pruebas_v8");
+    if (raw) {
+      try { estadoPruebas = JSON.parse(raw); } catch(e) { estadoPruebas = {}; }
+    }
+    asegurarEstructuraCursoEval();
+  }
+
+  function asegurarEstructuraCursoEval() {
+    const curso = document.getElementById("selectCurso").value;
+    const evalSel = document.getElementById("selectEval").value;
+    if (!estadoPruebas[curso]) estadoPruebas[curso] = {};
+    if (!estadoPruebas[curso][evalSel]) estadoPruebas[curso][evalSel] = [];
+
+    if (estadoPruebas[curso][evalSel].length === 0) {
+      const nuevaP = {
+        id: "p_" + Date.now(),
+        nombre: "Examen / Práctica 1",
+        criterios: [],
+        preguntasConfig: {}, // critId -> numPreguntas
+        notas: {}
+      };
+      estadoPruebas[curso][evalSel].push(nuevaP);
+      pruebaActivaId = nuevaP.id;
+    } else if (!pruebaActivaId || !estadoPruebas[curso][evalSel].find(p => p.id === pruebaActivaId)) {
+      pruebaActivaId = estadoPruebas[curso][evalSel][0].id;
+    }
+  }
+
+  function obtenerPruebaActiva() {
+    const curso = document.getElementById("selectCurso").value;
+    const evalSel = document.getElementById("selectEval").value;
+    return (estadoPruebas[curso] && estadoPruebas[curso][evalSel]) 
+      ? estadoPruebas[curso][evalSel].find(p => p.id === pruebaActivaId) 
+      : null;
+  }
+
+  function renderizarTodo() {
+    asegurarEstructuraCursoEval();
+    renderizarTabs();
+    renderizarChipsCriterios();
+    renderizarConfigPreguntas();
+    renderizarTablaNotas();
+  }
+
+  function renderizarTabs() {
+    const curso = document.getElementById("selectCurso").value;
+    const evalSel = document.getElementById("selectEval").value;
+    const lista = estadoPruebas[curso][evalSel] || [];
+    const container = document.getElementById("listaPruebasTabs");
+
+    container.innerHTML = "";
+    lista.forEach(p => {
+      const tab = document.createElement("div");
+      tab.className = "prueba-tab" + (p.id === pruebaActivaId ? " active" : "");
+      tab.innerHTML = `<span>📝 ${p.nombre || "Prueba sin nombre"}</span>`;
+      tab.onclick = () => {
+        pruebaActivaId = p.id;
+        renderizarTodo();
+      };
+      container.appendChild(tab);
+    });
+
+    const pActiva = obtenerPruebaActiva();
+    if (pActiva) {
+      document.getElementById("inputNombrePrueba").value = pActiva.nombre || "";
+    }
+  }
+
+  function renderizarChipsCriterios() {
+    const curso = document.getElementById("selectCurso").value;
+    const nivel = obtenerNivelCurso(curso);
+    const criterios = CRITERIOS_POR_NIVEL[nivel] || [];
+    const pActiva = obtenerPruebaActiva();
+    const seleccionados = pActiva ? (pActiva.criterios || []) : [];
+
+    const container = document.getElementById("chipsCriterios");
+    container.innerHTML = "";
+
+    criterios.forEach(crit => {
+      const chip = document.createElement("div");
+      const isSelected = seleccionados.includes(crit.id);
+      chip.className = "crit-chip" + (isSelected ? " selected" : "");
+      
+      const numPreg = (pActiva && pActiva.preguntasConfig && pActiva.preguntasConfig[crit.id]) || 1;
+      chip.innerHTML = `${crit.id} ${isSelected ? `<span class="badge-puntos">${numPreg} preg</span>` : ''}`;
+      chip.onclick = () => toggleCriterioPrueba(crit.id);
+      container.appendChild(chip);
+    });
+  }
+
+  function renderizarConfigPreguntas() {
+    const pActiva = obtenerPruebaActiva();
+    const container = document.getElementById("containerPreguntasConfig");
+    container.innerHTML = "";
+
+    if (!pActiva || !pActiva.criterios || pActiva.criterios.length === 0) {
+      container.innerHTML = `<span style="font-size:0.82rem; color:#64748b;">Selecciona criterios arriba para indicar el número de preguntas de cada uno.</span>`;
+      return;
+    }
+
+    if (!pActiva.preguntasConfig) pActiva.preguntasConfig = {};
+
+    pActiva.criterios.forEach(critId => {
+      if (!pActiva.preguntasConfig[critId]) pActiva.preguntasConfig[critId] = 1;
+
+      const box = document.createElement("div");
+      box.className = "preg-box";
+      box.innerHTML = `
+        <span>${critId}:</span>
+        <input type="number" min="1" max="20" class="preg-input" 
+          value="${pActiva.preguntasConfig[critId]}" 
+          onchange="actualizarPreguntasCriterio('${critId}', this.value)">
+        <span>preg.</span>
+      `;
+      container.appendChild(box);
+    });
+  }
+
+  function actualizarPreguntasCriterio(critId, val) {
+    const pActiva = obtenerPruebaActiva();
+    if (!pActiva) return;
+    if (!pActiva.preguntasConfig) pActiva.preguntasConfig = {};
+
+    let num = parseInt(val);
+    if (isNaN(num) || num < 1) num = 1;
+
+    pActiva.preguntasConfig[critId] = num;
+    renderizarChipsCriterios();
+    renderizarTablaNotas();
+    guardarPruebaActual(true);
+  }
+
+  function toggleCriterioPrueba(critId) {
+    const pActiva = obtenerPruebaActiva();
+    if (!pActiva) return;
+    if (!pActiva.criterios) pActiva.criterios = [];
+
+    const idx = pActiva.criterios.indexOf(critId);
+    if (idx >= 0) {
+      pActiva.criterios.splice(idx, 1);
+    } else {
+      pActiva.criterios.push(critId);
+      if (!pActiva.preguntasConfig) pActiva.preguntasConfig = {};
+      if (!pActiva.preguntasConfig[critId]) pActiva.preguntasConfig[critId] = 1;
+    }
+    renderizarTodo();
+    sincronizarConMatriz(true);
+  }
+
+  function renderizarTablaNotas() {
+    const curso = document.getElementById("selectCurso").value;
+    const alumnos = ALUMNOS_OFICIALES[curso] || [];
+    const pActiva = obtenerPruebaActiva();
+    const criteriosSel = pActiva ? (pActiva.criterios || []) : [];
+
+    const headersTr = document.getElementById("headersTabla");
+    let htmlHead = `<th class="col-sticky-1">#</th><th class="col-sticky-2">Alumno/a</th>`;
+
+    criteriosSel.forEach(critId => {
+      const numPreg = (pActiva.preguntasConfig && pActiva.preguntasConfig[critId]) || 1;
+      htmlHead += `<th style="min-width:85px;" title="Criterio ${critId} (${numPreg} preguntas)">${critId}<br><small style="font-size:0.72rem; color:#0284c7;">(${numPreg} preg)</small></th>`;
+    });
+
+    htmlHead += `<th style="min-width:105px; background:#e0f2fe; color:#0369a1;" title="Nota ponderada según el número de preguntas">📝 Examen Global</th>`;
+    headersTr.innerHTML = htmlHead;
+
+    const tbody = document.getElementById("bodyTabla");
+    tbody.innerHTML = "";
+
+    if (alumnos.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="20" style="padding:15px; color:#64748b;">No hay alumnos cargados en este grupo.</td></tr>`;
+      return;
+    }
+
+    if (!pActiva.notas) pActiva.notas = {};
+
+    alumnos.forEach((alum, idx) => {
+      const tr = document.createElement("tr");
+      if (!pActiva.notas[alum]) pActiva.notas[alum] = {};
+
+      let htmlRow = `<td class="col-sticky-1">${idx + 1}</td><td class="col-sticky-2">${alum}</td>`;
+      let sumaPonderadaExamen = 0;
+      let totalPreguntasExamen = 0;
+
+      criteriosSel.forEach(critId => {
+        const val = pActiva.notas[alum][critId] !== undefined ? pActiva.notas[alum][critId] : "";
+        const numPreg = (pActiva.preguntasConfig && pActiva.preguntasConfig[critId]) || 1;
+
+        if (val !== "" && !isNaN(parseFloat(val))) {
+          const vNum = parseFloat(val);
+          sumaPonderadaExamen += vNum * numPreg;
+          totalPreguntasExamen += numPreg;
         }
-        const db = firebase.firestore();
-        db.enablePersistence({ synchronizeTabs: true }).catch(err => console.log("Persistencia local:", err.code));
 
-        function normalizarCurso(cursoRaw) {
-            if (!cursoRaw) return '2ESO';
-            const str = String(cursoRaw).toUpperCase().replace(/[^A-Z0-9]/g, '');
-            if (str.includes('2')) return '2ESO';
-            if (str.includes('3')) return '3ESO';
-            if (str.includes('4')) return '4ESO';
-            return '2ESO';
-        }
+        htmlRow += `
+          <td>
+            <input type="number" step="0.1" min="0" max="10" class="input-nota" 
+              value="${val}" 
+              placeholder="0-10"
+              onchange="actualizarNotaAlumno('${alum.replace(/'/g, "\'")}', '${critId}', this.value)">
+          </td>
+        `;
+      });
 
-        const criteriosLOMLOE = {
-            '2ESO': ['TYD.2.1.1', 'TYD.2.1.2', 'TYD.2.2.1', 'TYD.2.3.1', 'TYD.2.4.1', 'TYD.2.5.1'],
-            '3ESO': ['TYD.3.1.1', 'TYD.3.1.2', 'TYD.3.2.1', 'TYD.3.3.1', 'TYD.3.4.1', 'TYD.3.5.1'],
-            '4ESO': ['DIG.4.1.1', 'DIG.4.1.2', 'DIG.4.2.1', 'DIG.4.3.1', 'DIG.4.4.1', 'DIG.4.5.1']
-        };
+      let notaExamenGlobalStr = "-";
+      if (totalPreguntasExamen > 0) {
+        const mediaExamenPonderada = sumaPonderadaExamen / totalPreguntasExamen;
+        notaExamenGlobalStr = mediaExamenPonderada.toFixed(2);
+      }
 
-        let listaAlumnos = [];
+      htmlRow += `<td style="font-weight:800; color:#0369a1; background:#f0f9ff;">${notaExamenGlobalStr}</td>`;
 
-        function cargarAlumnos() {
-            // Leer sin machacar de evaluador_directo_alumnos_v2 u otras listas en localStorage
-            const local = JSON.parse(localStorage.getItem('evaluador_directo_alumnos_v2') || '[]');
-            if (Array.isArray(local) && local.length > 0) {
-                listaAlumnos = local;
-            }
+      tr.innerHTML = htmlRow;
+      tbody.appendChild(tr);
+    });
+  }
 
-            // Sincronizar desde la nube si existen alumnos en Firebase
-            db.collection('alumnos_v2').onSnapshot(snapshot => {
-                if (!snapshot.empty) {
-                    const deNube = [];
-                    snapshot.forEach(doc => deNube.push(doc.data()));
-                    if (deNube.length > 0) {
-                        // Combinar sin duplicar por ID
-                        deNube.forEach(aNube => {
-                            const idx = listaAlumnos.findIndex(a => a.id === aNube.id);
-                            if (idx !== -1) {
-                                listaAlumnos[idx] = { ...listaAlumnos[idx], ...aNube };
-                            } else {
-                                listaAlumnos.push(aNube);
-                            }
-                        });
-                        localStorage.setItem('evaluador_directo_alumnos_v2', JSON.stringify(listaAlumnos));
-                        renderizarAlumnos();
-                    }
-                }
-            });
-        }
+  function actualizarNotaAlumno(alum, critId, val) {
+    const pActiva = obtenerPruebaActiva();
+    if (!pActiva) return;
+    if (!pActiva.notas[alum]) pActiva.notas[alum] = {};
 
-        function actualizarCriteriosYCargar() {
-            const curso = document.getElementById('select-curso').value;
-            const selectCrit = document.getElementById('select-criterio');
-            selectCrit.innerHTML = '';
-            
-            (criteriosLOMLOE[curso] || []).forEach(crit => {
-                const opt = document.createElement('option');
-                opt.value = crit;
-                opt.innerText = crit;
-                selectCrit.appendChild(opt);
-            });
+    if (val === "" || isNaN(parseFloat(val))) {
+      delete pActiva.notas[alum][critId];
+    } else {
+      pActiva.notas[alum][critId] = parseFloat(val);
+    }
 
-            renderizarAlumnos();
-        }
+    guardarPruebaActual(true);
+    renderizarTablaNotas();
+  }
 
-        function renderizarAlumnos() {
-            const cursoSeleccionado = document.getElementById('select-curso').value;
-            const contenedor = document.getElementById('contenedor-alumnos');
-            contenedor.innerHTML = '';
+  function guardarNombrePruebaActual() {
+    const pActiva = obtenerPruebaActiva();
+    if (pActiva) {
+      pActiva.nombre = document.getElementById("inputNombrePrueba").value;
+      renderizarTabs();
+      guardarPruebaActual(true);
+    }
+  }
 
-            const alumnosCurso = listaAlumnos.filter(a => normalizarCurso(a.curso || a.grupo) === cursoSeleccionado);
+  function crearNuevaPrueba() {
+    const curso = document.getElementById("selectCurso").value;
+    const evalSel = document.getElementById("selectEval").value;
 
-            if (alumnosCurso.length === 0) {
-                contenedor.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400">No hay alumnos añadidos para ${cursoSeleccionado}. Presiona "+ Añadir Alumno".</div>`;
-                return;
-            }
+    const nuevaP = {
+      id: "p_" + Date.now(),
+      nombre: "Nueva Prueba " + ((estadoPruebas[curso][evalSel] || []).length + 1),
+      criterios: [],
+      preguntasConfig: {},
+      notas: {}
+    };
 
-            alumnosCurso.forEach(alum => {
-                const card = document.createElement('div');
-                card.className = "bg-slate-50 border border-slate-200 rounded-lg p-4 shadow-sm flex items-center justify-between gap-3";
-                card.innerHTML = `
-                    <div class="flex items-center gap-2 overflow-hidden">
-                        <i class="fa-solid fa-user-circle text-2xl text-slate-400"></i>
-                        <span class="font-bold text-sm text-slate-800 truncate">${alum.nombre}</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <input type="number" min="0" max="10" step="0.1" placeholder="0-10" id="input-nota-${alum.id}"
-                            class="w-16 bg-white border border-slate-300 text-center font-extrabold text-sm rounded-md py-1.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                        <button onclick="guardarNotaAlumno('${alum.id}', '${alum.nombre.replace(/'/g, "\'")}')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-bold text-xs transition flex items-center gap-1 shadow-xs">
-                            <i class="fa-solid fa-floppy-disk"></i> Guardar
-                        </button>
-                    </div>
-                `;
-                contenedor.appendChild(card);
-            });
-        }
+    if (!estadoPruebas[curso]) estadoPruebas[curso] = {};
+    if (!estadoPruebas[curso][evalSel]) estadoPruebas[curso][evalSel] = [];
 
-        function guardarNotaAlumno(alumnoId, nombreAlumno) {
-            const curso = document.getElementById('select-curso').value;
-            const criterio = document.getElementById('select-criterio').value;
-            const origenRaw = document.getElementById('input-origen').value;
-            const notaVal = parseFloat(document.getElementById(`input-nota-${alumnoId}`).value);
+    estadoPruebas[curso][evalSel].push(nuevaP);
+    pruebaActivaId = nuevaP.id;
+    renderizarTodo();
+    guardarPruebaActual(true);
+  }
 
-            if (isNaN(notaVal) || notaVal < 0 || notaVal > 10) {
-                alert("Por favor introduce una nota válida entre 0 y 10.");
-                return;
-            }
+  function eliminarPruebaActual() {
+    const curso = document.getElementById("selectCurso").value;
+    const evalSel = document.getElementById("selectEval").value;
+    const lista = estadoPruebas[curso][evalSel] || [];
 
-            const origen = (origenRaw && origenRaw.trim() !== '') ? origenRaw.trim() : `Evaluación Directa ${criterio}`;
-            const badge = document.getElementById('save-status-badge');
-            badge.className = "text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold border border-amber-300 animate-pulse";
-            badge.innerText = "Guardando...";
+    if (lista.length <= 1) {
+      alert("⚠️ Debe existir al menos una prueba por trimestre.");
+      return;
+    }
 
-            // 1. Guardar en LocalStorage
-            let pruebasLocales = JSON.parse(localStorage.getItem('evaluador_directo_pruebas_v8') || '[]');
-            const idx = pruebasLocales.findIndex(p => p.alumnoId === alumnoId && p.criterio === criterio && (p.origen || '').trim() === origen);
-            if (idx !== -1) {
-                pruebasLocales[idx].nota = notaVal;
-            } else {
-                pruebasLocales.push({ alumnoId, nombreAlumno, curso, criterio, nota: notaVal, origen });
-            }
-            localStorage.setItem('evaluador_directo_pruebas_v8', JSON.stringify(pruebasLocales));
+    if (confirm("¿Estás seguro de eliminar esta prueba y todas sus notas?")) {
+      estadoPruebas[curso][evalSel] = lista.filter(p => p.id !== pruebaActivaId);
+      pruebaActivaId = estadoPruebas[curso][evalSel][0].id;
+      renderizarTodo();
+      guardarPruebaActual(true);
+    }
+  }
 
-            // 2. Sincronizar Alumno + Nota en Firebase Firestore (Nube multi-dispositivo)
-            const alumRef = db.collection('alumnos_v2').doc(alumnoId);
-            alumRef.set({ id: alumnoId, nombre: nombreAlumno, curso: curso }, { merge: true });
+  function cambiarCursoPrueba() {
+    pruebaActivaId = null;
+    renderizarTodo();
+  }
 
-            const docId = `${alumnoId}_${criterio}_${encodeURIComponent(origen)}`;
-            db.collection('evaluacion_directa').doc(docId).set({
-                alumnoId: alumnoId,
-                nombreAlumno: nombreAlumno,
-                curso: curso,
-                criterio: criterio,
-                nota: notaVal,
-                origen: origen,
-                fecha: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true }).then(() => {
-                badge.className = "text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-semibold border border-emerald-300";
-                badge.innerText = "¡Guardado en Nube y Local!";
-                setTimeout(() => { badge.innerText = "Listo"; badge.className = "text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-semibold border"; }, 2500);
-            }).catch(err => {
-                console.error("Error al sincronizar con Firebase:", err);
-                badge.className = "text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold border border-amber-300";
-                badge.innerText = "Guardado Local (Offline)";
-            });
-        }
+  function cambiarEvalPrueba() {
+    pruebaActivaId = null;
+    renderizarTodo();
+  }
 
-        function agregarNuevoAlumno() {
-            const nombre = prompt("Introduce el nombre completo del alumno:");
-            if (!nombre || nombre.trim() === '') return;
+  function guardarPruebaActual(silencioso = false) {
+    localStorage.setItem("evaluador_directo_pruebas_v8", JSON.stringify(estadoPruebas));
+    sincronizarConMatriz(silencioso);
+  }
 
-            const curso = document.getElementById('select-curso').value;
-            const nuevoId = 'alum_' + Date.now();
-            const nuevo = { id: nuevoId, nombre: nombre.trim(), curso: curso };
+  function sincronizarConMatriz(silencioso = false) {
+    window.dispatchEvent(new Event('storage'));
+    const statusEl = document.getElementById("autoSyncStatus");
+    if (statusEl) {
+      statusEl.textContent = "⚡ Auto-sincronizado a las " + new Date().toLocaleTimeString();
+    }
+    if (!silencioso) {
+      alert("✅ Pruebas guardadas y sincronizadas con éxito.");
+    }
+  }
 
-            listaAlumnos.push(nuevo);
-            localStorage.setItem('evaluador_directo_alumnos_v2', JSON.stringify(listaAlumnos));
-            
-            // Subir alumno a Firebase
-            db.collection('alumnos_v2').doc(nuevoId).set(nuevo, { merge: true });
+  document.addEventListener("DOMContentLoaded", () => {
+    cargarEstadoPruebas();
+    renderizarTodo();
+  });
+</script>
 
-            renderizarAlumnos();
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            cargarAlumnos();
-            actualizarCriteriosYCargar();
-        });
-    </script>
 </body>
 </html>
