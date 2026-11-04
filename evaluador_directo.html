@@ -225,7 +225,16 @@
 </div>
 
 <script>
-  const firebaseConfig = { projectId: "cyberbreakout-hispanidad" };
+  const firebaseConfig = {
+    apiKey: "AIzaSyAvb4fN7F3eRM_e35VP8MF--3FzHNvbN-U",
+    authDomain: "cyberbreakout-hispanidad.firebaseapp.com",
+    databaseURL: "https://cyberbreakout-hispanidad-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "cyberbreakout-hispanidad",
+    storageBucket: "cyberbreakout-hispanidad.firebasestorage.app",
+    messagingSenderId: "997498647623",
+    appId: "1:997498647623:web:abeb516da0cde8a66ced62",
+    measurementId: "G-E8CB81PK4E"
+  };
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
@@ -299,7 +308,7 @@
         id: "p_" + Date.now(),
         nombre: "Examen / Práctica 1",
         criterios: [],
-        preguntasConfig: {}, // critId -> numPreguntas
+        preguntasConfig: {},
         notas: {}
       };
       estadoPruebas[curso][evalSel].push(nuevaP);
@@ -573,6 +582,12 @@
 
   function guardarPruebaActual(silencioso = false) {
     localStorage.setItem("evaluador_directo_pruebas_v8", JSON.stringify(estadoPruebas));
+    if (db) {
+      db.collection("evaluacion_directa").doc("estadoGeneral").set({
+        data: estadoPruebas,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).catch(err => console.warn("Error enviando a Firestore:", err));
+    }
     sincronizarConMatriz(silencioso);
   }
 
@@ -587,9 +602,28 @@
     }
   }
 
+  function activarEscuchaNubeEvaluador() {
+    if (!db) return;
+    db.collection("evaluacion_directa").doc("estadoGeneral").onSnapshot(doc => {
+      if (doc.exists && doc.data() && doc.data().data) {
+        const nubeData = doc.data().data;
+        if (JSON.stringify(nubeData) !== JSON.stringify(estadoPruebas)) {
+          estadoPruebas = nubeData;
+          localStorage.setItem("evaluador_directo_pruebas_v8", JSON.stringify(estadoPruebas));
+          renderizarTodo();
+          const statusEl = document.getElementById("autoSyncStatus");
+          if (statusEl) {
+            statusEl.textContent = "⚡ Auto-sincronizado (Nube) " + new Date().toLocaleTimeString();
+          }
+        }
+      }
+    }, err => console.warn("Modo local activo:", err));
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     cargarEstadoPruebas();
     renderizarTodo();
+    activarEscuchaNubeEvaluador();
   });
 </script>
 

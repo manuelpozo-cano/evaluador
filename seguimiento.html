@@ -277,7 +277,16 @@
 </div>
 
 <script>
-  const firebaseConfig = { projectId: "cyberbreakout-hispanidad" };
+  const firebaseConfig = {
+    apiKey: "AIzaSyAvb4fN7F3eRM_e35VP8MF--3FzHNvbN-U",
+    authDomain: "cyberbreakout-hispanidad.firebaseapp.com",
+    databaseURL: "https://cyberbreakout-hispanidad-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "cyberbreakout-hispanidad",
+    storageBucket: "cyberbreakout-hispanidad.firebasestorage.app",
+    messagingSenderId: "997498647623",
+    appId: "1:997498647623:web:abeb516da0cde8a66ced62",
+    measurementId: "G-E8CB81PK4E"
+  };
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
@@ -323,7 +332,7 @@
   };
 
   let alumnosBD = {};
-  let matrizAcumuladaBD = {}; // matriz[curso][eval][alum_norm][crit_id] = [ { origen, valor } ]
+  let matrizAcumuladaBD = {};
 
   function normalizarTexto(txt) {
     if (!txt) return "";
@@ -385,7 +394,6 @@
   function parsearEntradaUniversal(key, data) {
     if (!data || typeof data !== "object") return;
 
-    // 1. Doblador 2º ESO
     if (key.includes("doblador")) {
       const grupo = data.grupo || (key.split("_")[1] || "2A");
       const alumno = data.alumno || key.split("_").slice(2).join("_");
@@ -396,7 +404,6 @@
       return;
     }
 
-    // 2. Retos 3º ESO
     if (key.includes("retos3eso")) {
       const parts = key.split("_");
       const grupo = parts[1] || "3A";
@@ -408,7 +415,6 @@
       return;
     }
 
-    // 3. ENIAC 4º ESO
     if (key.includes("eniac")) {
       const grupo = data.grupo || (key.split("_")[1] || "4A");
       const alumno = data.alumno || key.split("_").slice(2).join("_");
@@ -419,7 +425,6 @@
       return;
     }
 
-    // 4. Presupuestos PC 4º ESO
     if (key.includes("presupuesto") || key.includes("sda2presupuestos")) {
       const grupo = data.grupo || data.curso || (key.split("_")[1] || "4A");
       const alumno = data.alumno || key.split("_").slice(2).join("_");
@@ -430,7 +435,6 @@
       return;
     }
 
-    // 5. Evaluador Directo Pruebas v8
     if (key.includes("evaluador_directo_pruebas") || key === "estadoGeneral") {
       Object.keys(data).forEach(cKey => {
         const evDict = data[cKey];
@@ -455,7 +459,6 @@
       return;
     }
 
-    // 6. Matriz genérica
     Object.keys(data).forEach(cKey => {
       const cNorm = normalizarCurso(cKey);
       if (cNorm && typeof data[cKey] === "object") {
@@ -501,7 +504,11 @@
         snapshot.forEach(doc => {
           try {
             const data = doc.data();
-            parsearEntradaUniversal(collName + "_" + doc.id, data);
+            if (doc.id === "estadoGeneral" && data.data) {
+              parsearEntradaUniversal("evaluador_directo_pruebas_v8", data.data);
+            } else {
+              parsearEntradaUniversal(collName + "_" + doc.id, data);
+            }
           } catch(e) {}
         });
         renderizarMatrizSeguimiento();
@@ -534,7 +541,6 @@
     const listaAlumnos = alumnosBD[curso] || [];
     const datosCursoObj = matrizAcumuladaBD[curso] || {};
 
-    // Determinar qué criterios se muestran en las columnas
     let criteriosVisibles = [];
     let criteriosPendientes = [];
 
@@ -542,7 +548,6 @@
       criteriosVisibles = [...criteriosOficiales];
       criteriosPendientes = [];
     } else {
-      // En modo trimestral (1T, 2T, 3T), filtrar sólo los criterios que TIENEN NOTAS en este trimestre
       const datosEval = datosCursoObj[evalSeleccionada] || {};
 
       criteriosOficiales.forEach(crit => {
@@ -561,7 +566,6 @@
       });
     }
 
-    // Renderizar Banner de Criterios Pendientes en Trimestres
     const bannerContainer = document.getElementById("bannerPendientesContainer");
     if (evalSeleccionada !== "GLOBAL" && criteriosPendientes.length > 0) {
       bannerContainer.style.display = "block";
@@ -580,7 +584,6 @@
       bannerContainer.innerHTML = "";
     }
 
-    // Renderizar Headers de la Tabla
     const headersTr = document.getElementById("headersMatriz");
     let htmlHeaders = `
       <th class="col-sticky-1">#</th>
