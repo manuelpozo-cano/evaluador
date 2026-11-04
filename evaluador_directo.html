@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Evaluador Directo LOMLOE - Pruebas y Exámenes</title>
+  <title>Evaluador Directo LOMLOE - Pruebas y Exámenes (v2)</title>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -75,10 +75,22 @@
 
     .criterios-checkboxes { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
     .crit-chip {
-      padding: 5px 10px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; background: #f1f5f9; color: #334155;
-      cursor: pointer; border: 1px solid var(--border); user-select: none; transition: all 0.2s;
+      padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.82rem; background: #f1f5f9; color: #334155;
+      cursor: pointer; border: 1px solid var(--border); user-select: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
     }
     .crit-chip.selected { background: #e0f2fe; color: #0369a1; border-color: #38bdf8; }
+
+    .preg-config-container {
+      background: #f8fafc; border: 1px dashed var(--border); border-radius: 8px; padding: 12px; margin-top: 10px;
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    }
+    .preg-box {
+      display: flex; align-items: center; gap: 6px; background: white; padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1;
+      font-size: 0.83rem; font-weight: 700; color: #334155;
+    }
+    .preg-input {
+      width: 45px; padding: 3px 4px; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; font-weight: 800; font-size: 0.85rem;
+    }
 
     .table-container { overflow-x: auto; max-height: 65vh; border-radius: 10px; border: 1px solid var(--border); position: relative; background: white; }
     table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.86rem; text-align: left; }
@@ -118,6 +130,7 @@
     .btn-danger:hover { background: #b91c1c; }
 
     .actions-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+    .badge-puntos { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; }
   </style>
 </head>
 <body>
@@ -130,7 +143,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
       <span id="autoSyncStatus" style="font-size:0.82rem; color:#16a34a; font-weight:700; background:#dcfce7; padding:4px 10px; border-radius:12px; border:1px solid #86efac;">⚡ Auto-sincronizado</span>
-      <a href="seguimiento.html" class="btn-back">📊 Ir al Cuaderno de Seguimiento</a>
+      <a href="seguimiento_v2.html" class="btn-back">📊 Ir al Cuaderno de Seguimiento</a>
     </div>
   </header>
 
@@ -174,14 +187,21 @@
     </div>
 
     <div style="margin-top:10px;">
-      <label style="font-size:0.85rem; font-weight:700; color:#475569;">🎯 Criterios evaluados en esta prueba (Haz clic para activar/desactivar):</label>
+      <label style="font-size:0.85rem; font-weight:700; color:#475569;">🎯 1. Selecciona los Criterios evaluados en esta prueba:</label>
       <div id="chipsCriterios" class="criterios-checkboxes"></div>
+    </div>
+
+    <div style="margin-top:10px;">
+      <label style="font-size:0.85rem; font-weight:700; color:#475569;">⚖️ 2. Ajusta el Número de Preguntas por Criterio (Ponderación del Examen):</label>
+      <div id="containerPreguntasConfig" class="preg-config-container">
+        <span style="font-size:0.82rem; color:#64748b;">Selecciona criterios arriba para configurar el número de preguntas.</span>
+      </div>
     </div>
   </div>
 
   <div class="card">
     <div class="card-title">
-      <span>✏️ Calificaciones por Alumno y Criterio</span>
+      <span>✏️ Calificaciones Criteriales (0-10) y Nota Global del Examen</span>
     </div>
 
     <div class="table-container">
@@ -249,7 +269,7 @@
     "4ESO_B": ["Araujo Carrasco, José Manuel", "Borrero De Paula, José Antonio", "Boulal, Jilali", "Escudero Limón, Daniela", "Kykish Toporovska, Diana", "Lobato Ramos, Hugo", "Martin Venegas, Ester", "Naranjo Romero, Aitana", "Pérez Rodríguez, Pablo", "Rivero Hernández, Diego Alejandro", "Rivero Hernández, Enrique Alejandro", "Rodríguez Brejano, Alexys", "Salazar Fernández, Yamilet", "Sánchez Lozada, Sergio Enrique", "Sánchez Pérez, Induara", "Sánchez Ternero, Alejandro", "Soto García, Ángela", "Terrón Quintero, José Antonio", "Torres Hernández, Javier", "Wert Hermoso, Laura"]
   };
 
-  let estadoPruebas = {}; // estadoPruebas[curso][eval] = [ { id, nombre, criterios: [], notas: { alum: { critId: val } } } ]
+  let estadoPruebas = {}; 
   let pruebaActivaId = null;
 
   function obtenerNivelCurso(curso) {
@@ -278,6 +298,7 @@
         id: "p_" + Date.now(),
         nombre: "Examen / Práctica 1",
         criterios: [],
+        preguntasConfig: {}, // critId -> numPreguntas
         notas: {}
       };
       estadoPruebas[curso][evalSel].push(nuevaP);
@@ -299,6 +320,7 @@
     asegurarEstructuraCursoEval();
     renderizarTabs();
     renderizarChipsCriterios();
+    renderizarConfigPreguntas();
     renderizarTablaNotas();
   }
 
@@ -340,10 +362,54 @@
       const chip = document.createElement("div");
       const isSelected = seleccionados.includes(crit.id);
       chip.className = "crit-chip" + (isSelected ? " selected" : "");
-      chip.textContent = crit.id;
+      
+      const numPreg = (pActiva && pActiva.preguntasConfig && pActiva.preguntasConfig[crit.id]) || 1;
+      chip.innerHTML = `${crit.id} ${isSelected ? `<span class="badge-puntos">${numPreg} preg</span>` : ''}`;
       chip.onclick = () => toggleCriterioPrueba(crit.id);
       container.appendChild(chip);
     });
+  }
+
+  function renderizarConfigPreguntas() {
+    const pActiva = obtenerPruebaActiva();
+    const container = document.getElementById("containerPreguntasConfig");
+    container.innerHTML = "";
+
+    if (!pActiva || !pActiva.criterios || pActiva.criterios.length === 0) {
+      container.innerHTML = `<span style="font-size:0.82rem; color:#64748b;">Selecciona criterios arriba para indicar el número de preguntas de cada uno.</span>`;
+      return;
+    }
+
+    if (!pActiva.preguntasConfig) pActiva.preguntasConfig = {};
+
+    pActiva.criterios.forEach(critId => {
+      if (!pActiva.preguntasConfig[critId]) pActiva.preguntasConfig[critId] = 1;
+
+      const box = document.createElement("div");
+      box.className = "preg-box";
+      box.innerHTML = `
+        <span>${critId}:</span>
+        <input type="number" min="1" max="20" class="preg-input" 
+          value="${pActiva.preguntasConfig[critId]}" 
+          onchange="actualizarPreguntasCriterio('${critId}', this.value)">
+        <span>preg.</span>
+      `;
+      container.appendChild(box);
+    });
+  }
+
+  function actualizarPreguntasCriterio(critId, val) {
+    const pActiva = obtenerPruebaActiva();
+    if (!pActiva) return;
+    if (!pActiva.preguntasConfig) pActiva.preguntasConfig = {};
+
+    let num = parseInt(val);
+    if (isNaN(num) || num < 1) num = 1;
+
+    pActiva.preguntasConfig[critId] = num;
+    renderizarChipsCriterios();
+    renderizarTablaNotas();
+    guardarPruebaActual(true);
   }
 
   function toggleCriterioPrueba(critId) {
@@ -356,6 +422,8 @@
       pActiva.criterios.splice(idx, 1);
     } else {
       pActiva.criterios.push(critId);
+      if (!pActiva.preguntasConfig) pActiva.preguntasConfig = {};
+      if (!pActiva.preguntasConfig[critId]) pActiva.preguntasConfig[critId] = 1;
     }
     renderizarTodo();
     sincronizarConMatriz(true);
@@ -371,16 +439,18 @@
     let htmlHead = `<th class="col-sticky-1">#</th><th class="col-sticky-2">Alumno/a</th>`;
 
     criteriosSel.forEach(critId => {
-      htmlHead += `<th style="min-width:70px;">${critId}</th>`;
+      const numPreg = (pActiva.preguntasConfig && pActiva.preguntasConfig[critId]) || 1;
+      htmlHead += `<th style="min-width:85px;" title="Criterio ${critId} (${numPreg} preguntas)">${critId}<br><small style="font-size:0.72rem; color:#0284c7;">(${numPreg} preg)</small></th>`;
     });
-    htmlHead += `<th style="min-width:80px; background:#e0f2fe; color:#0369a1;">📊 Media</th>`;
+
+    htmlHead += `<th style="min-width:105px; background:#e0f2fe; color:#0369a1;" title="Nota ponderada según el número de preguntas">📝 Examen Global</th>`;
     headersTr.innerHTML = htmlHead;
 
     const tbody = document.getElementById("bodyTabla");
     tbody.innerHTML = "";
 
     if (alumnos.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="20" style="padding:15px; color:#64748b;">No hay alumnos cargados.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="20" style="padding:15px; color:#64748b;">No hay alumnos cargados en este grupo.</td></tr>`;
       return;
     }
 
@@ -391,25 +461,36 @@
       if (!pActiva.notas[alum]) pActiva.notas[alum] = {};
 
       let htmlRow = `<td class="col-sticky-1">${idx + 1}</td><td class="col-sticky-2">${alum}</td>`;
-      let suma = 0, count = 0;
+      let sumaPonderadaExamen = 0;
+      let totalPreguntasExamen = 0;
 
       criteriosSel.forEach(critId => {
         const val = pActiva.notas[alum][critId] !== undefined ? pActiva.notas[alum][critId] : "";
-        if (val !== "") {
-          suma += parseFloat(val);
-          count++;
+        const numPreg = (pActiva.preguntasConfig && pActiva.preguntasConfig[critId]) || 1;
+
+        if (val !== "" && !isNaN(parseFloat(val))) {
+          const vNum = parseFloat(val);
+          sumaPonderadaExamen += vNum * numPreg;
+          totalPreguntasExamen += numPreg;
         }
+
         htmlRow += `
           <td>
             <input type="number" step="0.1" min="0" max="10" class="input-nota" 
               value="${val}" 
+              placeholder="0-10"
               onchange="actualizarNotaAlumno('${alum.replace(/'/g, "\'")}', '${critId}', this.value)">
           </td>
         `;
       });
 
-      const mediaStr = count > 0 ? (suma / count).toFixed(2) : "-";
-      htmlRow += `<td style="font-weight:800; color:#0369a1; background:#f0f9ff;">${mediaStr}</td>`;
+      let notaExamenGlobalStr = "-";
+      if (totalPreguntasExamen > 0) {
+        const mediaExamenPonderada = sumaPonderadaExamen / totalPreguntasExamen;
+        notaExamenGlobalStr = mediaExamenPonderada.toFixed(2);
+      }
+
+      htmlRow += `<td style="font-weight:800; color:#0369a1; background:#f0f9ff;">${notaExamenGlobalStr}</td>`;
 
       tr.innerHTML = htmlRow;
       tbody.appendChild(tr);
@@ -448,6 +529,7 @@
       id: "p_" + Date.now(),
       nombre: "Nueva Prueba " + ((estadoPruebas[curso][evalSel] || []).length + 1),
       criterios: [],
+      preguntasConfig: {},
       notas: {}
     };
 
@@ -500,7 +582,7 @@
       statusEl.textContent = "⚡ Auto-sincronizado a las " + new Date().toLocaleTimeString();
     }
     if (!silencioso) {
-      alert("✅ Pruebas sincronizadas con éxito con el Cuaderno de Seguimiento.");
+      alert("✅ Pruebas guardadas y sincronizadas con éxito.");
     }
   }
 

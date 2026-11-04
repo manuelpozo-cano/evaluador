@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cuaderno de Seguimiento LOMLOE - Tecnología y Digitalización</title>
+  <title>Cuaderno de Seguimiento LOMLOE - Tecnología y Digitalización (v2)</title>
   
-  <!-- SDK Firebase -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
@@ -24,7 +24,7 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 15px; line-height: 1.5; }
-    .container { max-width: 1500px; margin: 0 auto; }
+    .container { max-width: 1600px; margin: 0 auto; }
 
     header {
       background: var(--card-bg);
@@ -65,9 +65,19 @@
     }
     .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
 
+    .banner-pendientes {
+      background: #fffbebf5; border: 1px solid #fef3c7; border-left: 4px solid var(--warning);
+      border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.86rem; color: #78350f;
+    }
+    .banner-pendientes strong { color: #b45309; }
+    .chip-pendiente {
+      display: inline-block; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;
+      padding: 2px 8px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; margin: 2px;
+    }
+
     .table-container {
       overflow-x: auto;
-      max-height: 72vh;
+      max-height: 70vh;
       border-radius: 10px;
       border: 1px solid var(--border);
       position: relative;
@@ -82,7 +92,7 @@
     th.col-sticky-1 { position: sticky; left: 0; z-index: 20; background: #f1f5f9; text-align: left; width: 35px; min-width: 35px; }
     th.col-sticky-2 { position: sticky; left: 35px; z-index: 20; background: #f1f5f9; text-align: left; min-width: 190px; border-right: 2px solid var(--border); }
 
-    td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; text-align: center; }
+    td { padding: 8px 8px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; text-align: center; }
     td.col-sticky-1 { position: sticky; left: 0; background: white; z-index: 5; text-align: left; font-weight: 700; color: #64748b; }
     td.col-sticky-2 { position: sticky; left: 35px; background: white; z-index: 5; text-align: left; font-weight: 700; color: #1e293b; border-right: 2px solid var(--border); white-space: nowrap; }
 
@@ -91,11 +101,15 @@
     tr:hover td { background-color: #f1f5f9; }
     tr:hover td.col-sticky-1, tr:hover td.col-sticky-2 { background-color: #f1f5f9; }
 
-    .input-nota-matriz {
-      width: 58px; padding: 5px 4px; font-size: 0.88rem; font-weight: 700; text-align: center;
-      border: 1px solid #cbd5e1; border-radius: 6px; outline: none; transition: all 0.2s;
+    .cell-nota {
+      font-weight: 800; border-radius: 6px; padding: 4px 6px; cursor: pointer; transition: all 0.2s; display: inline-block; min-width: 48px;
     }
-    .input-nota-matriz:focus { border-color: var(--primary); background: #f0f9ff; box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2); }
+    .cell-nota:hover { background: #e0f2fe; color: #0369a1; transform: scale(1.06); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+    .student-link {
+      color: #0284c7; font-weight: 700; cursor: pointer; text-decoration: none; transition: color 0.2s;
+    }
+    .student-link:hover { color: #0369a1; text-decoration: underline; }
 
     .badge-nota {
       display: inline-block; padding: 4px 8px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; min-width: 50px; text-align: center;
@@ -116,21 +130,33 @@
     .btn-secondary { background: #64748b; color: white; }
     .btn-secondary:hover { background: #475569; }
 
+    /* MODALES */
     .modal-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
       display: none; justify-content: center; align-items: center; z-index: 1000;
     }
     .modal-card {
-      background: white; border-radius: 12px; padding: 22px; width: 90%; max-width: 650px;
+      background: white; border-radius: 12px; padding: 22px; width: 92%; max-width: 750px; max-height: 85vh; overflow-y: auto;
       box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid var(--border);
     }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
     .modal-header h3 { font-size: 1.15rem; color: #1e293b; font-weight: 800; }
     .textarea-alumnos {
-      width: 100%; height: 260px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+      width: 100%; height: 240px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
       font-family: monospace; font-size: 0.88rem; margin-bottom: 14px; outline: none; line-height: 1.4;
     }
+
+    .modal-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
+    .modal-table th { background: #f8fafc; color: #475569; padding: 8px; border-bottom: 2px solid var(--border); text-align: left; }
+    .modal-table td { padding: 8px; border-bottom: 1px solid #e2e8f0; }
+
+    .summary-box {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;
+    }
+    .summary-item { text-align: center; }
+    .summary-item label { display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+    .summary-item val { font-size: 1.2rem; font-weight: 800; color: #0284c7; }
   </style>
 </head>
 <body>
@@ -143,7 +169,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
       <span id="syncStatusBadge" style="font-size:0.82rem; color:#16a34a; font-weight:700; background:#dcfce7; padding:4px 10px; border-radius:12px; border:1px solid #86efac;">☁️ Nube Conectada</span>
-      <a href="index.html" class="btn-back">⬅ Volver al Panel Principal</a>
+      <a href="evaluador_directo_v2.html" class="btn-back">📝 Ir al Evaluador Directo</a>
     </div>
   </header>
 
@@ -177,10 +203,12 @@
     </div>
   </div>
 
+  <div id="bannerPendientesContainer" style="display:none;"></div>
+
   <div class="card">
     <div class="card-title">
-      <span>📋 Matriz Integradora de Calificaciones por Criterio</span>
-      <small style="font-weight:600; color:#64748b; font-size:0.82rem;">Integración automática en tiempo real de todas las SdA y Evaluador Directo.</small>
+      <span>📋 Matriz Integradora de Calificaciones por Criterio (Solo Lectura)</span>
+      <small style="font-weight:600; color:#64748b; font-size:0.82rem;">Haz clic en el alumno para ver su Ficha de Seguimiento o en la nota para ver su origen.</small>
     </div>
 
     <div class="table-container">
@@ -195,9 +223,8 @@
     <div class="actions-bar">
       <div>
         <button class="btn btn-secondary" onclick="exportarCSVMatriz()">📥 Descargar Cuaderno (CSV)</button>
-        <button class="btn btn-primary" onclick="guardarCambiosManuales()">💾 Guardar Cambios Manuales</button>
       </div>
-      <button class="btn btn-success" onclick="sincronizarConNubeFirestore()">🔄 Recargar de Nube Ahora</button>
+      <button class="btn btn-success" onclick="sincronizarConNubeFirestore()">🔄 Recargar Datos de Nube</button>
     </div>
   </div>
 </div>
@@ -207,15 +234,43 @@
   <div class="modal-card">
     <div class="modal-header">
       <h3 id="modalTituloGrupo">👥 Modificar Lista de Alumnos</h3>
-      <button onclick="cerrarModalAlumnos()" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✖</button>
+      <button onclick="cerrarModal('modalAlumnos')" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✖</button>
     </div>
     <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">
-      Puedes modificar la lista del grupo si hay altas o bajas:
+      Puedes editar la lista del grupo si hay altas o bajas en la clase:
     </p>
     <textarea id="txtListaAlumnos" class="textarea-alumnos"></textarea>
     <div style="display:flex; justify-content:flex-end; gap:10px;">
-      <button class="btn btn-secondary" onclick="cerrarModalAlumnos()">Cancelar</button>
+      <button class="btn btn-secondary" onclick="cerrarModal('modalAlumnos')">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarListaAlumnosCustom()">💾 Guardar Lista de Clase</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE CRITERIO -->
+<div class="modal-overlay" id="modalDetalleCriterio">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="tituloDetalleCrit">🎯 Desglose del Criterio</h3>
+      <button onclick="cerrarModal('modalDetalleCriterio')" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✖</button>
+    </div>
+    <div id="contenidoDetalleCrit"></div>
+    <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+      <button class="btn btn-primary" onclick="cerrarModal('modalDetalleCriterio')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FICHA ALUMNO -->
+<div class="modal-overlay" id="modalFichaAlumno">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="tituloFichaAlumno">👤 Ficha de Seguimiento del Alumno/a</h3>
+      <button onclick="cerrarModal('modalFichaAlumno')" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✖</button>
+    </div>
+    <div id="contenidoFichaAlumno"></div>
+    <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+      <button class="btn btn-primary" onclick="cerrarModal('modalFichaAlumno')">Cerrar Ficha</button>
     </div>
   </div>
 </div>
@@ -267,11 +322,11 @@
   };
 
   let alumnosBD = {};
-  let matrizAcumuladaBD = {}; // matriz[curso][eval][alum_norm][crit_id] = [scores]
+  let matrizAcumuladaBD = {}; // matriz[curso][eval][alum_norm][crit_id] = [ { origen, valor } ]
 
   function normalizarTexto(txt) {
     if (!txt) return "";
-    return txt.toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return txt.toString().trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   }
 
   function normalizarCurso(keyStr) {
@@ -296,7 +351,7 @@
     }
   }
 
-  function registrarNota(cursoStr, evalStr, alumName, critId, valor) {
+  function registrarNotaConOrigen(cursoStr, evalStr, alumName, critId, valor, origenStr) {
     if (!cursoStr || !alumName || !critId) return;
     const valNum = parseFloat(valor);
     if (isNaN(valNum)) return;
@@ -312,7 +367,10 @@
     if (!matrizAcumuladaBD[cursoNorm][eKey][alumNorm]) matrizAcumuladaBD[cursoNorm][eKey][alumNorm] = {};
     if (!matrizAcumuladaBD[cursoNorm][eKey][alumNorm][critId]) matrizAcumuladaBD[cursoNorm][eKey][alumNorm][critId] = [];
 
-    matrizAcumuladaBD[cursoNorm][eKey][alumNorm][critId].push(valNum);
+    matrizAcumuladaBD[cursoNorm][eKey][alumNorm][critId].push({
+      origen: origenStr || "SdA / Prueba",
+      valor: valNum
+    });
   }
 
   function parsearEntradaUniversal(key, data) {
@@ -324,7 +382,7 @@
       const alumno = data.alumno || key.split("_").slice(2).join("_");
       const map = { c1: "TYD.2.3.1", c2: "TYD.2.2.2", c3: "TYD.2.1.2" };
       Object.keys(map).forEach(ck => {
-        if (data[ck] !== undefined && data[ck] !== null) registrarNota(grupo, "1T", alumno, map[ck], data[ck]);
+        if (data[ck] !== undefined && data[ck] !== null) registrarNotaConOrigen(grupo, "1T", alumno, map[ck], data[ck], "SdA Doblador 2º ESO");
       });
       return;
     }
@@ -336,7 +394,7 @@
       const alumno = parts.slice(2).join("_") || data.alumno;
       const map = { c1: "TYD.3.1.1", c2: "TYD.3.1.3", c3: "TYD.3.2.1", c4: "TYD.3.2.2", c5: "TYD.3.4.1", c6: "TYD.3.7.1" };
       Object.keys(map).forEach(ck => {
-        if (data[ck] !== undefined && data[ck] !== null) registrarNota(grupo, "1T", alumno, map[ck], data[ck]);
+        if (data[ck] !== undefined && data[ck] !== null) registrarNotaConOrigen(grupo, "1T", alumno, map[ck], data[ck], "SdA Retos 3º ESO");
       });
       return;
     }
@@ -347,7 +405,7 @@
       const alumno = data.alumno || key.split("_").slice(2).join("_");
       const map = { c1: "DIG.4.1.3", c2: "DIG.4.2.2", c3: "DIG.4.2.3", c4: "DIG.4.2.4", c5: "DIG.4.4.4" };
       Object.keys(map).forEach(ck => {
-        if (data[ck] !== undefined && data[ck] !== null) registrarNota(grupo, "1T", alumno, map[ck], data[ck]);
+        if (data[ck] !== undefined && data[ck] !== null) registrarNotaConOrigen(grupo, "1T", alumno, map[ck], data[ck], "SdA ENIAC 4º ESO");
       });
       return;
     }
@@ -358,10 +416,10 @@
       const alumno = data.alumno || key.split("_").slice(2).join("_");
       const map = { c1: "DIG.4.1.3", c2: "DIG.4.2.2", c3: "DIG.4.2.3", c4: "DIG.4.1.2" };
       Object.keys(map).forEach(ck => {
-        if (data[ck] !== undefined && data[ck] !== null) registrarNota(grupo, "1T", alumno, map[ck], data[ck]);
+        if (data[ck] !== undefined && data[ck] !== null) registrarNotaConOrigen(grupo, "1T", alumno, map[ck], data[ck], "SdA Presupuestos PC");
       });
       ["DIG.4.1.3", "DIG.4.2.2", "DIG.4.2.3", "DIG.4.1.2"].forEach(critId => {
-        if (data[critId] !== undefined && data[critId] !== null) registrarNota(grupo, "1T", alumno, critId, data[critId]);
+        if (data[critId] !== undefined && data[critId] !== null) registrarNotaConOrigen(grupo, "1T", alumno, critId, data[critId], "SdA Presupuestos PC");
       });
       return;
     }
@@ -375,10 +433,11 @@
             const pruebaList = evDict[eKey];
             if (Array.isArray(pruebaList)) {
               pruebaList.forEach(p => {
+                const pNombre = p ? (p.nombre || "Prueba Directa") : "Prueba Directa";
                 if (p && p.notas) {
                   Object.keys(p.notas).forEach(alum => {
                     Object.keys(p.notas[alum]).forEach(critId => {
-                      registrarNota(cKey, eKey, alum, critId, p.notas[alum][critId]);
+                      registrarNotaConOrigen(cKey, eKey, alum, critId, p.notas[alum][critId], pNombre);
                     });
                   });
                 }
@@ -390,7 +449,7 @@
       return;
     }
 
-    // 6. Objetos tipo Matriz Directos
+    // 6. Matriz genérica
     Object.keys(data).forEach(cKey => {
       const cNorm = normalizarCurso(cKey);
       if (cNorm && typeof data[cKey] === "object") {
@@ -400,12 +459,12 @@
             const eKey = subKey.toUpperCase();
             Object.keys(sub[subKey]).forEach(alum => {
               Object.keys(sub[subKey][alum]).forEach(critId => {
-                registrarNota(cNorm, eKey, alum, critId, sub[subKey][alum][critId]);
+                registrarNotaConOrigen(cNorm, eKey, alum, critId, sub[subKey][alum][critId], "Evaluación Directa");
               });
             });
           } else if (typeof sub[subKey] === "object") {
             Object.keys(sub[subKey]).forEach(critId => {
-              registrarNota(cNorm, "1T", subKey, critId, sub[subKey][critId]);
+              registrarNotaConOrigen(cNorm, "1T", subKey, critId, sub[subKey][critId], "Evaluación Directa");
             });
           }
         });
@@ -416,7 +475,6 @@
   function cargarYRefrescarDatos() {
     matrizAcumuladaBD = {};
 
-    // 1. Escanear todo LocalStorage
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (!k || k.includes("alumnos")) continue;
@@ -451,7 +509,7 @@
 
   function sincronizarConNubeFirestore() {
     cargarYRefrescarDatos();
-    alert("✅ Datos actualizados e integrados desde LocalStorage y Firestore.");
+    alert("✅ Datos integrados y actualizados correctamente.");
   }
 
   function obtenerNivelCurso(curso) {
@@ -466,17 +524,65 @@
     const evalSeleccionada = document.getElementById("selectEval").value;
     const nivel = obtenerNivelCurso(curso);
 
-    const criteriosList = CRITERIOS_POR_NIVEL[nivel] || CRITERIOS_POR_NIVEL["2ESO"];
+    const criteriosOficiales = CRITERIOS_POR_NIVEL[nivel] || CRITERIOS_POR_NIVEL["2ESO"];
     const listaAlumnos = alumnosBD[curso] || [];
+    const datosCursoObj = matrizAcumuladaBD[curso] || {};
 
+    // Determinar qué criterios se muestran en las columnas
+    let criteriosVisibles = [];
+    let criteriosPendientes = [];
+
+    if (evalSeleccionada === "GLOBAL") {
+      criteriosVisibles = [...criteriosOficiales];
+      criteriosPendientes = [];
+    } else {
+      // En modo trimestral (1T, 2T, 3T), filtrar sólo los criterios que TIENEN NOTAS en este trimestre
+      const datosEval = datosCursoObj[evalSeleccionada] || {};
+
+      criteriosOficiales.forEach(crit => {
+        let tieneNotaEnTrimestre = false;
+        Object.keys(datosEval).forEach(alumNorm => {
+          if (datosEval[alumNorm] && datosEval[alumNorm][crit.id] && datosEval[alumNorm][crit.id].length > 0) {
+            tieneNotaEnTrimestre = true;
+          }
+        });
+
+        if (tieneNotaEnTrimestre) {
+          criteriosVisibles.push(crit);
+        } else {
+          criteriosPendientes.push(crit);
+        }
+      });
+    }
+
+    // Renderizar Banner de Criterios Pendientes en Trimestres
+    const bannerContainer = document.getElementById("bannerPendientesContainer");
+    if (evalSeleccionada !== "GLOBAL" && criteriosPendientes.length > 0) {
+      bannerContainer.style.display = "block";
+      let htmlBanner = `
+        <div class="banner-pendientes">
+          📌 <strong>Criterios del Currículo Pendientes de Evaluar en la ${evalSeleccionada.replace('T', 'ª Evaluacion')}:</strong> (${criteriosPendientes.length} sin actividades)<br>
+          <div style="margin-top:6px;">
+      `;
+      criteriosPendientes.forEach(c => {
+        htmlBanner += `<span class="chip-pendiente">${c.id}</span>`;
+      });
+      htmlBanner += `</div></div>`;
+      bannerContainer.innerHTML = htmlBanner;
+    } else {
+      bannerContainer.style.display = "none";
+      bannerContainer.innerHTML = "";
+    }
+
+    // Renderizar Headers de la Tabla
     const headersTr = document.getElementById("headersMatriz");
     let htmlHeaders = `
       <th class="col-sticky-1">#</th>
       <th class="col-sticky-2">Nombre del Alumno/a</th>
     `;
 
-    criteriosList.forEach(crit => {
-      htmlHeaders += `<th title="${crit.id}" style="min-width:65px;">${crit.id}</th>`;
+    criteriosVisibles.forEach(crit => {
+      htmlHeaders += `<th title="Haz clic en las celdas para ver el origen de ${crit.id}" style="min-width:70px;">${crit.id}</th>`;
     });
 
     htmlHeaders += `
@@ -489,11 +595,9 @@
     tbody.innerHTML = "";
 
     if (listaAlumnos.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="30" style="padding:20px; text-align:center; color:#64748b;">No hay alumnos en este grupo.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="35" style="padding:20px; text-align:center; color:#64748b;">No hay alumnos en este grupo.</td></tr>`;
       return;
     }
-
-    const datosCursoObj = matrizAcumuladaBD[curso] || {};
 
     listaAlumnos.forEach((alumno, idx) => {
       const tr = document.createElement("tr");
@@ -504,39 +608,52 @@
 
       let htmlFila = `
         <td class="col-sticky-1">${idx + 1}</td>
-        <td class="col-sticky-2">${alumno}</td>
+        <td class="col-sticky-2">
+          <span class="student-link" onclick="abrirFichaAlumno('${alumno.replace(/'/g, "\'")}')" title="Haz clic para ver la Ficha de Seguimiento de ${alumno}">
+            👤 ${alumno}
+          </span>
+        </td>
       `;
 
-      criteriosList.forEach(crit => {
-        let arrayNotasCrit = [];
+      criteriosVisibles.forEach(crit => {
+        let objetosNotasCrit = [];
 
         if (evalSeleccionada === "GLOBAL") {
           Object.keys(datosCursoObj).forEach(eKey => {
             if (datosCursoObj[eKey][alumNorm] && datosCursoObj[eKey][alumNorm][crit.id]) {
-              arrayNotasCrit = arrayNotasCrit.concat(datosCursoObj[eKey][alumNorm][crit.id]);
+              objetosNotasCrit = objetosNotasCrit.concat(datosCursoObj[eKey][alumNorm][crit.id]);
             }
           });
         } else {
           if (datosCursoObj[evalSeleccionada] && datosCursoObj[evalSeleccionada][alumNorm] && datosCursoObj[evalSeleccionada][alumNorm][crit.id]) {
-            arrayNotasCrit = datosCursoObj[evalSeleccionada][alumNorm][crit.id];
+            objetosNotasCrit = datosCursoObj[evalSeleccionada][alumNorm][crit.id];
           }
         }
 
-        let mediaCritVal = "";
-        if (arrayNotasCrit.length > 0) {
-          const suma = arrayNotasCrit.reduce((a, b) => a + b, 0);
-          const mediaCrit = suma / arrayNotasCrit.length;
+        let mediaCritVal = "-";
+        let tooltipTexto = "Sin calificar";
+        let tieneNota = false;
+
+        if (objetosNotasCrit.length > 0) {
+          tieneNota = true;
+          const suma = objetosNotasCrit.reduce((a, b) => a + b.valor, 0);
+          const mediaCrit = suma / objetosNotasCrit.length;
           mediaCritVal = (Math.round(mediaCrit * 100) / 100).toFixed(2);
 
           sumaTotalMediaCriterios += parseFloat(mediaCritVal);
           countCriteriosEvaluados++;
+
+          const listaDesglose = objetosNotasCrit.map(item => `${item.origen}: ${item.valor}`).join(" | ");
+          tooltipTexto = `${crit.id} -> ${listaDesglose} => Media: ${mediaCritVal}`;
         }
 
         htmlFila += `
           <td>
-            <input type="number" step="0.1" min="0" max="10" class="input-nota-matriz" 
-              value="${mediaCritVal}" 
-              onchange="actualizarNotaMatrizManual('${alumno.replace(/'/g, "\\'")}', '${crit.id}', this.value)">
+            <span class="cell-nota" style="color: ${tieneNota ? '#0369a1' : '#94a3b8'}; background: ${tieneNota ? '#f0f9ff' : 'transparent'};"
+              title="${tooltipTexto}"
+              onclick="abrirModalDetalleCriterio('${alumno.replace(/'/g, "\'")}', '${crit.id}')">
+              ${mediaCritVal}
+            </span>
           </td>
         `;
       });
@@ -561,16 +678,227 @@
     });
   }
 
-  function actualizarNotaMatrizManual(alumno, critId, valor) {
+  function abrirModalDetalleCriterio(alumno, critId) {
     const curso = document.getElementById("selectCurso").value;
     const evalSel = document.getElementById("selectEval").value;
-    const eKey = evalSel === "GLOBAL" ? "1T" : evalSel;
-    registrarNota(curso, eKey, alumno, critId, valor);
-    renderizarMatrizSeguimiento();
+    const alumNorm = normalizarTexto(alumno);
+    const datosCursoObj = matrizAcumuladaBD[curso] || {};
+
+    let objetosNotas = [];
+
+    if (evalSel === "GLOBAL") {
+      Object.keys(datosCursoObj).forEach(eKey => {
+        if (datosCursoObj[eKey][alumNorm] && datosCursoObj[eKey][alumNorm][critId]) {
+          objetosNotas = objetosNotas.concat(datosCursoObj[eKey][alumNorm][critId]);
+        }
+      });
+    } else {
+      if (datosCursoObj[evalSel] && datosCursoObj[evalSel][alumNorm] && datosCursoObj[evalSel][alumNorm][critId]) {
+        objetosNotas = datosCursoObj[evalSel][alumNorm][critId];
+      }
+    }
+
+    document.getElementById("tituloDetalleCrit").textContent = `🎯 Desglose de ${critId} - ${alumno}`;
+    
+    const container = document.getElementById("contenidoDetalleCrit");
+    if (objetosNotas.length === 0) {
+      container.innerHTML = `<p style="color:#64748b; padding:15px; text-align:center;">No hay calificaciones registradas para este criterio en ${evalSel}.</p>`;
+    } else {
+      const suma = objetosNotas.reduce((a, b) => a + b.valor, 0);
+      const media = (suma / objetosNotas.length).toFixed(2);
+
+      let html = `
+        <div class="summary-box">
+          <div class="summary-item"><label>Alumno/a</label><val style="font-size:1rem;">${alumno}</val></div>
+          <div class="summary-item"><label>Criterio</label><val style="font-size:1rem;">${critId}</val></div>
+          <div class="summary-item"><label>Nota Media Criterio</label><val style="font-size:1.3rem;">${media}</val></div>
+        </div>
+
+        <h4 style="font-size:0.92rem; color:#1e293b; margin-top:14px; font-weight:800;">📋 Actividades y Pruebas que integran este Criterio:</h4>
+        <table class="modal-table">
+          <thead>
+            <tr>
+              <th>Actividad / Examen / SdA</th>
+              <th style="text-align:right;">Calificación Criterial</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      objetosNotas.forEach(item => {
+        html += `
+          <tr>
+            <td><strong>${item.origen}</strong></td>
+            <td style="text-align:right; font-weight:800; color:#0284c7;">${item.valor.toFixed(2)}</td>
+          </tr>
+        `;
+      });
+
+      html += `
+          </tbody>
+        </table>
+      `;
+      container.innerHTML = html;
+    }
+
+    document.getElementById("modalDetalleCriterio").style.display = "flex";
   }
 
-  function guardarCambiosManuales() {
-    alert("💾 Todos los cambios están integrados automáticamente en el cuaderno.");
+  function abrirFichaAlumno(alumno) {
+    const curso = document.getElementById("selectCurso").value;
+    const nivel = obtenerNivelCurso(curso);
+    const criteriosOficiales = CRITERIOS_POR_NIVEL[nivel] || [];
+    const alumNorm = normalizarTexto(alumno);
+    const datosCursoObj = matrizAcumuladaBD[curso] || {};
+
+    document.getElementById("tituloFichaAlumno").textContent = `👤 Ficha de Seguimiento Individual: ${alumno}`;
+
+    let totalCriterios = criteriosOficiales.length;
+    let sumMedias = 0;
+    let evalCount = 0;
+    let pasadosList = [];
+    let suspensosList = [];
+    let noEvaluadosList = [];
+
+    let historialCompleto = [];
+
+    criteriosOficiales.forEach(crit => {
+      let notasCrit = [];
+      Object.keys(datosCursoObj).forEach(eKey => {
+        if (datosCursoObj[eKey][alumNorm] && datosCursoObj[eKey][alumNorm][crit.id]) {
+          datosCursoObj[eKey][alumNorm][crit.id].forEach(item => {
+            notasCrit.push(item);
+            historialCompleto.push({ trim: eKey, crit: crit.id, origen: item.origen, nota: item.valor });
+          });
+        }
+      });
+
+      if (notasCrit.length > 0) {
+        const mediaCrit = notasCrit.reduce((a, b) => a + b.valor, 0) / notasCrit.length;
+        sumMedias += mediaCrit;
+        evalCount++;
+
+        if (mediaCrit >= 5.0) {
+          pasadosList.push({ id: crit.id, media: mediaCrit.toFixed(2) });
+        } else {
+          suspensosList.push({ id: crit.id, media: mediaCrit.toFixed(2) });
+        }
+      } else {
+        noEvaluadosList.push(crit.id);
+      }
+    });
+
+    const notaGlobal = evalCount > 0 ? (sumMedias / evalCount).toFixed(2) : "-";
+
+    let html = `
+      <div class="summary-box">
+        <div class="summary-item"><label>Nota Media Global</label><val style="font-size:1.3rem;">${notaGlobal}</val></div>
+        <div class="summary-item"><label>Criterios Superados</label><val style="color:#16a34a;">${pasadosList.length} / ${evalCount}</val></div>
+        <div class="summary-item"><label>Criterios Suspensos</label><val style="color:#dc2626;">${suspensosList.length}</val></div>
+        <div class="summary-item"><label>Sin Evaluar</label><val style="color:#d97706;">${noEvaluadosList.length}</val></div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <h4 style="font-size:0.88rem; font-weight:800; color:#15803d; margin-bottom:6px;">✅ Criterios Superados (≥ 5.0):</h4>
+        <div>
+    `;
+
+    if (pasadosList.length === 0) html += `<span style="font-size:0.82rem; color:#64748b;">Ninguno aún</span>`;
+    pasadosList.forEach(c => {
+      html += `<span class="badge-nota badge-pass" style="margin:3px;">${c.id}: ${c.media}</span>`;
+    });
+
+    html += `
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <h4 style="font-size:0.88rem; font-weight:800; color:#b91c1c; margin-bottom:6px;">❌ Criterios Suspensos (< 5.0):</h4>
+        <div>
+    `;
+
+    if (suspensosList.length === 0) html += `<span style="font-size:0.82rem; color:#64748b;">Ninguno</span>`;
+    suspensosList.forEach(c => {
+      html += `<span class="badge-nota badge-fail" style="margin:3px;">${c.id}: ${c.media}</span>`;
+    });
+
+    html += `
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <h4 style="font-size:0.88rem; font-weight:800; color:#b45309; margin-bottom:6px;">⏳ Criterios Pendientes por Evaluar:</h4>
+        <div>
+    `;
+
+    if (noEvaluadosList.length === 0) html += `<span style="font-size:0.82rem; color:#64748b;">¡Todos los criterios del curso han sido evaluados!</span>`;
+    noEvaluadosList.forEach(id => {
+      html += `<span class="chip-pendiente">${id}</span>`;
+    });
+
+    html += `
+        </div>
+      </div>
+
+      <h4 style="font-size:0.92rem; color:#1e293b; margin-top:16px; font-weight:800;">📜 Historial Detallado de Calificaciones:</h4>
+      <table class="modal-table">
+        <thead>
+          <tr>
+            <th>Trimestre</th>
+            <th>Criterio</th>
+            <th>Actividad / Examen</th>
+            <th style="text-align:right;">Nota</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    if (historialCompleto.length === 0) {
+      html += `<tr><td colspan="4" style="text-align:center; color:#64748b; padding:12px;">No se han registrado notas aún para este alumno/a.</td></tr>`;
+    } else {
+      historialCompleto.forEach(item => {
+        html += `
+          <tr>
+            <td><strong>${item.trim}</strong></td>
+            <td><span style="font-weight:700; color:#0284c7;">${item.crit}</span></td>
+            <td>${item.origen}</td>
+            <td style="text-align:right; font-weight:800; color:#0369a1;">${item.nota.toFixed(2)}</td>
+          </tr>
+        `;
+      });
+    }
+
+    html += `
+        </tbody>
+      </table>
+    `;
+
+    document.getElementById("contenidoFichaAlumno").innerHTML = html;
+    document.getElementById("modalFichaAlumno").style.display = "flex";
+  }
+
+  function cerrarModal(modalId) {
+    document.getElementById(modalId).style.display = "none";
+  }
+
+  function abrirModalAlumnos() {
+    const curso = document.getElementById("selectCurso").value;
+    document.getElementById("modalTituloGrupo").textContent = `👥 Modificar Lista de Alumnos (${curso.replace('_', ' ')})`;
+    const lista = alumnosBD[curso] || [];
+    document.getElementById("txtListaAlumnos").value = lista.join("\n");
+    document.getElementById("modalAlumnos").style.display = "flex";
+  }
+
+  function guardarListaAlumnosCustom() {
+    const curso = document.getElementById("selectCurso").value;
+    const txt = document.getElementById("txtListaAlumnos").value;
+    const lineas = txt.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+
+    alumnosBD[curso] = lineas;
+    localStorage.setItem("evaluador_directo_alumnos_v2", JSON.stringify(alumnosBD));
+    cerrarModal("modalAlumnos");
+    renderizarMatrizSeguimiento();
+    alert("✅ Lista de alumnos actualizada correctamente para " + curso.replace('_', ' ') + ".");
   }
 
   function exportarCSVMatriz() {
@@ -605,7 +933,7 @@
 
         let scoreStr = "";
         if (arr.length > 0) {
-          const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
+          const avg = arr.reduce((a, b) => a + b.valor, 0) / arr.length;
           scoreStr = avg.toFixed(2);
           suma += avg;
           count++;
@@ -623,30 +951,6 @@
     link.href = URL.createObjectURL(blob);
     link.download = "Cuaderno_Seguimiento_" + curso + "_" + evalSel + ".csv";
     link.click();
-  }
-
-  function abrirModalAlumnos() {
-    const curso = document.getElementById("selectCurso").value;
-    document.getElementById("modalTituloGrupo").textContent = `👥 Modificar Lista de Alumnos (${curso.replace('_', ' ')})`;
-    const lista = alumnosBD[curso] || [];
-    document.getElementById("txtListaAlumnos").value = lista.join("\n");
-    document.getElementById("modalAlumnos").style.display = "flex";
-  }
-
-  function cerrarModalAlumnos() {
-    document.getElementById("modalAlumnos").style.display = "none";
-  }
-
-  function guardarListaAlumnosCustom() {
-    const curso = document.getElementById("selectCurso").value;
-    const txt = document.getElementById("txtListaAlumnos").value;
-    const lineas = txt.split("\n").map(l => l.trim()).filter(l => l.length > 0);
-
-    alumnosBD[curso] = lineas;
-    localStorage.setItem("evaluador_directo_alumnos_v2", JSON.stringify(alumnosBD));
-    cerrarModalAlumnos();
-    renderizarMatrizSeguimiento();
-    alert("✅ Lista de alumnos actualizada correctamente para " + curso.replace('_', ' ') + ".");
   }
 
   window.addEventListener("storage", () => {
