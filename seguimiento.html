@@ -497,26 +497,20 @@
   }
 
   function activarEscuchaNube() {
-    const colecciones = ["evaluaciones", "eniac_4eso_notas", "doblador_2eso_notas", "evaluacion_directa"];
-
-    colecciones.forEach(collName => {
-      db.collection(collName).onSnapshot(snapshot => {
-        snapshot.forEach(doc => {
-          try {
-            const data = doc.data();
-            if (doc.id === "estadoGeneral" && data.data) {
-              parsearEntradaUniversal("evaluador_directo_pruebas_v8", data.data);
-            } else {
-              parsearEntradaUniversal(collName + "_" + doc.id, data);
-            }
-          } catch(e) {}
-        });
-        renderizarMatrizSeguimiento();
+    if (!db) return;
+    db.collection("evaluacion_directa").doc("estadoGeneral").onSnapshot(doc => {
+      if (doc.exists && doc.data() && doc.data().data) {
+        const nubeData = doc.data().data;
+        // Guardar en el LocalStorage del móvil para que no se borre al cambiar de pestaña
+        localStorage.setItem("evaluador_directo_pruebas_v8", JSON.stringify(nubeData));
+        cargarYRefrescarDatos();
         const badge = document.getElementById("syncStatusBadge");
-        if (badge) badge.textContent = "☁️ Nube Sincronizada (" + new Date().toLocaleTimeString() + ")";
-      }, err => {
-        console.warn("Nube offline en " + collName, err);
-      });
+        if (badge) badge.textContent = "☁️ Nube Conectada (" + new Date().toLocaleTimeString() + ")";
+      }
+    }, err => {
+      console.warn("Error en la escucha de nube:", err);
+      const badge = document.getElementById("syncStatusBadge");
+      if (badge) badge.textContent = "⚠️ Modo Local (Sin Nube)";
     });
   }
 

@@ -582,16 +582,21 @@
 
   function guardarPruebaActual(silencioso = false) {
     localStorage.setItem("evaluador_directo_pruebas_v8", JSON.stringify(estadoPruebas));
+    const statusEl = document.getElementById("autoSyncStatus");
     if (db) {
+      if (statusEl) statusEl.textContent = "⏳ Enviando a nube...";
       db.collection("evaluacion_directa").doc("estadoGeneral").set({
         data: estadoPruebas,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true }).catch(err => console.warn("Error enviando a Firestore:", err));
+      }, { merge: true }).then(() => {
+        if (statusEl) statusEl.textContent = "⚡ Auto-sincronizado " + new Date().toLocaleTimeString();
+      }).catch(err => {
+        console.warn("Error enviando a Firestore:", err);
+        if (statusEl) statusEl.textContent = "⚠️ Error Nube (Guardado Local)";
+      });
     }
     sincronizarConMatriz(silencioso);
-  }
-
-  function sincronizarConMatriz(silencioso = false) {
+  }function sincronizarConMatriz(silencioso = false) {
     window.dispatchEvent(new Event('storage'));
     const statusEl = document.getElementById("autoSyncStatus");
     if (statusEl) {
