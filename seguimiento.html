@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cuaderno de Seguimiento LOMLOE - Tecnología y Digitalización</title>
   
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -178,6 +181,7 @@
     <div class="card-title">
       <span>⚙️ Selección de Grupo y Modo de Calificación</span>
       <button class="btn btn-secondary" onclick="abrirModalAlumnos()" style="font-size:0.82rem; padding:6px 12px;">👥 Editar Lista de Alumnos</button>
+      <button class="btn btn-primary" onclick="abrirModalComparadorGrupos()" style="font-size:0.82rem; padding:6px 12px;">📊 Comparar Grupos</button>
     </div>
 
     <div class="form-grid">
@@ -272,6 +276,52 @@
     <div id="contenidoFichaAlumno"></div>
     <div style="display:flex; justify-content:flex-end; margin-top:16px;">
       <button class="btn btn-primary" onclick="cerrarModal('modalFichaAlumno')">Cerrar Ficha</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL COMPARADOR ENTRE GRUPOS -->
+<div class="modal-overlay" id="modalComparadorGrupos">
+  <div class="modal-card" style="max-width: 850px;">
+    <div class="modal-header">
+      <h3 id="tituloComparadorGrupos">📊 Comparativa entre Grupos / Cursos</h3>
+      <button onclick="cerrarModal('modalComparadorGrupos')" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✖</button>
+    </div>
+    
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:16px;">
+      <div class="form-group">
+        <label for="selectGrupoComp1">Grupo 1 (Referencia):</label>
+        <select id="selectGrupoComp1" class="form-control" onchange="actualizarGraficoComparativoGrupos()">
+          <option value="2ESO_A">2º ESO A</option>
+          <option value="2ESO_B">2º ESO B</option>
+          <option value="3ESO_A">3º ESO A</option>
+          <option value="3ESO_B">3º ESO B</option>
+          <option value="4ESO_A">4º ESO A</option>
+          <option value="4ESO_B">4º ESO B</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="selectGrupoComp2">Grupo 2 (Comparación):</label>
+        <select id="selectGrupoComp2" class="form-control" onchange="actualizarGraficoComparativoGrupos()">
+          <option value="2ESO_A">2º ESO A</option>
+          <option value="2ESO_B" selected>2º ESO B</option>
+          <option value="3ESO_A">3º ESO A</option>
+          <option value="3ESO_B">3º ESO B</option>
+          <option value="4ESO_A">4º ESO A</option>
+          <option value="4ESO_B">4º ESO B</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="resumenComparativoGrupos" class="summary-box" style="margin-bottom:15px;"></div>
+
+    <div style="position:relative; width:100%; height:360px;">
+      <canvas id="chartComparadorGrupos"></canvas>
+    </div>
+
+    <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+      <button class="btn btn-primary" onclick="cerrarModal('modalComparadorGrupos')">Cerrar Comparativa</button>
     </div>
   </div>
 </div>
@@ -762,6 +812,7 @@
     const criteriosOficiales = CRITERIOS_POR_NIVEL[nivel] || [];
     const alumNorm = normalizarTexto(alumno);
     const datosCursoObj = matrizAcumuladaBD[curso] || {};
+    const listaAlumnosCurso = alumnosBD[curso] || [];
 
     document.getElementById("tituloFichaAlumno").textContent = `👤 Ficha de Seguimiento Individual: ${alumno}`;
 
@@ -774,6 +825,10 @@
 
     let historialCompleto = [];
 
+    let labelsRadar = [];
+    let dataAlumnoRadar = [];
+    let dataGrupoRadar = [];
+
     criteriosOficiales.forEach(crit => {
       let notasCrit = [];
       Object.keys(datosCursoObj).forEach(eKey => {
@@ -785,18 +840,46 @@
         }
       });
 
+      let mediaCritVal = null;
       if (notasCrit.length > 0) {
-        const mediaCrit = notasCrit.reduce((a, b) => a + b.valor, 0) / notasCrit.length;
-        sumMedias += mediaCrit;
+        mediaCritVal = notasCrit.reduce((a, b) => a + b.valor, 0) / notasCrit.length;
+        sumMedias += mediaCritVal;
         evalCount++;
 
-        if (mediaCrit >= 5.0) {
-          pasadosList.push({ id: crit.id, media: mediaCrit.toFixed(2) });
+        if (mediaCritVal >= 5.0) {
+          pasadosList.push({ id: crit.id, media: mediaCritVal.toFixed(2) });
         } else {
-          suspensosList.push({ id: crit.id, media: mediaCrit.toFixed(2) });
+          suspensosList.push({ id: crit.id, media: mediaCritVal.toFixed(2) });
         }
       } else {
         noEvaluadosList.push(crit.id);
+      }
+
+      // Media del Grupo para este Criterio
+      let sumaMediasGrupoCrit = 0;
+      let countAlumsConNotaGrupo = 0;
+
+      listaAlumnosCurso.forEach(al => {
+        const alNorm = normalizarTexto(al);
+        let notasAlGrupoCrit = [];
+        Object.keys(datosCursoObj).forEach(eKey => {
+          if (datosCursoObj[eKey][alNorm] && datosCursoObj[eKey][alNorm][crit.id]) {
+            notasAlGrupoCrit = notasAlGrupoCrit.concat(datosCursoObj[eKey][alNorm][crit.id]);
+          }
+        });
+        if (notasAlGrupoCrit.length > 0) {
+          const m = notasAlGrupoCrit.reduce((a, b) => a + b.valor, 0) / notasAlGrupoCrit.length;
+          sumaMediasGrupoCrit += m;
+          countAlumsConNotaGrupo++;
+        }
+      });
+
+      const mediaGrupoVal = countAlumsConNotaGrupo > 0 ? (sumaMediasGrupoCrit / countAlumsConNotaGrupo) : null;
+
+      if (mediaCritVal !== null || mediaGrupoVal !== null) {
+        labelsRadar.push(crit.id);
+        dataAlumnoRadar.push(mediaCritVal !== null ? parseFloat(mediaCritVal.toFixed(2)) : 0);
+        dataGrupoRadar.push(mediaGrupoVal !== null ? parseFloat(mediaGrupoVal.toFixed(2)) : 0);
       }
     });
 
@@ -852,6 +935,15 @@
         </div>
       </div>
 
+      <div style="margin-top:20px; margin-bottom:20px; background:#f8fafc; padding:16px; border-radius:10px; border:1px solid #e2e8f0;">
+        <h4 style="font-size:0.92rem; font-weight:800; color:#1e293b; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+          🎯 Diana Competencial (Comparativa con el Grupo)
+        </h4>
+        <div style="position:relative; width:100%; max-width:520px; margin:0 auto; height:320px;">
+          <canvas id="chartRadarAlumno"></canvas>
+        </div>
+      </div>
+
       <h4 style="font-size:0.92rem; color:#1e293b; margin-top:16px; font-weight:800;">📜 Historial Detallado de Calificaciones:</h4>
       <table class="modal-table">
         <thead>
@@ -887,6 +979,201 @@
 
     document.getElementById("contenidoFichaAlumno").innerHTML = html;
     document.getElementById("modalFichaAlumno").style.display = "flex";
+
+    // Renderizar gráfico Radar de Chart.js
+    if (window.chartAlumnoInstance) {
+      window.chartAlumnoInstance.destroy();
+    }
+    const canvasRadar = document.getElementById("chartRadarAlumno");
+    if (canvasRadar && labelsRadar.length > 0) {
+      const ctx = canvasRadar.getContext("2d");
+      window.chartAlumnoInstance = new Chart(ctx, {
+        type: "radar",
+        data: {
+          labels: labelsRadar,
+          datasets: [
+            {
+              label: alumno,
+              data: dataAlumnoRadar,
+              backgroundColor: "rgba(2, 132, 199, 0.25)",
+              borderColor: "#0284c7",
+              pointBackgroundColor: "#0284c7",
+              borderWidth: 2,
+              fill: true
+            },
+            {
+              label: "Media Grupo (" + curso.replace('_', ' ') + ")",
+              data: dataGrupoRadar,
+              backgroundColor: "rgba(100, 116, 139, 0.15)",
+              borderColor: "#64748b",
+              pointBackgroundColor: "#64748b",
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              min: 0,
+              max: 10,
+              ticks: { stepSize: 2, font: { size: 10 } },
+              pointLabels: { font: { size: 10, weight: "bold" } }
+            }
+          },
+          plugins: {
+            legend: { position: "top", labels: { font: { size: 11, weight: "bold" } } }
+          }
+        }
+      });
+    }
+  }
+
+
+  function abrirModalComparadorGrupos() {
+    const cursoSel = document.getElementById("selectCurso").value;
+    document.getElementById("selectGrupoComp1").value = cursoSel;
+    
+    let rival = "2ESO_B";
+    if (cursoSel === "2ESO_A") rival = "2ESO_B";
+    else if (cursoSel === "2ESO_B") rival = "2ESO_A";
+    else if (cursoSel === "3ESO_A") rival = "3ESO_B";
+    else if (cursoSel === "3ESO_B") rival = "3ESO_A";
+    else if (cursoSel === "4ESO_A") rival = "4ESO_B";
+    else if (cursoSel === "4ESO_B") rival = "4ESO_A";
+    
+    document.getElementById("selectGrupoComp2").value = rival;
+    document.getElementById("modalComparadorGrupos").style.display = "flex";
+    actualizarGraficoComparativoGrupos();
+  }
+
+  function actualizarGraficoComparativoGrupos() {
+    const g1 = document.getElementById("selectGrupoComp1").value;
+    const g2 = document.getElementById("selectGrupoComp2").value;
+
+    const nivel1 = obtenerNivelCurso(g1);
+    const criteriosList = CRITERIOS_POR_NIVEL[nivel1] || [];
+
+    const alums1 = alumnosBD[g1] || [];
+    const alums2 = alumnosBD[g2] || [];
+    const datosG1 = matrizAcumuladaBD[g1] || {};
+    const datosG2 = matrizAcumuladaBD[g2] || {};
+
+    let labelsComp = [];
+    let dataG1 = [];
+    let dataG2 = [];
+
+    let sumaGlobalG1 = 0, countGlobalG1 = 0;
+    let sumaGlobalG2 = 0, countGlobalG2 = 0;
+
+    criteriosList.forEach(crit => {
+      // Calc G1 avg for this crit
+      let sumaCrit1 = 0, countCrit1 = 0;
+      alums1.forEach(al => {
+        const alNorm = normalizarTexto(al);
+        let arr = [];
+        Object.keys(datosG1).forEach(eKey => {
+          if (datosG1[eKey] && datosG1[eKey][alNorm] && datosG1[eKey][alNorm][crit.id]) {
+            arr = arr.concat(datosG1[eKey][alNorm][crit.id]);
+          }
+        });
+        if (arr.length > 0) {
+          const avg = arr.reduce((a, b) => a + b.valor, 0) / arr.length;
+          sumaCrit1 += avg;
+          countCrit1++;
+        }
+      });
+      const avgG1Crit = countCrit1 > 0 ? (sumaCrit1 / countCrit1) : null;
+      if (avgG1Crit !== null) { sumaGlobalG1 += avgG1Crit; countGlobalG1++; }
+
+      // Calc G2 avg for this crit
+      let sumaCrit2 = 0, countCrit2 = 0;
+      alums2.forEach(al => {
+        const alNorm = normalizarTexto(al);
+        let arr = [];
+        Object.keys(datosG2).forEach(eKey => {
+          if (datosG2[eKey] && datosG2[eKey][alNorm] && datosG2[eKey][alNorm][crit.id]) {
+            arr = arr.concat(datosG2[eKey][alNorm][crit.id]);
+          }
+        });
+        if (arr.length > 0) {
+          const avg = arr.reduce((a, b) => a + b.valor, 0) / arr.length;
+          sumaCrit2 += avg;
+          countCrit2++;
+        }
+      });
+      const avgG2Crit = countCrit2 > 0 ? (sumaCrit2 / countCrit2) : null;
+      if (avgG2Crit !== null) { sumaGlobalG2 += avgG2Crit; countGlobalG2++; }
+
+      if (avgG1Crit !== null || avgG2Crit !== null) {
+        labelsComp.push(crit.id);
+        dataG1.push(avgG1Crit !== null ? parseFloat(avgG1Crit.toFixed(2)) : 0);
+        dataG2.push(avgG2Crit !== null ? parseFloat(avgG2Crit.toFixed(2)) : 0);
+      }
+    });
+
+    const mediaFinalG1 = countGlobalG1 > 0 ? (sumaGlobalG1 / countGlobalG1).toFixed(2) : "-";
+    const mediaFinalG2 = countGlobalG2 > 0 ? (sumaGlobalG2 / countGlobalG2).toFixed(2) : "-";
+
+    const resumenDiv = document.getElementById("resumenComparativoGrupos");
+    resumenDiv.innerHTML = `
+      <div class="summary-item"><label>Media ${g1.replace('_', ' ')}</label><val style="font-size:1.3rem; color:#0284c7;">${mediaFinalG1}</val></div>
+      <div class="summary-item"><label>Media ${g2.replace('_', ' ')}</label><val style="font-size:1.3rem; color:#0d9488;">${mediaFinalG2}</val></div>
+      <div class="summary-item"><label>Criterios Evaluados</label><val style="font-size:1.2rem; color:#475569;">${labelsComp.length}</val></div>
+    `;
+
+    if (window.chartGruposInstance) {
+      window.chartGruposInstance.destroy();
+    }
+
+    const canvasComp = document.getElementById("chartComparadorGrupos");
+    if (!canvasComp) return;
+
+    const ctx = canvasComp.getContext("2d");
+    window.chartGruposInstance = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: labelsComp,
+        datasets: [
+          {
+            label: g1.replace('_', ' '),
+            data: dataG1,
+            backgroundColor: "rgba(2, 132, 199, 0.85)",
+            borderColor: "#0284c7",
+            borderWidth: 1,
+            borderRadius: 4
+          },
+          {
+            label: g2.replace('_', ' '),
+            data: dataG2,
+            backgroundColor: "rgba(13, 148, 136, 0.85)",
+            borderColor: "#0d9488",
+            borderWidth: 1,
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            min: 0,
+            max: 10,
+            ticks: { stepSize: 2 }
+          },
+          x: {
+            ticks: { font: { size: 10, weight: "bold" } }
+          }
+        },
+        plugins: {
+          legend: { position: "top", labels: { font: { size: 11, weight: "bold" } } }
+        }
+      }
+    });
   }
 
   function cerrarModal(modalId) {
